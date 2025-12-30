@@ -1,0 +1,243 @@
+/* =====================================================
+   VARIABLES GLOBALES - CHARTE GRAPHIQUE LULU-OPEN
+   ===================================================== */
+
+:root {
+    /* Couleurs principales */
+    --primary-dark: #000033;
+    --primary-blue: #0099FF;
+    --primary-light: #00ccff;
+    --accent-red: #FF3366;
+    
+    /* Dégradés */
+    --gradient-primary: linear-gradient(135deg, #000033 0%, #001a4d 100%);
+    --gradient-blue: linear-gradient(135deg, #0099FF 0%, #00ccff 100%);
+    --gradient-hero: linear-gradient(135deg, #000033 0%, #0055aa 100%);
+    
+    /* Couleurs UI */
+    --bg-light: #f8f9fa;
+    --bg-white: #ffffff;
+    --text-dark: #212529;
+    --text-muted: #6c757d;
+    --border-color: #dee2e6;
+    
+    /* Ombres */
+    --shadow-sm: 0 2px 8px rgba(0, 153, 255, 0.1);
+    --shadow-md: 0 4px 20px rgba(0, 153, 255, 0.15);
+    --shadow-lg: 0 8px 30px rgba(0, 153, 255, 0.25);
+    
+    /* Espacements */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 2rem;
+    --spacing-lg: 3rem;
+    --spacing-xl: 5rem;
+    
+    /* Typographie */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.5rem;
+    --font-size-2xl: 2rem;
+    --font-size-3xl: 3rem;
+    
+    /* Transitions */
+    --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s ease;
+}
+
+/* =====================================================
+   STYLES GLOBAUX
+   ===================================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    color: var(--text-dark);
+    background: var(--bg-light);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+a {
+    color: var(--primary-blue);
+    text-decoration: none;
+    transition: var(--transition-base);
+}
+
+a:hover {
+    color: var(--primary-light);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: var(--spacing-sm);
+    color: var(--primary-dark);
+}
+
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-2xl); }
+h3 { font-size: var(--font-size-xl); }
+
+.main-content {
+    min-height: calc(100vh - 200px);
+    padding: var(--spacing-md) 0;
+}
+
+/* =====================================================
+   BOUTONS PERSONNALISÉS
+   ===================================================== */
+
+.btn-primary-custom {
+    background: var(--gradient-blue);
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: var(--transition-base);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary-custom:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-outline-custom {
+    background: transparent;
+    color: var(--primary-blue);
+    border: 2px solid var(--primary-blue);
+    padding: 0.75rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: var(--transition-base);
+}
+
+.btn-outline-custom:hover {
+    background: var(--primary-blue);
+    color: white;
+    transform: translateY(-3px);
+}
+
+/* =====================================================
+   CARDS PERSONNALISÉES
+   ===================================================== */
+
+.card-custom {
+    background: var(--bg-white);
+    border-radius: 15px;
+    box-shadow: var(--shadow-md);
+    border: none;
+    transition: var(--transition-base);
+    overflow: hidden;
+}
+
+.card-custom:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-custom .card-header-custom {
+    background: var(--gradient-primary);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-bottom: none;
+}
+
+/* =====================================================
+   SECTIONS
+   ===================================================== */
+
+.section {
+    padding: var(--spacing-xl) 0;
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+    position: relative;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: var(--gradient-blue);
+    border-radius: 10px;
+}
+
+/* =====================================================
+   BREADCRUMB
+   ===================================================== */
+
+.breadcrumb-custom {
+    background: transparent;
+    padding: var(--spacing-sm) 0;
+    margin-bottom: var(--spacing-md);
+}
+
+.breadcrumb-custom .breadcrumb-item {
+    font-size: 0.9rem;
+}
+
+.breadcrumb-custom .breadcrumb-item + .breadcrumb-item::before {
+    content: '›';
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+.breadcrumb-custom .breadcrumb-item.active {
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+/* =====================================================
+   MESSAGES FLASH
+   ===================================================== */
+
+.alert-custom {
+    border-radius: 10px;
+    border: none;
+    box-shadow: var(--shadow-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    animation: slideInDown 0.5s ease;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+
+@media (max-width: 768px) {
+    :root {
+        --font-size-3xl: 2rem;
+        --font-size-2xl: 1.5rem;
+        --spacing-xl: 3rem;
+    }
+    
+    .section {
+        padding: var(--spacing-md) 0;
+    }
+}

@@ -1,0 +1,377 @@
+/**
+ * RESPONSIVE.CSS - LULU-OPEN
+ * Media queries optimisées - Mobile First
+ */
+
+/* === BASE (Mobile 320px+) === */
+
+:root {
+    --container-padding: 1rem;
+    --card-gap: 1rem;
+    --font-size-base: 16px;
+    --font-size-h1: 2rem;
+    --font-size-h2: 1.5rem;
+    --font-size-h3: 1.25rem;
+}
+
+body {
+    font-size: var(--font-size-base);
+}
+
+.container {
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+}
+
+/* Hero Section Mobile */
+.hero-section {
+    padding: 60px 0 40px;
+    min-height: auto;
+}
+
+.hero-section h1 {
+    font-size: var(--font-size-h1);
+    line-height: 1.2;
+}
+
+.hero-section p {
+    font-size: 1rem;
+}
+
+/* Cards Mobile */
+.category-card,
+.profile-card {
+    width: 100%;
+    margin-bottom: var(--card-gap);
+}
+
+/* Search Bar Mobile */
+.search-bar {
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.search-bar input,
+.search-bar select,
+.search-bar button {
+    width: 100%;
+}
+
+/* Filters Mobile */
+.filters-panel {
+    position: static;
+    margin-bottom: 1.5rem;
+}
+
+.filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.filter-pill {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+}
+
+/* Results Grid Mobile */
+.results-container.grid-view {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+/* Navigation Mobile */
+.navbar-nav {
+    padding: 1rem 0;
+}
+
+.nav-item {
+    margin-bottom: 0.5rem;
+}
+
+/* Footer Mobile */
+.footer-columns {
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* === SMALL DEVICES (576px+) === */
+
+@media (min-width: 576px) {
+    :root {
+        --container-padding: 1.5rem;
+        --font-size-h1: 2.5rem;
+        --font-size-h2: 1.75rem;
+    }
+
+    .hero-section {
+        padding: 80px 0 60px;
+    }
+
+    .category-card,
+    .profile-card {
+        width: calc(50% - 0.5rem);
+    }
+
+    .results-container.grid-view {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .search-bar {
+        flex-direction: row;
+    }
+
+    .search-bar input {
+        flex: 1;
+    }
+
+    .search-bar select {
+        width: auto;
+        min-width: 150px;
+    }
+
+    .search-bar button {
+        width: auto;
+    }
+}
+
+/* === MEDIUM DEVICES (768px+) === */
+
+@media (min-width: 768px) {
+    :root {
+        --container-padding: 2rem;
+        --card-gap: 1.5rem;
+        --font-size-h1: 3rem;
+        --font-size-h2: 2rem;
+    }
+
+    .hero-section {
+        padding: 100px 0 80px;
+    }
+
+    .category-card {
+        width: calc(33.333% - 1rem);
+    }
+
+    .results-container.grid-view {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+    }
+
+    /* Filters Sticky */
+    .filters-panel.sticky-top {
+        position: sticky;
+        top: 80px;
+        z-index: 10;
+    }
+
+    /* Footer Columns */
+    .footer-columns {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .footer-column {
+        flex: 1;
+    }
+}
+
+/* === LARGE DEVICES (992px+) === */
+
+@media (min-width: 992px) {
+    :root {
+        --font-size-h1: 3.5rem;
+        --font-size-h2: 2.5rem;
+        --font-size-h3: 1.5rem;
+    }
+
+    .hero-section h1 {
+        font-size: var(--font-size-h1);
+    }
+
+    .category-card {
+        width: calc(25% - 1.125rem);
+    }
+
+    .results-container.grid-view {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* List View */
+    .results-container.list-view {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .results-container.list-view .profile-card {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+    }
+
+    .results-container.list-view .profile-image {
+        width: 200px;
+        flex-shrink: 0;
+    }
+
+    .results-container.list-view .profile-info {
+        flex: 1;
+        padding: 1.5rem;
+    }
+
+    /* Sidebar Layout */
+    .page-with-sidebar {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 2rem;
+    }
+
+    .sidebar {
+        position: sticky;
+        top: 80px;
+        height: fit-content;
+    }
+}
+
+/* === EXTRA LARGE DEVICES (1200px+) === */
+
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .hero-section h1 {
+        font-size: 4rem;
+    }
+
+    .results-container.grid-view {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2rem;
+    }
+
+    .page-with-sidebar {
+        grid-template-columns: 320px 1fr;
+        gap: 3rem;
+    }
+}
+
+/* === ULTRA WIDE (1920px+) === */
+
+@media (min-width: 1920px) {
+    .container {
+        max-width: 1400px;
+    }
+
+    .results-container.grid-view {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+/* === LANDSCAPE MOBILE === */
+
+@media (max-height: 500px) and (orientation: landscape) {
+    .hero-section {
+        padding: 40px 0 30px;
+        min-height: auto;
+    }
+
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+}
+
+/* === PRINT === */
+
+@media print {
+    .navbar,
+    .footer,
+    .filters-panel,
+    .btn,
+    .pagination {
+        display: none !important;
+    }
+
+    body {
+        font-size: 12pt;
+        color: #000;
+        background: #fff;
+    }
+
+    .profile-card {
+        page-break-inside: avoid;
+        border: 1px solid #000;
+        margin-bottom: 1rem;
+    }
+}
+
+/* === REDUCED MOTION === */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* === HIGH CONTRAST === */
+
+@media (prefers-contrast: high) {
+    :root {
+        --primary-dark: #000000;
+        --primary-blue: #0066CC;
+    }
+
+    .btn,
+    .card {
+        border: 2px solid currentColor;
+    }
+}
+
+/* === DARK MODE === */
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #1a1a1a;
+        --text-color: #ffffff;
+        --card-bg: #2a2a2a;
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+    }
+
+    .card,
+    .profile-card {
+        background-color: var(--card-bg);
+        color: var(--text-color);
+    }
+}
+
+/* === TOUCH DEVICES === */
+
+@media (hover: none) and (pointer: coarse) {
+    /* Augmenter les zones de touch */
+    .btn,
+    .nav-link,
+    a {
+        min-height: 44px;
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Désactiver les hover effects */
+    .hover-lift:hover,
+    .hover-tilt:hover,
+    .hover-scale:hover {
+        transform: none;
+    }
+}
