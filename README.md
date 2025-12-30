@@ -299,7 +299,7 @@ Utilisez les [GitHub Issues](https://github.com/ItxMveng/Lulu-open/issues) pour 
 
 Ce projet est sous licence propriétaire. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
-**Usage commercial :** Pour toute utilisation commerciale, contactez contact@lulu-open.com
+**Usage commercial :** Pour toute utilisation commerciale, contactez francisitoua05@gmail.com
 
 ---
 
