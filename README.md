@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/ItxMveng/Lulu-open)
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-777BB4.svg)](https://php.net/)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3.svg)](https://getbootstrap.com/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Proprietary-red.svg)](LICENSE)
 
 > **LULU-OPEN** est une plateforme innovante qui révolutionne la mise en relation entre prestataires de services, candidats à l'emploi et recruteurs. Une marketplace complète pour connecter les talents aux opportunités.
 
@@ -297,7 +297,9 @@ Utilisez les [GitHub Issues](https://github.com/ItxMveng/Lulu-open/issues) pour 
 
 ## 📄 Licence
 
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+Ce projet est sous licence propriétaire. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+**Usage commercial :** Pour toute utilisation commerciale, contactez contact@lulu-open.com
 
 ---
 
