@@ -1,36 +1,45 @@
 <?php
 require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/stripe.php';
 require_once __DIR__ . '/../../includes/middleware-admin.php';
 require_admin();
 
 // Filtres
-$statut_filter = $_GET['statut'] ?? 'actif';
-$plan_filter = $_GET['plan'] ?? '';
+$statut_filter = $_GET['statut'] ?? 'Actif';
 $search = $_GET['search'] ?? '';
 
-// Requête avec filtres
-$db = Database::getInstance()->getConnection();
-$sql = "SELECT a.*, 
-        CONCAT(u.prenom, ' ', u.nom) as nom_utilisateur, 
-        u.email, u.photo_profil, u.type_utilisateur,
-        p.nom as plan_nom, p.prix_mensuel, p.prix_annuel,
-        a.prix as montant,
-        a.auto_renouvellement as renouvellement_auto,
-        NULL as date_prochaine_facturation
-        FROM abonnements a
-        JOIN utilisateurs u ON a.utilisateur_id = u.id
-        JOIN plans_abonnement p ON a.plan_id = p.id
+$db = Database::getInstance();
+
+// Requête pour TOUS les utilisateurs avec leur statut d'abonnement réel
+$sql = "SELECT u.id, u.prenom, u.nom, u.email, u.photo_profil, u.type_utilisateur,
+               CASE 
+                   WHEN u.subscription_status = 'Actif' AND u.subscription_end_date > NOW() THEN 'Actif'
+                   WHEN u.subscription_status = 'Actif' AND u.subscription_end_date <= NOW() THEN 'Expiré'
+                   ELSE 'Gratuit'
+               END as subscription_status,
+               u.subscription_start_date, 
+               u.subscription_end_date,
+               CASE 
+                   WHEN u.subscription_status = 'Actif' AND u.subscription_end_date > NOW() THEN DATEDIFF(u.subscription_end_date, NOW())
+                   ELSE NULL 
+               END as days_remaining,
+               ps.plan as stripe_plan
+        FROM utilisateurs u 
+        LEFT JOIN paiements_stripe ps ON u.id = ps.utilisateur_id AND ps.status = 'succeeded'
         WHERE 1=1";
 $params = [];
 
 if ($statut_filter && $statut_filter !== 'tous') {
-    $sql .= " AND a.statut = ?";
-    $params[] = $statut_filter;
+    if ($statut_filter === 'Gratuit') {
+        $sql .= " AND (u.subscription_status IS NULL OR u.subscription_status != 'Actif' OR u.subscription_end_date <= NOW())";
+    } elseif ($statut_filter === 'Expiré') {
+        $sql .= " AND u.subscription_status = 'Actif' AND u.subscription_end_date <= NOW()";
+    } else {
+        $sql .= " AND u.subscription_status = ? AND u.subscription_end_date > NOW()";
+        $params[] = $statut_filter;
+    }
 }
-if ($plan_filter) {
-    $sql .= " AND a.plan_id = ?";
-    $params[] = $plan_filter;
-}
+
 if ($search) {
     $sql .= " AND (u.prenom LIKE ? OR u.nom LIKE ? OR u.email LIKE ?)";
     $searchTerm = "%$search%";
@@ -39,27 +48,38 @@ if ($search) {
     $params[] = $searchTerm;
 }
 
-$sql .= " ORDER BY a.date_fin ASC";
+$sql .= " ORDER BY u.subscription_end_date DESC";
 
-$stmt = $db->prepare($sql);
-$stmt->execute($params);
-$abonnements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$abonnements = $db->fetchAll($sql, $params);
 
 // Statistiques
-$stmt = $db->query("SELECT COUNT(*) FROM abonnements WHERE statut = 'actif'");
-$total_actifs = $stmt->fetchColumn();
+$stats = [
+    'total_users' => $db->fetch("SELECT COUNT(*) as count FROM utilisateurs")['count'],
+    'total_actifs' => $db->fetch("SELECT COUNT(*) as count FROM utilisateurs WHERE subscription_status = 'Actif' AND subscription_end_date > NOW()")['count'],
+    'expire_7j' => $db->fetch("SELECT COUNT(*) as count FROM utilisateurs WHERE subscription_status = 'Actif' AND subscription_end_date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 7 DAY)")['count'],
+    'revenus_mois' => $db->fetch("SELECT COALESCE(SUM(montant), 0) as total FROM paiements_stripe WHERE status = 'succeeded' AND MONTH(created_at) = MONTH(NOW())")['total'],
+    'gratuits' => $db->fetch("SELECT COUNT(*) as count FROM utilisateurs WHERE subscription_status IS NULL OR subscription_status != 'Actif' OR subscription_end_date <= NOW()")['count']
+];
 
-$stmt = $db->query("SELECT COUNT(*) FROM abonnements WHERE statut = 'actif' AND date_fin BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)");
-$expirant_7j = $stmt->fetchColumn();
+// Demandes d'upgrade en attente
+$pending_requests = $db->fetchAll("
+    SELECT du.*, u.prenom, u.nom, u.email, u.type_utilisateur
+    FROM demandes_upgrade du
+    JOIN utilisateurs u ON du.utilisateur_id = u.id
+    WHERE du.statut = 'en_attente'
+    ORDER BY du.date_demande DESC
+");
 
-$stmt = $db->query("SELECT COALESCE(SUM(montant), 0) FROM paiements WHERE statut = 'valide' AND MONTH(date_paiement) = MONTH(CURDATE())");
-$revenus_mois = $stmt->fetchColumn();
+// Paiements récents
+$recent_payments = $db->fetchAll("
+    SELECT ps.*, u.prenom, u.nom, u.email
+    FROM paiements_stripe ps
+    JOIN utilisateurs u ON ps.utilisateur_id = u.id
+    ORDER BY ps.created_at DESC
+    LIMIT 20
+");
 
-// Liste plans pour filtre
-$stmt = $db->query("SELECT id, nom FROM plans_abonnement WHERE actif = 1 ORDER BY ordre_affichage");
-$plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-$page_title = "Gestion Abonnements - Admin LULU-OPEN";
+$page_title = "Gestion Stripe - Admin LULU-OPEN";
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -71,7 +91,6 @@ $page_title = "Gestion Abonnements - Admin LULU-OPEN";
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="<?= url('assets/css/admin-global.css') ?>" rel="stylesheet">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <style>
     .admin-content {
         margin-left: 260px;
@@ -87,13 +106,35 @@ $page_title = "Gestion Abonnements - Admin LULU-OPEN";
         }
     }
     
-    .stat-mini-card {
+    .stat-card {
         background: white;
-        padding: 1rem;
-        border-radius: 10px;
-        box-shadow: var(--shadow-sm);
-        text-align: center;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: none;
+        transition: all 0.3s ease;
     }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .stat-icon.users { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .stat-icon.subscriptions { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+    .stat-icon.pending { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .stat-icon.revenue { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: #333 !important; }
     
     .btn-action {
         width: 32px;
@@ -102,11 +143,23 @@ $page_title = "Gestion Abonnements - Admin LULU-OPEN";
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        border-radius: 8px;
     }
     
-    .table-warning {
-        background-color: rgba(255, 193, 7, 0.1) !important;
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,123,255,0.05);
     }
+    
+    .badge-plan {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .badge-active { background: #e8f5e8; color: #388e3c; }
+    .badge-inactive { background: #ffebee; color: #d32f2f; }
+    .badge-expired { background: #fff3e0; color: #f57c00; }
     </style>
 </head>
 <body>
@@ -118,405 +171,474 @@ $page_title = "Gestion Abonnements - Admin LULU-OPEN";
             <div class="breadcrumb-custom">
                 <ol class="breadcrumb mb-0">
                     <li class="breadcrumb-item"><a href="<?= url('views/admin/dashboard.php') ?>">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Abonnements</li>
+                    <li class="breadcrumb-item active">Gestion Stripe</li>
                 </ol>
             </div>
         </nav>
         
-        <!-- En-tête + Stats -->
-        <div class="row mb-4" data-aos="fade-down">
-            <div class="col-md-6">
+        <!-- En-tête -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
                 <h1 class="mb-2" style="color: var(--primary-dark); font-weight: 700;">
-                    <i class="bi bi-award-fill me-2"></i>Gestion des Abonnements
+                    <i class="bi bi-credit-card-fill me-2"></i>Gestion Stripe
                 </h1>
-                <p class="text-muted">Gérer les abonnements et renouvellements</p>
+                <p class="text-muted">Abonnements, paiements et suivi automatisé</p>
             </div>
-            <div class="col-md-6">
-                <div class="row g-2">
-                    <div class="col-md-4">
-                        <div class="stat-mini-card">
-                            <small class="text-muted">Actifs</small>
-                            <h4 class="mb-0 text-success"><?= $total_actifs ?></h4>
+        </div>
+        
+        <!-- Statistiques -->
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon users">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h3 class="mb-0"><?= number_format($stats['total_users']) ?></h3>
+                            <small class="text-muted">Utilisateurs total</small>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="stat-mini-card">
-                            <small class="text-muted">Expirent 7j</small>
-                            <h4 class="mb-0 text-warning"><?= $expirant_7j ?></h4>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon subscriptions">
+                            <i class="bi bi-shield-check-fill"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h3 class="mb-0"><?= number_format($stats['total_actifs']) ?></h3>
+                            <small class="text-muted">Abonnements actifs</small>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="stat-mini-card">
-                            <small class="text-muted">Revenus mois</small>
-                            <h4 class="mb-0 text-primary"><?= number_format($revenus_mois, 2) ?>€</h4>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon pending">
+                            <i class="bi bi-clock-fill"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h3 class="mb-0"><?= number_format($stats['expire_7j']) ?></h3>
+                            <small class="text-muted">Expirent dans 7j</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon revenue">
+                            <i class="bi bi-currency-euro"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h3 class="mb-0"><?= number_format($stats['revenus_mois'], 2) ?>€</h3>
+                            <small class="text-muted">Revenus ce mois</small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Filtres + Actions -->
-        <div class="card-custom mb-4" data-aos="fade-up">
+        <!-- Demandes en attente -->
+        <?php if (!empty($pending_requests)): ?>
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                    Demandes d'upgrade en attente (<?= count($pending_requests) ?>)
+                </h5>
+                <span class="badge bg-warning"><?= count($pending_requests) ?> à traiter</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th>Plan demandé</th>
+                            <th>Montant</th>
+                            <th>Date demande</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($pending_requests as $request): ?>
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong><?= htmlspecialchars($request['prenom'] . ' ' . $request['nom']) ?></strong>
+                                        <br><small class="text-muted"><?= htmlspecialchars($request['email']) ?></small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <?php 
+                                    $planConfig = getStripeConfig($request['plan_demande']);
+                                    ?>
+                                    <span class="badge bg-primary">
+                                        <?= $planConfig ? $planConfig['name'] : ucfirst($request['plan_demande']) ?>
+                                    </span>
+                                    <?php if ($planConfig): ?>
+                                    <br><small class="text-muted"><?= $planConfig['description'] ?></small>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="fw-bold text-success"><?= number_format($request['montant'], 2) ?>€</td>
+                                <td><?= date('d/m/Y H:i', strtotime($request['date_demande'])) ?></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-success btn-action" 
+                                                onclick="approveRequest(<?= $request['id'] ?>)"
+                                                title="Approuver">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                        <button class="btn btn-danger btn-action" 
+                                                onclick="rejectRequest(<?= $request['id'] ?>)"
+                                                title="Refuser">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?php endif; ?>
+        
+        <!-- Filtres -->
+        <div class="card mb-4">
             <div class="card-body">
                 <form method="GET" class="row g-3">
-                    <!-- Recherche -->
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Rechercher</label>
                         <input type="text" name="search" class="form-control" 
                                placeholder="Nom, email..." value="<?= htmlspecialchars($search) ?>">
                     </div>
                     
-                    <!-- Statut -->
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Statut</label>
                         <select name="statut" class="form-select">
-                            <option value="actif" <?= $statut_filter === 'actif' ? 'selected' : '' ?>>Actifs</option>
-                            <option value="essai" <?= $statut_filter === 'essai' ? 'selected' : '' ?>>Essai gratuit</option>
-                            <option value="suspendu" <?= $statut_filter === 'suspendu' ? 'selected' : '' ?>>Suspendus</option>
-                            <option value="expire" <?= $statut_filter === 'expire' ? 'selected' : '' ?>>Expirés</option>
-                            <option value="annule" <?= $statut_filter === 'annule' ? 'selected' : '' ?>>Annulés</option>
+                            <option value="Actif" <?= $statut_filter === 'Actif' ? 'selected' : '' ?>>Actifs</option>
+                            <option value="Gratuit" <?= $statut_filter === 'Gratuit' ? 'selected' : '' ?>>Gratuits</option>
+                            <option value="Inactif" <?= $statut_filter === 'Inactif' ? 'selected' : '' ?>>Inactifs</option>
+                            <option value="Expiré" <?= $statut_filter === 'Expiré' ? 'selected' : '' ?>>Expirés</option>
                             <option value="tous" <?= $statut_filter === 'tous' ? 'selected' : '' ?>>Tous</option>
                         </select>
                     </div>
                     
-                    <!-- Plan -->
-                    <div class="col-md-3">
-                        <label class="form-label">Plan</label>
-                        <select name="plan" class="form-select">
-                            <option value="">Tous les plans</option>
-                            <?php foreach ($plans as $plan): ?>
-                                <option value="<?= $plan['id'] ?>" <?= $plan_filter == $plan['id'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($plan['nom']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    
-                    <!-- Actions -->
-                    <div class="col-md-3 d-flex align-items-end gap-2">
-                        <button type="submit" class="btn btn-primary-custom flex-grow-1">
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">
                             <i class="bi bi-search"></i> Filtrer
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" onclick="exportCSV()">
-                            <i class="bi bi-download"></i>
                         </button>
                     </div>
                 </form>
             </div>
         </div>
         
-        <!-- Liste abonnements -->
-        <div class="card-custom" data-aos="fade-up" data-aos-delay="100">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead style="background: var(--gradient-primary); color: white;">
-                        <tr>
-                            <th>Utilisateur</th>
-                            <th>Plan</th>
-                            <th>Statut</th>
-                            <th>Date début</th>
-                            <th>Date fin</th>
-                            <th>Montant</th>
-                            <th>Renouvellement</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($abonnements)): ?>
-                            <tr>
-                                <td colspan="8" class="text-center py-5">
-                                    <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
-                                    <p class="text-muted mt-3">Aucun abonnement trouvé</p>
-                                </td>
-                            </tr>
-                        <?php else: ?>
-                            <?php foreach ($abonnements as $abo): ?>
-                                <?php
-                                // Calcul jours restants
-                                $today = new DateTime();
-                                $dateFin = new DateTime($abo['date_fin']);
-                                $joursRestants = $today->diff($dateFin)->days;
-                                $isExpireSoon = $joursRestants <= 7 && $abo['statut'] === 'actif';
-                                ?>
-                                <tr class="<?= $isExpireSoon ? 'table-warning' : '' ?>">
-                                    <!-- Utilisateur -->
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <?php
-                                            $photo = $abo['photo_profil'] ?? null;
-                                            if ($photo) {
-                                                if (strpos($photo, 'http') === 0) {
-                                                    // URL absolue
-                                                    $photoUrl = $photo;
-                                                } elseif (strpos($photo, 'uploads/') === 0) {
-                                                    // Chemin déjà avec uploads/
-                                                    $photoUrl = url($photo);
-                                                } elseif (strpos($photo, 'profiles/') === 0) {
-                                                    // Format: profiles/xxx.png -> uploads/profiles/xxx.png
-                                                    $photoUrl = url('uploads/' . $photo);
-                                                } else {
-                                                    // Format: user_xxx.jpg -> uploads/profiles/user_xxx.jpg
-                                                    $photoUrl = url('uploads/profiles/' . $photo);
-                                                }
-                                            } else {
-                                                $photoUrl = url('assets/images/default-avatar.png');
-                                            }
-                                            ?>
-                                            <img src="<?= $photoUrl ?>" 
-                                                 class="rounded-circle me-2"
-                                                 style="width: 40px; height: 40px; object-fit: cover;"
-                                                 onerror="this.src='<?= url('assets/images/default-avatar.png') ?>'">
-                                            <div>
-                                                <strong><?= htmlspecialchars($abo['nom_utilisateur']) ?></strong>
-                                                <br><small class="text-muted"><?= htmlspecialchars($abo['email']) ?></small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    
-                                    <!-- Plan -->
-                                    <td>
-                                        <strong><?= htmlspecialchars($abo['plan_nom']) ?></strong>
-                                        <br><small class="text-muted">
-                                            <?= ucfirst($abo['type_abonnement']) ?> - 
-                                            <?= $abo['type_abonnement'] === 'mensuel' ? $abo['prix_mensuel'] : $abo['prix_annuel'] ?>€
-                                        </small>
-                                    </td>
-                                    
-                                    <!-- Statut -->
-                                    <td>
-                                        <?php
-                                        $badgeClass = match($abo['statut']) {
-                                            'actif' => 'success',
-                                            'essai' => 'info',
-                                            'suspendu' => 'warning',
-                                            'expire' => 'danger',
-                                            'annule' => 'dark',
-                                            default => 'secondary'
-                                        };
-                                        ?>
-                                        <span class="badge bg-<?= $badgeClass ?>">
-                                            <?= ucfirst($abo['statut']) ?>
-                                        </span>
-                                        <?php if ($isExpireSoon): ?>
-                                            <br><small class="text-danger">
-                                                <i class="bi bi-exclamation-triangle"></i> <?= $joursRestants ?>j restants
-                                            </small>
-                                        <?php endif; ?>
-                                    </td>
-                                    
-                                    <!-- Dates -->
-                                    <td><?= date('d/m/Y', strtotime($abo['date_debut'])) ?></td>
-                                    <td>
-                                        <?= date('d/m/Y', strtotime($abo['date_fin'])) ?>
-                                        <?php if (isset($abo['date_prochaine_facturation']) && $abo['date_prochaine_facturation']): ?>
-                                            <br><small class="text-muted">
-                                                Fact: <?= date('d/m', strtotime($abo['date_prochaine_facturation'])) ?>
-                                            </small>
-                                        <?php endif; ?>
-                                    </td>
-                                    
-                                    <!-- Montant -->
-                                    <td class="fw-bold text-success">
-                                        <?= number_format($abo['montant'] ?? 0, 2) ?>€
-                                    </td>
-                                    
-                                    <!-- Renouvellement auto -->
-                                    <td>
-                                        <?php if (isset($abo['renouvellement_auto']) && $abo['renouvellement_auto']): ?>
-                                            <i class="bi bi-arrow-repeat text-success" title="Auto"></i> Oui
-                                        <?php else: ?>
-                                            <i class="bi bi-x-circle text-danger" title="Manuel"></i> Non
-                                        <?php endif; ?>
-                                    </td>
-                                    
-                                    <!-- Actions -->
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-outline-primary btn-action" 
-                                                    onclick="showDetails(<?= $abo['id'] ?>)"
-                                                    title="Détails">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            
-                                            <?php if ($abo['statut'] === 'actif' || $abo['statut'] === 'essai'): ?>
-                                                <button class="btn btn-outline-success btn-action" 
-                                                        onclick="openProlongModal(<?= $abo['id'] ?>)"
-                                                        title="Prolonger">
-                                                    <i class="bi bi-plus-circle"></i>
-                                                </button>
-                                                <button class="btn btn-outline-warning btn-action" 
-                                                        onclick="suspendAbonnement(<?= $abo['id'] ?>)"
-                                                        title="Suspendre">
-                                                    <i class="bi bi-pause-circle"></i>
-                                                </button>
-                                            <?php endif; ?>
-                                            
-                                            <?php if ($abo['statut'] === 'suspendu'): ?>
-                                                <button class="btn btn-outline-success btn-action" 
-                                                        onclick="reactiveAbonnement(<?= $abo['id'] ?>)"
-                                                        title="Réactiver">
-                                                    <i class="bi bi-play-circle"></i>
-                                                </button>
-                                            <?php endif; ?>
-                                            
-                                            <button class="btn btn-outline-danger btn-action" 
-                                                    onclick="openCancelModal(<?= $abo['id'] ?>)"
-                                                    title="Résilier">
-                                                <i class="bi bi-x-circle"></i>
-                                            </button>
-                                        </div>
-                                    </td>
+        <!-- Abonnements et Paiements -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-shield-check-fill text-success me-2"></i>
+                            Abonnements (<?= count($abonnements) ?>)
+                        </h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Utilisateur</th>
+                                    <th>Plan</th>
+                                    <th>Statut</th>
+                                    <th>Début</th>
+                                    <th>Fin</th>
+                                    <th>Jours restants</th>
+                                    <th>Actions</th>
                                 </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($abonnements)): ?>
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <i class="bi bi-inbox" style="font-size: 2rem; color: #ccc;"></i>
+                                            <p class="text-muted mt-2">Aucun abonnement trouvé</p>
+                                        </td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($abonnements as $abo): ?>
+                                        <tr class="<?= $abo['days_remaining'] <= 7 && $abo['subscription_status'] === 'Actif' ? 'table-warning' : '' ?>">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="<?= url('assets/images/default-avatar.png') ?>" 
+                                                         class="rounded-circle me-2"
+                                                         style="width: 32px; height: 32px; object-fit: cover;">
+                                                    <div>
+                                                        <strong><?= htmlspecialchars($abo['prenom'] . ' ' . $abo['nom']) ?></strong>
+                                                        <br><small class="text-muted"><?= htmlspecialchars($abo['email']) ?></small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <?php 
+                                                $planName = 'Gratuit';
+                                                $realStatus = $abo['subscription_status'];
+                                                
+                                                if ($realStatus === 'Actif') {
+                                                    if ($abo['stripe_plan'] && getStripeConfig($abo['stripe_plan'])) {
+                                                        $planName = getStripeConfig($abo['stripe_plan'])['name'];
+                                                    } elseif ($abo['subscription_end_date'] && $abo['subscription_start_date']) {
+                                                        $start = new DateTime($abo['subscription_start_date']);
+                                                        $end = new DateTime($abo['subscription_end_date']);
+                                                        $months = $start->diff($end)->m + ($start->diff($end)->y * 12);
+                                                        
+                                                        if ($months <= 1) $planName = 'Mensuel';
+                                                        elseif ($months <= 3) $planName = 'Trimestriel';
+                                                        else $planName = 'Annuel';
+                                                    } else {
+                                                        $planName = 'Premium';
+                                                    }
+                                                }
+                                                
+                                                $badgeColor = $planName === 'Gratuit' ? 'secondary' : 'info';
+                                                ?>
+                                                <span class="badge bg-<?= $badgeColor ?>">
+                                                    <?= $planName ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <?php
+                                                $realStatus = $abo['subscription_status'];
+                                                $badgeClass = match($realStatus) {
+                                                    'Actif' => 'success',
+                                                    'Gratuit' => 'secondary',
+                                                    'Inactif' => 'danger',
+                                                    'Expiré' => 'warning',
+                                                    default => 'secondary'
+                                                };
+                                                ?>
+                                                <span class="badge bg-<?= $badgeClass ?>">
+                                                    <?= $realStatus ?>
+                                                </span>
+                                            </td>
+                                            <td><?= $abo['subscription_start_date'] ? date('d/m/Y', strtotime($abo['subscription_start_date'])) : '-' ?></td>
+                                            <td><?= $abo['subscription_end_date'] ? date('d/m/Y', strtotime($abo['subscription_end_date'])) : '-' ?></td>
+                                            <td>
+                                                <?php if ($realStatus === 'Actif' && $abo['days_remaining'] !== null): ?>
+                                                    <?php if ($abo['days_remaining'] <= 7): ?>
+                                                        <span class="text-danger fw-bold">
+                                                            <i class="bi bi-exclamation-triangle"></i> <?= $abo['days_remaining'] ?> jours
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <?= $abo['days_remaining'] ?> jours
+                                                    <?php endif; ?>
+                                                <?php elseif ($realStatus === 'Gratuit'): ?>
+                                                    <span class="text-muted">Illimité</span>
+                                                <?php else: ?>
+                                                    -
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <?php if ($realStatus === 'Gratuit' || $realStatus === 'Expiré'): ?>
+                                                        <button class="btn btn-success btn-action" 
+                                                                onclick="renouvelerGratuit(<?= $abo['id'] ?>)"
+                                                                title="Renouveler gratuit (1 an)">
+                                                            <i class="bi bi-arrow-clockwise"></i>
+                                                        </button>
+                                                        <button class="btn btn-primary btn-action" 
+                                                                onclick="activerPremium(<?= $abo['id'] ?>)"
+                                                                title="Activer premium">
+                                                            <i class="bi bi-star-fill"></i>
+                                                        </button>
+                                                    <?php elseif ($realStatus === 'Actif'): ?>
+                                                        <button class="btn btn-warning btn-action" 
+                                                                onclick="suspendreAbonnement(<?= $abo['id'] ?>)"
+                                                                title="Suspendre">
+                                                            <i class="bi bi-pause-circle"></i>
+                                                        </button>
+                                                        <button class="btn btn-info btn-action" 
+                                                                onclick="prolongerAbonnement(<?= $abo['id'] ?>)"
+                                                                title="Prolonger">
+                                                            <i class="bi bi-plus-circle"></i>
+                                                        </button>
+                                                    <?php elseif ($realStatus === 'Inactif'): ?>
+                                                        <button class="btn btn-success btn-action" 
+                                                                onclick="reactiverAbonnement(<?= $abo['id'] ?>)"
+                                                                title="Réactiver">
+                                                            <i class="bi bi-play-circle"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-credit-card-fill text-primary me-2"></i>
+                            Paiements récents
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <?php if (empty($recent_payments)): ?>
+                            <div class="text-center py-4">
+                                <i class="bi bi-inbox" style="font-size: 2rem; color: #ccc;"></i>
+                                <p class="text-muted mt-2">Aucun paiement</p>
+                            </div>
+                        <?php else: ?>
+                            <?php foreach ($recent_payments as $payment): ?>
+                                <div class="d-flex align-items-center p-3 border-bottom">
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold"><?= htmlspecialchars($payment['prenom'] . ' ' . $payment['nom']) ?></div>
+                                        <small class="text-muted">
+                                            <?= date('d/m H:i', strtotime($payment['created_at'])) ?>
+                                            <?php if ($payment['plan']): ?>
+                                                - <?= getStripeConfig($payment['plan'])['name'] ?? ucfirst($payment['plan']) ?>
+                                            <?php endif; ?>
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-success"><?= number_format($payment['montant'], 2) ?>€</div>
+                                        <span class="badge bg-<?= $payment['status'] === 'succeeded' ? 'success' : 'warning' ?>">
+                                            <?= ucfirst($payment['status']) ?>
+                                        </span>
+                                    </div>
+                                </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Détails Abonnement -->
-    <div class="modal fade" id="modalDetails" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header" style="background: var(--gradient-primary); color: white;">
-                    <h5 class="modal-title">
-                        <i class="bi bi-info-circle-fill me-2"></i>Détails de l'abonnement
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="detailsContent">
-                    <div class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Prolonger -->
-    <div class="modal fade" id="modalProlong" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header" style="background: var(--gradient-primary); color: white;">
-                    <h5 class="modal-title">
-                        <i class="bi bi-plus-circle-fill me-2"></i>Prolonger l'abonnement
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="formProlong">
-                    <div class="modal-body">
-                        <input type="hidden" id="abonnementIdProlong">
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Durée de prolongation</label>
-                            <select class="form-select" id="dureeProlongation" required>
-                                <option value="7">7 jours</option>
-                                <option value="15">15 jours</option>
-                                <option value="30" selected>1 mois (30 jours)</option>
-                                <option value="90">3 mois (90 jours)</option>
-                                <option value="365">1 an (365 jours)</option>
-                                <option value="custom">Personnalisé</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3" id="customDaysDiv" style="display:none;">
-                            <label class="form-label">Nombre de jours</label>
-                            <input type="number" class="form-control" id="customDays" min="1" max="3650">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Motif (optionnel)</label>
-                            <textarea class="form-control" id="motifProlongation" rows="2"
-                                      placeholder="Ex: Geste commercial, compensation panne..."></textarea>
-                        </div>
-                        
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> La date de fin sera automatiquement prolongée.
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check-circle"></i> Prolonger
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Résilier -->
-    <div class="modal fade" id="modalCancel" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-x-circle-fill me-2"></i>Résilier l'abonnement
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="formCancel">
-                    <div class="modal-body">
-                        <input type="hidden" id="abonnementIdCancel">
-                        
-                        <div class="alert alert-danger">
-                            <i class="bi bi-exclamation-triangle-fill"></i>
-                            <strong>Attention :</strong> Cette action est irréversible.
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Motif de résiliation <span class="text-danger">*</span></label>
-                            <select class="form-select" id="motifCancel" required>
-                                <option value="">-- Sélectionner --</option>
-                                <option value="demande_client">Demande du client</option>
-                                <option value="impaye">Impayé prolongé</option>
-                                <option value="fraude">Fraude détectée</option>
-                                <option value="violation_cgu">Violation CGU</option>
-                                <option value="autre">Autre</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Commentaire interne</label>
-                            <textarea class="form-control" id="commentaireCancel" rows="3"></textarea>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Type de résiliation</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="typeCancel" 
-                                       id="cancelImmediate" value="immediate" checked>
-                                <label class="form-check-label" for="cancelImmediate">
-                                    Immédiate (bloque accès maintenant)
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="typeCancel" 
-                                       id="cancelEndPeriod" value="end_period">
-                                <label class="form-check-label" for="cancelEndPeriod">
-                                    À la fin de la période payée
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-x-circle"></i> Confirmer la résiliation
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script src="<?= url('assets/js/admin-subscriptions.js') ?>"></script>
     <script>
-        AOS.init({ duration: 600, once: true });
+        function approveRequest(requestId) {
+            if (confirm('Approuver cette demande d\'abonnement ?')) {
+                fetch('<?= url('api/admin-subscriptions.php') ?>', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'approuver', id: requestId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Erreur: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur de communication avec le serveur');
+                });
+            }
+        }
+        
+        function rejectRequest(requestId) {
+            const motif = prompt('Motif du refus (optionnel):');
+            if (motif !== null) {
+                fetch('<?= url('api/admin-subscriptions.php') ?>', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'refuser', id: requestId, motif: motif || 'Demande refusée par l\'administrateur' })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Erreur: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur de communication avec le serveur');
+                });
+            }
+        }
+        
+        function renouvelerGratuit(userId) {
+            if (confirm('Renouveler l\'abonnement gratuit pour 1 an ?')) {
+                actionAbonnement('renouveler_gratuit', { user_id: userId });
+            }
+        }
+        
+        function activerPremium(userId) {
+            const plan = prompt('Plan premium (monthly/quarterly/yearly):', 'monthly');
+            const duree = prompt('Durée en mois:', '12');
+            
+            if (plan && duree) {
+                actionAbonnement('activer_premium', { 
+                    user_id: userId, 
+                    plan: plan, 
+                    duree: parseInt(duree) 
+                });
+            }
+        }
+        
+        function suspendreAbonnement(userId) {
+            const motif = prompt('Motif de la suspension:');
+            if (motif) {
+                actionAbonnement('suspendre_abonnement', { 
+                    user_id: userId, 
+                    motif: motif 
+                });
+            }
+        }
+        
+        function reactiverAbonnement(userId) {
+            if (confirm('Réactiver cet abonnement ?')) {
+                actionAbonnement('reactiver_abonnement', { user_id: userId });
+            }
+        }
+        
+        function prolongerAbonnement(userId) {
+            const duree = prompt('Prolonger de combien de mois ?', '1');
+            if (duree) {
+                actionAbonnement('prolonger_abonnement', { 
+                    user_id: userId, 
+                    duree: parseInt(duree) 
+                });
+            }
+        }
+        
+        function actionAbonnement(action, data) {
+            fetch('<?= url('api/admin-subscription-actions.php') ?>', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action, ...data })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Erreur: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur de communication avec le serveur');
+            });
+        }
     </script>
 </body>
 </html>

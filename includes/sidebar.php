@@ -336,9 +336,22 @@ function getCurrentBaseUrl($userType) {
 }
 
 function getPhotoUrl($photoPath) {
+    if (!$photoPath) {
+        return '/lulu/assets/images/default-avatar.png';
+    }
+    
     if (strpos($photoPath, 'http') === 0) {
         return $photoPath;
     }
+    
+    // Nettoyer les doublons de dossiers
+    $photoPath = str_replace('uploads/profiles/profiles/', 'uploads/profiles/', $photoPath);
+    $photoPath = str_replace('profiles/profiles/', 'uploads/profiles/', $photoPath);
+    
+    if (strpos($photoPath, 'uploads/') === 0) {
+        return '/lulu/' . $photoPath;
+    }
+    
     return '/lulu/uploads/profiles/' . $photoPath;
 }
 ?>

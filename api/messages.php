@@ -1,7 +1,6 @@
 <?php
 require_once '../config/config.php';
-require_once '../includes/middleware-admin.php';
-require_admin();
+require_once '../includes/middleware.php';
 require_once '../models/Message.php';
 
 header('Content-Type: application/json');
@@ -9,30 +8,31 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
-$action = $_GET['action'] ?? ($_POST['action'] ?? '');
+require_login();
 
+$action = $_GET['action'] ?? ($_POST['action'] ?? '');
 $messageModel = new Message();
-$adminId = $_SESSION['user_id'];
+$userId = $_SESSION['user_id'];
 
 try {
     switch ($action) {
         case 'get_conversation':
-            $userId = (int)($_GET['user_id'] ?? 0);
-            if (!$userId) {
+            $interlocutorId = (int)($_GET['user_id'] ?? 0);
+            if (!$interlocutorId) {
                 throw new Exception("ID utilisateur manquant");
             }
 
             $db = Database::getInstance()->getConnection();
             $stmt = $db->prepare("SELECT prenom, nom, photo_profil FROM utilisateurs WHERE id = ?");
-            $stmt->execute([$userId]);
+            $stmt->execute([$interlocutorId]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$user) {
                 throw new Exception("Utilisateur introuvable");
             }
 
-            $conversation = $messageModel->getConversation($adminId, $userId);
-            $messageModel->markAsRead($adminId, $userId);
+            $conversation = $messageModel->getConversation($userId, $interlocutorId);
+            $messageModel->markAsRead($userId, $interlocutorId);
 
             echo json_encode([
                 'success' => true,
@@ -43,7 +43,7 @@ try {
 
         case 'send_message':
             $destinataireId = (int)($_POST['destinataire_id'] ?? 0);
-            $sujet = trim($_POST['sujet'] ?? '');
+            $sujet = trim($_POST['sujet'] ?? 'Message');
             $contenu = trim($_POST['contenu'] ?? '');
 
             if (!$destinataireId || !$sujet || (!$contenu && !isset($_FILES['fichier']))) {
@@ -66,7 +66,7 @@ try {
                 }
             }
 
-            $messageId = $messageModel->send($adminId, $destinataireId, $sujet, $contenu, $fichierJoint);
+            $messageId = $messageModel->send($userId, $destinataireId, $sujet, $contenu, $fichierJoint);
 
             if ($messageId) {
                 echo json_encode([
@@ -85,8 +85,8 @@ try {
                 throw new Exception("ID message manquant");
             }
 
-            // Vérifier que l'admin peut supprimer ce message (seulement ses propres messages)
-            $result = $messageModel->deleteMessage($messageId, $adminId, true); // true = admin only
+            // Utilisateur ne peut supprimer que ses propres messages
+            $result = $messageModel->deleteMessage($messageId, $userId, false);
             if ($result) {
                 echo json_encode(['success' => true, 'message' => 'Message supprimé']);
             } else {
@@ -95,12 +95,12 @@ try {
             break;
 
         case 'delete_conversation':
-            $userId = (int)($_POST['user_id'] ?? 0);
-            if (!$userId) {
+            $interlocutorId = (int)($_POST['user_id'] ?? 0);
+            if (!$interlocutorId) {
                 throw new Exception("ID utilisateur manquant");
             }
 
-            $result = $messageModel->deleteConversation($adminId, $userId);
+            $result = $messageModel->deleteConversation($userId, $interlocutorId);
             if ($result) {
                 echo json_encode(['success' => true, 'message' => 'Conversation supprimée']);
             } else {
@@ -114,7 +114,7 @@ try {
                 throw new Exception("ID message manquant");
             }
 
-            $result = $messageModel->markMessageAsRead($messageId, $adminId);
+            $result = $messageModel->markMessageAsRead($messageId, $userId);
             echo json_encode(['success' => true]);
             break;
 
@@ -126,8 +126,7 @@ try {
     http_response_code(400);
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage(),
-        'error' => $e->getTraceAsString()
+        'message' => $e->getMessage()
     ]);
 }
 ?>

@@ -1,5 +1,6 @@
 {
     "require": {
-        "spatie/pdf-to-text": "^1.54"
+        "spatie/pdf-to-text": "^1.54",
+        "stripe/stripe-php": "^19.1"
     }
 }

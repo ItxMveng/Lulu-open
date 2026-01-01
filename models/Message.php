@@ -15,7 +15,7 @@ class Message {
     /**
      * Envoyer un message
      */
-    public function send($expediteurId, $destinataireId, $sujet, $contenu) {
+    public function send($expediteurId, $destinataireId, $sujet, $contenu, $fichierJoint = null) {
         // Validation stricte ID numérique
         if (!is_numeric($destinataireId) || $destinataireId <= 0) return false;
         
@@ -24,13 +24,13 @@ class Message {
         $stmt->execute([$destinataireId]);
         if (!$stmt->fetch()) return false;
         
-        if (empty(trim($contenu))) return false;
+        if (empty(trim($contenu)) && !$fichierJoint) return false;
         if (!$this->checkRateLimit($expediteurId, $destinataireId)) return false;
         
-        $sql = "INSERT INTO messages (expediteur_id, destinataire_id, sujet, contenu) VALUES (?, ?, ?, ?)";
+        $sql = "INSERT INTO messages (expediteur_id, destinataire_id, sujet, contenu, fichier_joint) VALUES (?, ?, ?, ?, ?)";
         try {
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([$expediteurId, $destinataireId, $sujet, $contenu]);
+            $stmt->execute([$expediteurId, $destinataireId, $sujet, $contenu, $fichierJoint]);
             $messageId = $this->db->lastInsertId();
             $this->createNotification($destinataireId, $expediteurId, $messageId);
             return $messageId;
@@ -74,7 +74,7 @@ class Message {
                 JOIN utilisateurs u ON u.id = m.expediteur_id
                 WHERE (m.expediteur_id = ? AND m.destinataire_id = ?)
                    OR (m.expediteur_id = ? AND m.destinataire_id = ?)
-                ORDER BY m.date_envoi DESC LIMIT ? OFFSET ?";
+                ORDER BY m.date_envoi ASC LIMIT ? OFFSET ?";
         
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$utilisateurId, $interlocuteurId, $interlocuteurId, $utilisateurId, $perPage, $offset]);
@@ -110,6 +110,43 @@ class Message {
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$expediteurId, $destinataireId]);
         return $stmt->fetchColumn() < 10;
+    }
+    
+    /**
+     * Supprimer un message
+     */
+    public function deleteMessage($messageId, $userId, $adminOnly = false) {
+        if ($adminOnly) {
+            // L'admin ne peut supprimer que ses propres messages
+            $sql = "DELETE FROM messages WHERE id = ? AND expediteur_id = ?";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([$messageId, $userId]);
+        } else {
+            // Utilisateur normal peut supprimer ses messages reçus ou envoyés
+            $sql = "DELETE FROM messages WHERE id = ? AND (expediteur_id = ? OR destinataire_id = ?)";
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([$messageId, $userId, $userId]);
+        }
+    }
+    
+    /**
+     * Supprimer une conversation complète
+     */
+    public function deleteConversation($userId1, $userId2) {
+        $sql = "DELETE FROM messages WHERE 
+                (expediteur_id = ? AND destinataire_id = ?) OR 
+                (expediteur_id = ? AND destinataire_id = ?)";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$userId1, $userId2, $userId2, $userId1]);
+    }
+    
+    /**
+     * Marquer un message spécifique comme lu
+     */
+    public function markMessageAsRead($messageId, $userId) {
+        $sql = "UPDATE messages SET lu = 1 WHERE id = ? AND destinataire_id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$messageId, $userId]);
     }
     
     /**

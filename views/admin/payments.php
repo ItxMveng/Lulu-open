@@ -1,74 +1,67 @@
 <?php
 require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/stripe.php';
 require_once __DIR__ . '/../../includes/middleware-admin.php';
 require_admin();
 
 // Filtres
-$statut_filter = $_GET['statut'] ?? 'valide';
-$methode_filter = $_GET['methode'] ?? '';
+$statut_filter = $_GET['statut'] ?? 'succeeded';
 $search = $_GET['search'] ?? '';
 $date_debut = $_GET['date_debut'] ?? date('Y-m-01');
 $date_fin = $_GET['date_fin'] ?? date('Y-m-d');
 
-// Requête avec filtres
-$db = Database::getInstance()->getConnection();
-$sql = "SELECT p.*, 
+$db = Database::getInstance();
+
+// Requête pour les paiements Stripe
+$sql = "SELECT ps.*, 
         CONCAT(u.prenom, ' ', u.nom) as nom_utilisateur, 
-        u.email, u.photo_profil,
-        pl.nom as plan_nom, 
-        a.id as abonnement_id
-        FROM paiements p
-        JOIN utilisateurs u ON p.utilisateur_id = u.id
-        LEFT JOIN abonnements a ON p.abonnement_id = a.id
-        LEFT JOIN plans_abonnement pl ON a.plan_id = pl.id
+        u.email, u.photo_profil
+        FROM paiements_stripe ps
+        JOIN utilisateurs u ON ps.utilisateur_id = u.id
         WHERE 1=1";
 $params = [];
 
 if ($statut_filter && $statut_filter !== 'tous') {
-    $sql .= " AND p.statut = ?";
+    $sql .= " AND ps.status = ?";
     $params[] = $statut_filter;
 }
-if ($methode_filter) {
-    $sql .= " AND p.methode_paiement = ?";
-    $params[] = $methode_filter;
-}
+
 if ($search) {
-    $sql .= " AND (u.prenom LIKE ? OR u.nom LIKE ? OR u.email LIKE ? OR p.transaction_id LIKE ?)";
+    $sql .= " AND (u.prenom LIKE ? OR u.nom LIKE ? OR u.email LIKE ? OR ps.stripe_session_id LIKE ?)";
     $searchTerm = "%$search%";
     $params[] = $searchTerm;
     $params[] = $searchTerm;
     $params[] = $searchTerm;
     $params[] = $searchTerm;
 }
+
 if ($date_debut) {
-    $sql .= " AND DATE(p.date_paiement) >= ?";
+    $sql .= " AND DATE(ps.created_at) >= ?";
     $params[] = $date_debut;
 }
+
 if ($date_fin) {
-    $sql .= " AND DATE(p.date_paiement) <= ?";
+    $sql .= " AND DATE(ps.created_at) <= ?";
     $params[] = $date_fin;
 }
 
-$sql .= " ORDER BY p.date_paiement DESC";
+$sql .= " ORDER BY ps.created_at DESC";
 
-$stmt = $db->prepare($sql);
-$stmt->execute($params);
-$paiements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$paiements = $db->fetchAll($sql, $params);
 
 // Statistiques
-$stmt = $db->prepare("
+$stats = $db->fetch("
     SELECT 
         COUNT(*) as total_transactions,
-        COALESCE(SUM(CASE WHEN statut = 'valide' THEN montant ELSE 0 END), 0) as revenus_valides,
-        COALESCE(SUM(CASE WHEN statut = 'rembourse' THEN montant ELSE 0 END), 0) as total_rembourses,
-        COALESCE(SUM(CASE WHEN statut = 'echoue' THEN 1 ELSE 0 END), 0) as total_echecs
-    FROM paiements
-    WHERE DATE(date_paiement) BETWEEN ? AND ?
-");
-$stmt->execute([$date_debut, $date_fin]);
-$stats = $stmt->fetch(PDO::FETCH_ASSOC);
+        COALESCE(SUM(CASE WHEN status = 'succeeded' THEN montant ELSE 0 END), 0) as revenus_valides,
+        COALESCE(SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END), 0) as total_echecs,
+        COALESCE(AVG(CASE WHEN status = 'succeeded' THEN montant ELSE NULL END), 0) as montant_moyen
+    FROM paiements_stripe
+    WHERE DATE(created_at) BETWEEN ? AND ?
+", [$date_debut, $date_fin]);
 
-$page_title = "Gestion Paiements - Admin LULU-OPEN";
+$page_title = "Paiements Stripe - Admin LULU-OPEN";
+?>
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -133,12 +126,12 @@ $page_title = "Gestion Paiements - Admin LULU-OPEN";
         </nav>
         
         <!-- En-tête + Stats -->
-        <div class="row mb-4" data-aos="fade-down">
+        <div class="row mb-4">
             <div class="col-md-6">
                 <h1 class="mb-2" style="color: var(--primary-dark); font-weight: 700;">
-                    <i class="bi bi-credit-card-fill me-2"></i>Gestion des Paiements
+                    <i class="bi bi-credit-card-fill me-2"></i>Paiements Stripe
                 </h1>
-                <p class="text-muted">Transactions et historique financier</p>
+                <p class="text-muted">Transactions et historique Stripe</p>
             </div>
             <div class="col-md-6">
                 <div class="row g-2">
@@ -156,8 +149,8 @@ $page_title = "Gestion Paiements - Admin LULU-OPEN";
                     </div>
                     <div class="col-md-3">
                         <div class="stat-mini-card">
-                            <small class="text-muted">Remboursés</small>
-                            <h4 class="mb-0 text-warning"><?= number_format($stats['total_rembourses'], 2) ?>€</h4>
+                            <small class="text-muted">Montant moyen</small>
+                            <h4 class="mb-0 text-info"><?= number_format($stats['montant_moyen'], 2) ?>€</h4>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -171,35 +164,22 @@ $page_title = "Gestion Paiements - Admin LULU-OPEN";
         </div>
         
         <!-- Filtres -->
-        <div class="card-custom mb-4" data-aos="fade-up">
+        <div class="card mb-4">
             <div class="card-body">
                 <form method="GET" class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label">Rechercher</label>
                         <input type="text" name="search" class="form-control" 
-                               placeholder="Nom, email, transaction ID..." value="<?= htmlspecialchars($search) ?>">
+                               placeholder="Nom, email, session ID..." value="<?= htmlspecialchars($search) ?>">
                     </div>
                     
                     <div class="col-md-2">
                         <label class="form-label">Statut</label>
                         <select name="statut" class="form-select">
-                            <option value="valide" <?= $statut_filter === 'valide' ? 'selected' : '' ?>>Validés</option>
-                            <option value="en_attente" <?= $statut_filter === 'en_attente' ? 'selected' : '' ?>>En attente</option>
-                            <option value="echoue" <?= $statut_filter === 'echoue' ? 'selected' : '' ?>>Échoués</option>
-                            <option value="rembourse" <?= $statut_filter === 'rembourse' ? 'selected' : '' ?>>Remboursés</option>
-                            <option value="annule" <?= $statut_filter === 'annule' ? 'selected' : '' ?>>Annulés</option>
+                            <option value="succeeded" <?= $statut_filter === 'succeeded' ? 'selected' : '' ?>>Réussis</option>
+                            <option value="pending" <?= $statut_filter === 'pending' ? 'selected' : '' ?>>En attente</option>
+                            <option value="failed" <?= $statut_filter === 'failed' ? 'selected' : '' ?>>Échoués</option>
                             <option value="tous" <?= $statut_filter === 'tous' ? 'selected' : '' ?>>Tous</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-2">
-                        <label class="form-label">Méthode</label>
-                        <select name="methode" class="form-select">
-                            <option value="">Toutes</option>
-                            <option value="stripe" <?= $methode_filter === 'stripe' ? 'selected' : '' ?>>Stripe</option>
-                            <option value="paypal" <?= $methode_filter === 'paypal' ? 'selected' : '' ?>>PayPal</option>
-                            <option value="virement" <?= $methode_filter === 'virement' ? 'selected' : '' ?>>Virement</option>
-                            <option value="autre" <?= $methode_filter === 'autre' ? 'selected' : '' ?>>Autre</option>
                         </select>
                     </div>
                     
@@ -213,49 +193,35 @@ $page_title = "Gestion Paiements - Admin LULU-OPEN";
                         <input type="date" name="date_fin" class="form-control" value="<?= $date_fin ?>">
                     </div>
                     
-                    <div class="col-md-1 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary-custom w-100">
-                            <i class="bi bi-search"></i>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Filtrer
                         </button>
                     </div>
                 </form>
-                
-                <div class="d-flex gap-2 mt-3">
-                    <a href="<?= url('views/admin/payments.php') ?>" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-x-circle"></i> Réinitialiser
-                    </a>
-                    <button onclick="exportCSV()" class="btn btn-outline-success btn-sm">
-                        <i class="bi bi-download"></i> Export CSV
-                    </button>
-                    <button onclick="printReport()" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-printer"></i> Imprimer
-                    </button>
-                </div>
             </div>
         </div>
         
         <!-- Tableau paiements -->
-        <div class="card-custom" data-aos="fade-up" data-aos-delay="100">
+        <div class="card">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
-                    <thead style="background: var(--gradient-primary); color: white;">
+                    <thead class="table-dark">
                         <tr>
                             <th>ID</th>
                             <th>Date</th>
                             <th>Utilisateur</th>
                             <th>Plan</th>
                             <th>Montant</th>
-                            <th>Méthode</th>
                             <th>Statut</th>
-                            <th>Transaction</th>
-                            <th>Actions</th>
+                            <th>Session Stripe</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($paiements)): ?>
                             <tr>
-                                <td colspan="9" class="text-center py-5">
-                                    <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+                                <td colspan="7" class="text-center py-5">
+                                    <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
                                     <p class="text-muted mt-3">Aucun paiement trouvé</p>
                                 </td>
                             </tr>
@@ -265,32 +231,15 @@ $page_title = "Gestion Paiements - Admin LULU-OPEN";
                                     <td class="fw-bold">#<?= $paiement['id'] ?></td>
                                     
                                     <td>
-                                        <?= date('d/m/Y', strtotime($paiement['date_paiement'])) ?>
-                                        <br><small class="text-muted"><?= date('H:i', strtotime($paiement['date_paiement'])) ?></small>
+                                        <?= date('d/m/Y', strtotime($paiement['created_at'])) ?>
+                                        <br><small class="text-muted"><?= date('H:i', strtotime($paiement['created_at'])) ?></small>
                                     </td>
                                     
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <?php
-                                            $photo = $paiement['photo_profil'] ?? null;
-                                            if ($photo) {
-                                                if (strpos($photo, 'http') === 0) {
-                                                    $photoUrl = $photo;
-                                                } elseif (strpos($photo, 'uploads/') === 0) {
-                                                    $photoUrl = url($photo);
-                                                } elseif (strpos($photo, 'profiles/') === 0) {
-                                                    $photoUrl = url('uploads/' . $photo);
-                                                } else {
-                                                    $photoUrl = url('uploads/profiles/' . $photo);
-                                                }
-                                            } else {
-                                                $photoUrl = url('assets/images/default-avatar.png');
-                                            }
-                                            ?>
-                                            <img src="<?= $photoUrl ?>" 
+                                            <img src="<?= url('assets/images/default-avatar.png') ?>" 
                                                  class="rounded-circle me-2"
-                                                 style="width: 35px; height: 35px; object-fit: cover;"
-                                                 onerror="this.src='<?= url('assets/images/default-avatar.png') ?>'">
+                                                 style="width: 32px; height: 32px; object-fit: cover;">
                                             <div>
                                                 <strong><?= htmlspecialchars($paiement['nom_utilisateur']) ?></strong>
                                                 <br><small class="text-muted"><?= htmlspecialchars($paiement['email']) ?></small>
@@ -298,77 +247,40 @@ $page_title = "Gestion Paiements - Admin LULU-OPEN";
                                         </div>
                                     </td>
                                     
-                                    <td><?= htmlspecialchars($paiement['plan_nom'] ?? 'N/A') ?></td>
-                                    
-                                    <td class="fw-bold" style="color: <?= $paiement['statut'] === 'rembourse' ? '#dc3545' : '#28a745' ?>;">
-                                        <?= $paiement['statut'] === 'rembourse' ? '-' : '' ?><?= number_format($paiement['montant'], 2) ?>€
-                                    </td>
-                                    
                                     <td>
-                                        <?php
-                                        $methodeIcon = match($paiement['methode_paiement']) {
-                                            'stripe' => 'bi-credit-card',
-                                            'paypal' => 'bi-paypal',
-                                            'virement' => 'bi-bank',
-                                            default => 'bi-cash'
-                                        };
+                                        <?php 
+                                        $planConfig = getStripeConfig($paiement['plan']);
                                         ?>
-                                        <i class="bi <?= $methodeIcon ?> me-1"></i>
-                                        <?= ucfirst($paiement['methode_paiement']) ?>
+                                        <span class="badge bg-info">
+                                            <?= $planConfig ? $planConfig['name'] : ucfirst($paiement['plan']) ?>
+                                        </span>
+                                        <?php if ($planConfig): ?>
+                                        <br><small class="text-muted"><?= $planConfig['description'] ?></small>
+                                        <?php endif; ?>
+                                    </td>
+                                    
+                                    <td class="fw-bold text-success">
+                                        <?= number_format($paiement['montant'], 2) ?>€
                                     </td>
                                     
                                     <td>
                                         <?php
-                                        $badgeClass = match($paiement['statut']) {
-                                            'valide' => 'success',
-                                            'en_attente' => 'warning',
-                                            'echoue' => 'danger',
-                                            'rembourse' => 'info',
-                                            'annule' => 'dark',
+                                        $badgeClass = match($paiement['status']) {
+                                            'succeeded' => 'success',
+                                            'pending' => 'warning',
+                                            'failed' => 'danger',
                                             default => 'secondary'
                                         };
                                         ?>
                                         <span class="badge bg-<?= $badgeClass ?>">
-                                            <?= ucfirst($paiement['statut']) ?>
+                                            <?= ucfirst($paiement['status']) ?>
                                         </span>
                                     </td>
                                     
                                     <td>
                                         <small class="text-muted font-monospace">
-                                            <?= $paiement['transaction_id'] ? substr($paiement['transaction_id'], 0, 15) . '...' : '-' ?>
+                                            <?= $paiement['stripe_session_id'] ? substr($paiement['stripe_session_id'], 0, 20) . '...' : '-' ?>
                                         </small>
-                                    </td>
-                                    
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-outline-primary btn-action" 
-                                                    onclick="showDetails(<?= $paiement['id'] ?>)"
-                                                    title="Détails">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            
-                                            <button class="btn btn-outline-secondary btn-action" 
-                                                    onclick="downloadInvoice(<?= $paiement['id'] ?>)"
-                                                    title="Facture PDF">
-                                                <i class="bi bi-file-pdf"></i>
-                                            </button>
-                                            
-                                            <?php if ($paiement['statut'] === 'en_attente'): ?>
-                                                <button class="btn btn-outline-success btn-action" 
-                                                        onclick="validatePayment(<?= $paiement['id'] ?>)"
-                                                        title="Valider">
-                                                    <i class="bi bi-check-circle"></i>
-                                                </button>
-                                            <?php endif; ?>
-                                            
-                                            <?php if ($paiement['statut'] === 'valide' && empty($paiement['date_remboursement'])): ?>
-                                                <button class="btn btn-outline-danger btn-action" 
-                                                        onclick="openRefundModal(<?= $paiement['id'] ?>, <?= $paiement['montant'] ?>)"
-                                                        title="Rembourser">
-                                                    <i class="bi bi-arrow-counterclockwise"></i>
-                                                </button>
-                                            <?php endif; ?>
-                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -376,14 +288,6 @@ $page_title = "Gestion Paiements - Admin LULU-OPEN";
                     </tbody>
                 </table>
             </div>
-            
-            <?php if (count($paiements) > 0): ?>
-                <div class="card-footer bg-white text-center">
-                    <small class="text-muted">
-                        Affichage de <?= count($paiements) ?> transaction(s)
-                    </small>
-                </div>
-            <?php endif; ?>
         </div>
     </div>
 

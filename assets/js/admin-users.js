@@ -28,6 +28,11 @@ async function showUserDetails(userId) {
             body: JSON.stringify({ action: 'details', id: userId })
         });
         const data = await res.json();
+        
+        // Debug complet de la réponse
+        console.log('Réponse API complète:', data);
+        console.log('Catégories reçues:', data.categories);
+        console.log('Nombre de catégories:', data.categories ? data.categories.length : 'undefined');
 
         if (!data.success) {
             content.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
@@ -75,8 +80,9 @@ async function showUserDetails(userId) {
                 <div class="col-md-12 mb-3">
                     <h6 class="text-muted mb-2"><i class="bi bi-tags"></i> Catégories</h6>
                     <div class="d-flex flex-wrap gap-2">
-                        ${u.categories && u.categories.length > 0 ? u.categories.map(cat => `<span class="badge" style="background-color: ${cat.couleur}; color: white;">${cat.icone} ${cat.nom}</span>`).join('') : '<small class="text-muted">Aucune catégorie</small>'}
+                        ${data.categories && data.categories.length > 0 ? data.categories.map(cat => `<span class="badge" style="background-color: ${cat.couleur || '#0099FF'}; color: white;">${cat.icone || '📂'} ${cat.nom}</span>`).join('') : '<small class="text-muted">Aucune catégorie</small>'}
                     </div>
+                    <small class="text-muted">Debug: ${data.debug_categories_count || 0} catégories trouvées</small>
                 </div>
                 <div class="col-md-12 mb-3">
                     <h6 class="text-muted mb-2"><i class="bi bi-activity"></i> Activité</h6>

@@ -3,12 +3,13 @@ ob_start();
 session_start();
 require_once '../../config/config.php';
 require_once '../../includes/functions.php';
+if (file_exists('../../vendor/autoload.php')) {
+    require_once '../../vendor/autoload.php';
+}
 require_once '../../includes/sidebar.php';
 require_once '../../includes/ai/IAProvider.php';
 require_once '../../includes/ai/CvUtils.php';
-if (file_exists('../../includes/ai/SimplePdfExtractor.php')) {
-    require_once '../../includes/ai/SimplePdfExtractor.php';
-}
+require_once '../../includes/ai/ImageOcrExtractor.php';
 
 function scrapeLinkContent($url) {
     if (!filter_var($url, FILTER_VALIDATE_URL)) {
@@ -21,15 +22,10 @@ function scrapeLinkContent($url) {
             CURLOPT_URL => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_ENCODING => "", // Gère automatiquement gzip/deflate
             CURLOPT_TIMEOUT => 15,
             CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_HTTPHEADER => [
-                'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language: fr-FR,fr;q=0.5',
-                'Accept-Encoding: gzip, deflate',
-                'Connection: keep-alive'
-            ]
         ]);
 
         $html = curl_exec($ch);
@@ -41,25 +37,32 @@ function scrapeLinkContent($url) {
             return null;
         }
 
-        // Extraction intelligente du contenu
-        $text = strip_tags($html);
+        // Use DOMDocument for robust parsing
+        $doc = new DOMDocument();
+        libxml_use_internal_errors(true); // Suppress warnings from malformed HTML
+        $doc->loadHTML('<?xml encoding="UTF-8">' . $html);
+        libxml_clear_errors();
+        $xpath = new DOMXPath($doc);
+
+        // Remove script, style, and common noise tags
+        foreach ($xpath->query('//script|//style|//nav|//header|//footer|//aside|//form') as $node) {
+            $node->parentNode->removeChild($node);
+        }
+
+        // Try to find the main content area, more specific first
+        $mainNode = $xpath->query('//main | //article | //div[contains(@id, "description")] | //div[contains(@class, "job-description")] | //div[contains(@id, "content")]')->item(0);
+
+        // If we found a main node, use its text content, otherwise use the whole body
+        $bodyNode = $mainNode ?: $xpath->query('//body')->item(0);
+
+        $text = $bodyNode ? $bodyNode->textContent : strip_tags($html);
+
+        // Final cleaning
         $text = preg_replace('/\s+/', ' ', $text);
         $text = trim($text);
 
-        // Rechercher des sections spécifiques d'offre d'emploi
-        $keywords = ['mission', 'profil', 'compétences', 'expérience', 'formation', 'salaire', 'contrat'];
-        $relevantText = '';
-
-        foreach ($keywords as $keyword) {
-            if (preg_match('/(.{0,200}' . preg_quote($keyword, '/') . '.{0,500})/i', $text, $matches)) {
-                $relevantText .= $matches[0] . ' ';
-            }
-        }
-
-        $finalText = !empty($relevantText) ? $relevantText : substr($text, 0, 2000);
-
-        error_log("SCRAPING SUCCESS: $url - " . strlen($finalText) . " chars");
-        return strlen($finalText) > 100 ? $finalText : null;
+        error_log("SCRAPING SUCCESS: $url - " . strlen($text) . " chars");
+        return strlen($text) > 100 ? $text : null;
 
     } catch (Exception $e) {
         error_log("SCRAPING ERROR: $url - " . $e->getMessage());
@@ -68,38 +71,47 @@ function scrapeLinkContent($url) {
 }
 
 function extractCvSummary($cvText, $cvData) {
-    if (!empty($cvData['titre_poste_recherche'])) {
-        return $cvData['titre_poste_recherche'] . ' - ' . ($cvData['niveau_experience'] ?? 'Niveau non spécifié');
+    // Priorité absolue au texte extrait du PDF
+    // Recherche d'un titre de poste commun en début de CV
+    $firstLines = substr($cvText, 0, 500);
+    if (preg_match('/(?:développeur|ingénieur|chef|manager|consultant|analyste|pâtissier|cuisinier|technicien|assistant|directeur|responsable)\s+[a-zà-ÿ0-9\s\-\&]+/i', $firstLines, $matches)) {
+        return trim($matches[0]);
     }
     
-    // Extraction basique du titre depuis le texte CV
-    if (preg_match('/(?:développeur|ingénieur|chef|manager|consultant|analyste)\s+\w+/i', $cvText, $matches)) {
-        return $matches[0];
+    if (!empty($cvData['titre_poste_recherche'])) {
+        return $cvData['titre_poste_recherche'] . ' - ' . ($cvData['niveau_experience'] ?? 'Niveau non spécifié');
     }
     
     return 'Profil professionnel';
 }
 
 function extractCvExperience($cvText, $cvData) {
+    // Essayer de trouver la durée d'expérience dans le texte
+    if (preg_match('/(\d+)\s+ans?\s+d[\'\']expérience/i', $cvText, $matches)) {
+        return $matches[1] . ' ans d\'expérience';
+    }
+    
     if (!empty($cvData['experiences_professionnelles'])) {
         $exp = explode('---', $cvData['experiences_professionnelles'])[0];
         $lines = explode("\n", $exp);
         return implode(' - ', array_slice($lines, 0, 2));
     }
     
-    // Extraction depuis le texte
-    if (preg_match('/(\d+)\s+ans?\s+d[\'\']expérience/i', $cvText, $matches)) {
-        return $matches[1] . ' ans d\'expérience';
-    }
-    
     return 'Expérience variée';
 }
 
 function extractCvSkills($cvText, $cvData) {
+    // Si le texte est riche, on ne se fie pas à la BDD en premier
+    // Mais l'extraction de compétences par regex est complexe, on garde la BDD en fallback
+    // L'IA fera le vrai travail d'extraction
+    
     if (!empty($cvData['competences'])) {
         $skills = explode(',', $cvData['competences']);
         return implode(', ', array_slice($skills, 0, 3));
     }
+    
+    // Fallback texte
+    if (strlen($cvText) > 100) return 'Compétences du CV';
     
     return 'Compétences techniques';
 }
@@ -129,6 +141,11 @@ function extractJobSkills($jobText) {
     }
     
     return !empty($skills) ? implode(', ', array_slice($skills, 0, 3)) : 'Compétences spécifiques';
+}
+
+function stripEmojis($text) {
+    // Supprime les caractères 4 octets (emojis) pour compatibilité MySQL utf8mb3
+    return $text ? preg_replace('/[\x{10000}-\x{10FFFF}]/u', '', $text) : $text;
 }
 
 if (!isLoggedIn() || !in_array($_SESSION['user_type'], ['candidat', 'prestataire_candidat'])) {
@@ -164,10 +181,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     if ($action === 'add_candidature') {
-        $entreprise = $_POST['entreprise'];
-        $poste = $_POST['poste'];
+        $entreprise = stripEmojis($_POST['entreprise']);
+        $poste = stripEmojis($_POST['poste']);
         $type_candidature = $_POST['type_candidature'];
-        $contenu = $_POST['contenu'] ?? '';
+        $contenu = stripEmojis($_POST['contenu'] ?? '');
         $lien_offre = $_POST['lien_offre'] ?? '';
         
         // Gestion du fichier
@@ -196,10 +213,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // MODIFIER CANDIDATURE
     if ($action === 'edit_candidature') {
         $id = $_POST['candidature_id'];
-        $entreprise = $_POST['entreprise'];
-        $poste = $_POST['poste'];
+        $entreprise = stripEmojis($_POST['entreprise']);
+        $poste = stripEmojis($_POST['poste']);
         $type_candidature = $_POST['type_candidature'];
-        $contenu = $_POST['contenu'] ?? '';
+        $contenu = stripEmojis($_POST['contenu'] ?? '');
         $lien_offre = $_POST['lien_offre'] ?? '';
         $statut = $_POST['statut'];
         
@@ -288,52 +305,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             
-            // 3. Extraire texte du CV PDF - PRIORITÉ AU PDF
+            // 3. Extraire texte du CV PDF avec validation robuste
             $cvFilePath = '../../uploads/cv/' . $cvData['cv_file'];
-            $pdfText = '';
             
-            try {
-                if (file_exists($cvFilePath)) {
-                    if (class_exists('SimplePdfExtractor')) {
-                        $pdfText = SimplePdfExtractor::extractText($cvFilePath);
-                    } elseif (class_exists('Spatie\PdfToText\Pdf')) {
-                        try {
-                            $pdfText = \Spatie\PdfToText\Pdf::getText($cvFilePath);
-                        } catch (Exception $e) {
-                            error_log("Spatie PDF Error: " . $e->getMessage());
-                        }
-                    }
+            // Essayer plusieurs méthodes d'extraction
+            $cvText = null;
+            
+            // Méthode 1: SimplePdfExtractor amélioré
+            if (class_exists('SimplePdfExtractor')) {
+                $cvText = SimplePdfExtractor::extractText($cvFilePath);
+            }
+            
+            // Méthode 2: Spatie PDF (si disponible)
+            if (!$cvText && class_exists('Spatie\PdfToText\Pdf')) {
+                try {
+                    $cvText = \Spatie\PdfToText\Pdf::getText($cvFilePath);
+                } catch (Exception $e) {
+                    error_log("Spatie PDF failed: " . $e->getMessage());
                 }
-            } catch (Throwable $e) {
-                error_log("PDF Extraction Failed: " . $e->getMessage());
             }
             
-            if ($pdfText && strlen(trim($pdfText)) > 50) {
-                $cvText = $pdfText;
+            // Méthode 3: Fallback base de données
+            if (!$cvText || strlen(trim($cvText)) < 100) {
+                $cvText = CvUtils::combineCvSources(null, $cvData);
+                if (strlen(trim($cvText)) < 100) {
+                    echo json_encode(['success' => false, 'error' => 'CV insuffisant. Veuillez compléter votre profil avec plus d\'informations ou utiliser un PDF avec texte sélectionnable.']);
+                    exit;
+                }
+                error_log("Using database CV data: " . strlen($cvText) . " chars");
             } else {
-                echo json_encode(['success' => false, 'error' => 'Impossible de lire le contenu du PDF. Assurez-vous que le fichier contient du texte sélectionnable (pas une image scannée).']);
-                exit;
+                error_log("PDF extraction success: " . strlen($cvText) . " chars");
             }
-            
-            // 4. Construire jobText depuis la candidature spécifique
+            // 4. Construire jobText depuis la candidature spécifique avec nettoyage
             $jobParts = [];
             if (!empty($candidature['contenu'])) {
                 $jobParts[] = "Description fournie :\n" . $candidature['contenu'];
             }
             if (!empty($candidature['lien_offre'])) {
                 $scrapedContent = scrapeLinkContent($candidature['lien_offre']);
-                if ($scrapedContent && strlen($scrapedContent) > 200) {
+                if ($scrapedContent && strlen($scrapedContent) > 300) {
                     $jobParts[] = "Contenu extrait du lien :\n" . $scrapedContent;
                     error_log("SCRAPING SUCCESS: " . strlen($scrapedContent) . " chars");
                 } else {
-                    $jobParts[] = "Lien de l'offre (contenu non accessible) :\n" . $candidature['lien_offre'];
-                    error_log("SCRAPING FAILED for: " . $candidature['lien_offre']);
+                    // ERREUR STRICTE POUR LE LIEN
+                    echo json_encode(['success' => false, 'error' => 'Impossible de lire le contenu de l\'offre via le lien (protection anti-robot ou site sécurisé). Veuillez copier-coller la description du poste dans le champ "Description textuelle" de la candidature.']);
+                    exit;
                 }
             }
             if (!empty($candidature['fichier_offre'])) {
                 $offreFilePath = '../../uploads/offres/' . $candidature['fichier_offre'];
                 $offreText = CvUtils::extractTextFromPdfOrDoc($offreFilePath);
-                if ($offreText && strlen($offreText) >= 200) {
+                
+                // Gestion spéciale pour les images
+                if (!$offreText && in_array(strtolower(pathinfo($offreFilePath, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif'])) {
+                    $offreText = ImageOcrExtractor::extractTextFromImage($offreFilePath);
+                }
+                
+                // Vérification et réparation du texte de l'offre si nécessaire
+                if ($offreText && strlen($offreText) > 100) {
+                    $cleanOffre = trim($offreText);
+                    // Détection de garbage (ratio alphanumérique faible ou trop de caractères isolés)
+                    $alphaNum = preg_replace('/[^a-zA-Z0-9\p{L}]/u', '', $cleanOffre);
+                    $ratio = strlen($cleanOffre) > 0 ? strlen($alphaNum) / strlen($cleanOffre) : 0;
+                    
+                    if ($ratio < 0.4 || preg_match_all('/\b\w\b/', substr($cleanOffre, 0, 500)) > 20) {
+                        error_log("OFFRE TEXTE CASSÉ DÉTECTÉ - Réparation nécessaire");
+                        // Nettoyage basique au lieu de repairText
+                        $cleanOffre = preg_replace('/[^\w\s\p{L}\p{P}]/u', ' ', $cleanOffre);
+                        $cleanOffre = preg_replace('/\s+/', ' ', $cleanOffre);
+                        $offreText = trim($cleanOffre);
+                    }
+                    
                     $jobParts[] = "Texte extrait de l'offre jointe :\n" . $offreText;
                 } elseif ($offreText) {
                     echo json_encode(['success' => false, 'error' => 'Le fichier de l\'offre ne contient pas assez de texte lisible. Merci de coller la description dans le champ texte.']);
@@ -349,8 +391,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             
-            if (empty(trim($jobText)) || strlen(trim($jobText)) < 100) {
-                echo json_encode(['success' => false, 'error' => 'Veuillez fournir une description d\'offre plus détaillée (minimum 100 caractères).']);
+            if (empty(trim($jobText)) || strlen(trim($jobText)) < 50) {
+                echo json_encode(['success' => false, 'error' => 'Veuillez fournir une description d\'offre plus détaillée (minimum 50 caractères).']);
                 exit;
             }
             
@@ -398,14 +440,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $analysis['debug_job_snippet'] = substr($jobText, 0, 300);
             
             // Extraire des informations du CV pour l'affichage
-            $analysis['cv_summary'] = extractCvSummary($cvText, $cvData);
-            $analysis['cv_experience'] = extractCvExperience($cvText, $cvData);
-            $analysis['cv_skills'] = extractCvSkills($cvText, $cvData);
+            // UTILISATION PRIORITAIRE DES DONNÉES EXTRAITES PAR L'IA
+            $analysis['cv_summary'] = $analysis['cv_parsing']['title'] ?? 'Non extrait par l\'IA';
+            $analysis['cv_experience'] = $analysis['cv_parsing']['experience'] ?? 'Non extrait par l\'IA';
+            $analysis['cv_skills'] = $analysis['cv_parsing']['skills'] ?? 'Non extrait par l\'IA';
             
             // Extraire des informations de l'offre
-            $analysis['job_requirements'] = extractJobRequirements($jobText);
-            $analysis['job_experience'] = extractJobExperience($jobText);
-            $analysis['job_skills'] = extractJobSkills($jobText);
+            $analysis['job_requirements'] = $analysis['job_parsing']['title'] ?? 'Non extrait par l\'IA';
+            $analysis['job_experience'] = $analysis['job_parsing']['experience'] ?? 'Non extrait par l\'IA';
+            $analysis['job_skills'] = $analysis['job_parsing']['skills'] ?? 'Non extrait par l\'IA';
             
             // 6. Sauvegarder en BDD avec ID unique
             $database->query(
@@ -415,7 +458,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             error_log("ANALYSE SAVED for candidature $candidatureId - Score: " . $analysis['score']);
             
-            echo json_encode(['success' => true, 'analysis' => $analysis]);
+            $jsonOutput = json_encode(['success' => true, 'analysis' => $analysis], JSON_INVALID_UTF8_SUBSTITUTE);
+            if ($jsonOutput === false) {
+                echo json_encode(['success' => false, 'error' => 'Erreur encodage JSON: ' . json_last_error_msg()]);
+            } else {
+                echo $jsonOutput;
+            }
             exit;
             
         } catch (Throwable $e) {
@@ -445,30 +493,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             
-            // 2. Extraire texte CV
+            // 2. Extraire texte CV avec méthodes multiples
             $cvFilePath = '../../uploads/cv/' . $cvData['cv_file'];
-            $pdfText = '';
-            try {
-                if (file_exists($cvFilePath)) {
-                    if (class_exists('SimplePdfExtractor')) {
-                        $pdfText = SimplePdfExtractor::extractText($cvFilePath);
-                    } elseif (class_exists('Spatie\PdfToText\Pdf')) {
-                        try {
-                            $pdfText = \Spatie\PdfToText\Pdf::getText($cvFilePath);
-                        } catch (Exception $e) {
-                            error_log("Spatie PDF Error: " . $e->getMessage());
-                        }
-                    }
-                }
-            } catch (Throwable $e) {
-                error_log("CV Gen PDF Error: " . $e->getMessage());
+            $cvText = null;
+            
+            // Essayer extraction PDF
+            if (class_exists('SimplePdfExtractor')) {
+                $cvText = SimplePdfExtractor::extractText($cvFilePath);
             }
             
-            if ($pdfText && strlen(trim($pdfText)) > 50) {
-                $cvText = $pdfText;
-            } else {
-                echo json_encode(['success' => false, 'error' => 'Impossible de lire le contenu du PDF pour générer le CV. Le fichier doit contenir du texte sélectionnable.']);
-                exit;
+            // Fallback Spatie
+            if (!$cvText && class_exists('Spatie\PdfToText\Pdf')) {
+                try {
+                    $cvText = \Spatie\PdfToText\Pdf::getText($cvFilePath);
+                } catch (Exception $e) {
+                    error_log("Spatie error: " . $e->getMessage());
+                }
+            }
+            
+            // Fallback base de données
+            if (!$cvText || strlen(trim($cvText)) < 100) {
+                $cvText = CvUtils::combineCvSources(null, $cvData);
+                if (strlen(trim($cvText)) < 50) {
+                    echo json_encode(['success' => false, 'error' => 'CV insuffisant pour génération']);
+                    exit;
+                }
             }
             
             // 3. Construire jobText spécifique à la candidature
@@ -477,17 +526,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $candidature = $database->fetch("SELECT * FROM candidatures WHERE id = ? AND utilisateur_id = ?", [$candidatureId, $_SESSION['user_id']]);
                 if ($candidature) {
                     $jobParts = [];
-                    if (!empty($candidature['contenu'])) $jobParts[] = $candidature['contenu'];
+                    if (!empty($candidature['contenu'])) {
+                        $jobParts[] = "Description fournie :\n" . $candidature['contenu'];
+                    }
                     if (!empty($candidature['lien_offre'])) {
                         $scrapedContent = scrapeLinkContent($candidature['lien_offre']);
                         if ($scrapedContent) {
-                            $jobParts[] = $scrapedContent;
-                        } else {
-                            $jobParts[] = "Offre: " . $candidature['lien_offre'];
+                            $jobParts[] = "Contenu extrait du lien :\n" . $scrapedContent;
                         }
                     }
+                    if (!empty($candidature['fichier_offre'])) {
+                        $offreFilePath = '../../uploads/offres/' . $candidature['fichier_offre'];
+                        $offreText = CvUtils::extractTextFromPdfOrDoc($offreFilePath);
+                        if ($offreText) $jobParts[] = "Texte extrait de l'offre jointe :\n" . $offreText;
+                    }
+                    
                     if (!empty($jobParts)) {
-                        $jobText = implode("\n", $jobParts);
+                        $jobText = implode("\n\n", $jobParts);
                     }
                 }
             }
@@ -534,7 +589,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'cv' => $cvData
                     ]);
                     
-                    echo json_encode(['success' => true, 'html' => $html, 'template_id' => $templateId]);
+                    $jsonOutput = json_encode(['success' => true, 'html' => $html, 'template_id' => $templateId], JSON_INVALID_UTF8_SUBSTITUTE);
+                    if ($jsonOutput === false) {
+                        echo json_encode(['success' => false, 'error' => 'Erreur encodage JSON CV']);
+                    } else {
+                        echo $jsonOutput;
+                    }
                     exit;
                 } else {
                     echo json_encode(['success' => false, 'error' => "Fonction $renderFunction non trouvée"]);
@@ -578,8 +638,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
             
-            // 2. Récupérer CV
+            // 2. Récupérer CV avec extraction flexible
             $cvData = CvUtils::getCvDataFromDatabase($_SESSION['user_id'], $database);
+            if (!$cvData) {
+                echo json_encode(['success' => false, 'error' => 'Profil CV non trouvé']);
+                exit;
+            }
+            
+            $cvText = '';
+            if (!empty($cvData['cv_file'])) {
+                $cvFilePath = '../../uploads/cv/' . $cvData['cv_file'];
+                if (file_exists($cvFilePath) && class_exists('SimplePdfExtractor')) {
+                    $cvText = SimplePdfExtractor::extractText($cvFilePath);
+                }
+            }
+            
+            // Fallback sur les données de profil
+            if (!$cvText || strlen(trim($cvText)) < 50) {
+                $cvText = CvUtils::combineCvSources(null, $cvData);
+            }
             
             // 3. Construire jobData spécifique
             $jobParts = [];
@@ -601,7 +678,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             session_write_close();
             
             // 4. Génération contenu unique
-            $letterContent = IAProvider::generateCoverLetter($cvData, $jobData, $style);
+            $letterContent = IAProvider::generateCoverLetter($cvText, $cvData, $jobData, $style);
             
             // 5. Rendu template
             $templateFile = "templates/letter-template-$templateId.php";
@@ -616,7 +693,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'job' => $jobData
                     ]);
                     
-                    echo json_encode(['success' => true, 'html' => $html, 'template_id' => $templateId]);
+                    $jsonOutput = json_encode(['success' => true, 'html' => $html, 'template_id' => $templateId], JSON_INVALID_UTF8_SUBSTITUTE);
+                    if ($jsonOutput === false) {
+                        echo json_encode(['success' => false, 'error' => 'Erreur encodage JSON Lettre']);
+                    } else {
+                        echo $jsonOutput;
+                    }
                     exit;
                 }
             }
@@ -965,7 +1047,7 @@ $candidatures = $database->fetchAll("SELECT * FROM candidatures WHERE utilisateu
                             </div>
                             <div class="col-12" id="fichier_section" style="display: none;">
                                 <label class="form-label">Fichier de l'offre</label>
-                                <input type="file" class="form-control" name="fichier_offre" accept=".pdf,.doc,.docx">
+                                <input type="file" class="form-control" name="fichier_offre" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
                             </div>
                         </div>
                     </div>
@@ -1027,7 +1109,7 @@ $candidatures = $database->fetchAll("SELECT * FROM candidatures WHERE utilisateu
                             </div>
                             <div class="col-12" id="edit_fichier_section">
                                 <label class="form-label">Nouveau fichier (optionnel)</label>
-                                <input type="file" class="form-control" name="fichier_offre" accept=".pdf,.doc,.docx">
+                                <input type="file" class="form-control" name="fichier_offre" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
                                 <small class="text-muted">Laissez vide pour conserver le fichier actuel</small>
                             </div>
                         </div>

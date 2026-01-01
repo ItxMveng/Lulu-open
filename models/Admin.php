@@ -20,20 +20,23 @@ class Admin {
             'growth_rate' => $this->calculateGrowthRate('utilisateurs', 'date_inscription', $periode),
         ];
         $summary['revenue'] = [
-            'amount' => $pdo->query("SELECT COALESCE(SUM(montant), 0) FROM paiements WHERE statut = 'valide' AND date_paiement {$dateFilter}")->fetchColumn(),
+            'amount' => (
+                $pdo->query("SELECT COALESCE(SUM(montant), 0) FROM paiements WHERE statut = 'valide' AND date_paiement {$dateFilter}")->fetchColumn() +
+                $pdo->query("SELECT COALESCE(SUM(montant), 0) FROM paiements_stripe WHERE status = 'succeeded' AND created_at {$dateFilter}")->fetchColumn()
+            ),
             'prev_amount' => $this->getPreviousPeriodRevenue($periode),
             'growth_rate' => $this->calculateGrowthRate('paiements', 'date_paiement', $periode, 'montant'),
-            'avg_per_user' => $summary['revenue']['amount'] / $summary['users']['total'],
         ];
+        $summary['revenue']['avg_per_user'] = $summary['users']['total'] > 0 ? $summary['revenue']['amount'] / $summary['users']['total'] : 0;
         $summary['subscriptions'] = [
-            'new' => $pdo->query("SELECT COUNT(*) FROM abonnements WHERE date_debut {$dateFilter}")->fetchColumn(),
-            'churned' => $pdo->query("SELECT COUNT(*) FROM abonnements WHERE statut = 'annule' AND date_fin {$dateFilter}")->fetchColumn(),
-            'active' => $pdo->query("SELECT COUNT(*) FROM abonnements WHERE statut = 'actif'")->fetchColumn(),
+            'new' => $pdo->query("SELECT COUNT(*) FROM utilisateurs WHERE subscription_start_date {$dateFilter}")->fetchColumn(),
+            'churned' => $pdo->query("SELECT COUNT(*) FROM utilisateurs WHERE subscription_status = 'Expiré' AND subscription_end_date {$dateFilter}")->fetchColumn(),
+            'active' => $pdo->query("SELECT COUNT(*) FROM utilisateurs WHERE subscription_status = 'Actif' AND subscription_end_date > NOW()")->fetchColumn(),
             'churn_rate' => $this->calculateChurnRate($periode),
         ];
         $summary['validations'] = [
-            'processed' => $pdo->query("SELECT COUNT(*) FROM demandes_activation WHERE statut = 'valide' AND date_validation {$dateFilter}")->fetchColumn(),
-            'pending' => $pdo->query("SELECT COUNT(*) FROM demandes_activation WHERE statut = 'en_attente'")->fetchColumn(),
+            'processed' => $pdo->query("SELECT COUNT(*) FROM demandes_upgrade WHERE statut = 'approuve' AND date_traitement {$dateFilter}")->fetchColumn(),
+            'pending' => $pdo->query("SELECT COUNT(*) FROM demandes_upgrade WHERE statut = 'en_attente'")->fetchColumn(),
             'avg_time_hours' => $this->calculateAverageValidationTime(),
         ];
 
@@ -45,8 +48,13 @@ class Admin {
         $currentPeriodFilter = $this->getDateFilter($periode);
         $previousPeriodFilter = $this->getPreviousPeriodFilter($periode);
 
-        $currentValue = $pdo->query("SELECT COALESCE(SUM({$sumColumn}), COUNT(*)) FROM {$table} WHERE {$dateColumn} {$currentPeriodFilter}")->fetchColumn();
-        $previousValue = $pdo->query("SELECT COALESCE(SUM({$sumColumn}), COUNT(*)) FROM {$table} WHERE {$dateColumn} {$previousPeriodFilter}")->fetchColumn();
+        if ($sumColumn) {
+            $currentValue = $pdo->query("SELECT COALESCE(SUM({$sumColumn}), 0) FROM {$table} WHERE {$dateColumn} {$currentPeriodFilter}")->fetchColumn();
+            $previousValue = $pdo->query("SELECT COALESCE(SUM({$sumColumn}), 0) FROM {$table} WHERE {$dateColumn} {$previousPeriodFilter}")->fetchColumn();
+        } else {
+            $currentValue = $pdo->query("SELECT COUNT(*) FROM {$table} WHERE {$dateColumn} {$currentPeriodFilter}")->fetchColumn();
+            $previousValue = $pdo->query("SELECT COUNT(*) FROM {$table} WHERE {$dateColumn} {$previousPeriodFilter}")->fetchColumn();
+        }
 
         return $previousValue > 0 ? (($currentValue - $previousValue) / $previousValue) * 100 : 0;
     }
@@ -67,20 +75,20 @@ class Admin {
         $pdo = Database::getInstance()->getConnection();
         $dateFilter = $this->getDateFilter($periode);
 
-        $churned = $pdo->query("SELECT COUNT(*) FROM abonnements WHERE statut = 'annule' AND date_fin {$dateFilter}")->fetchColumn();
-        $active = $pdo->query("SELECT COUNT(*) FROM abonnements WHERE statut = 'actif'")->fetchColumn();
+        $churned = $pdo->query("SELECT COUNT(*) FROM utilisateurs WHERE subscription_status = 'Expiré' AND subscription_end_date {$dateFilter}")->fetchColumn();
+        $active = $pdo->query("SELECT COUNT(*) FROM utilisateurs WHERE subscription_status = 'Actif'")->fetchColumn();
 
         return $active > 0 ? ($churned / $active) * 100 : 0;
     }
 
     private function calculateAverageValidationTime() {
         $pdo = Database::getInstance()->getConnection();
-        $validations = $pdo->query("SELECT date_creation, date_validation FROM demandes_activation WHERE statut = 'valide'")->fetchAll(PDO::FETCH_ASSOC);
+        $validations = $pdo->query("SELECT date_demande, date_traitement FROM demandes_upgrade WHERE statut = 'approuve' AND date_traitement IS NOT NULL")->fetchAll(PDO::FETCH_ASSOC);
 
         $totalTime = 0;
         foreach ($validations as $validation) {
-            $creationTime = strtotime($validation['date_creation']);
-            $validationTime = strtotime($validation['date_validation']);
+            $creationTime = strtotime($validation['date_demande']);
+            $validationTime = strtotime($validation['date_traitement']);
             $totalTime += ($validationTime - $creationTime) / 3600; // Convert to hours
         }
 
@@ -102,7 +110,10 @@ class Admin {
     private function getPreviousPeriodRevenue($periode) {
         $pdo = Database::getInstance()->getConnection();
         $previousPeriodFilter = $this->getPreviousPeriodFilter($periode);
-        return $pdo->query("SELECT COALESCE(SUM(montant), 0) FROM paiements WHERE statut = 'valide' AND date_paiement {$previousPeriodFilter}")->fetchColumn();
+        return (
+            $pdo->query("SELECT COALESCE(SUM(montant), 0) FROM paiements WHERE statut = 'valide' AND date_paiement {$previousPeriodFilter}")->fetchColumn() +
+            $pdo->query("SELECT COALESCE(SUM(montant), 0) FROM paiements_stripe WHERE status = 'succeeded' AND created_at {$previousPeriodFilter}")->fetchColumn()
+        );
     }
 
     public function logAction($admin_id, $action, $cible_type = null, $cible_id = null, $details = []) {
@@ -155,7 +166,7 @@ class Admin {
         );
         
         // Demandes en attente
-        $stats['demandes_attente'] = $this->db->fetchColumn("SELECT COUNT(*) FROM demandes_activation WHERE statut = 'en_attente'");
+        $stats['demandes_attente'] = $this->db->fetchColumn("SELECT COUNT(*) FROM demandes_upgrade WHERE statut = 'en_attente'");
         
         return $stats;
     }
@@ -171,7 +182,7 @@ class Admin {
         $stats['revenue_growth'] = $stats['revenue_last_month'] > 0 ? round((($stats['revenue_month'] - $stats['revenue_last_month']) / $stats['revenue_last_month']) * 100, 1) : 0;
         $stats['active_subscriptions'] = $pdo->query("SELECT COUNT(*) FROM abonnements WHERE statut = 'actif'")->fetchColumn();
         $stats['expiring_soon'] = $pdo->query("SELECT COUNT(*) FROM abonnements WHERE statut = 'actif' AND date_fin BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)")->fetchColumn();
-        $stats['pending_validations'] = $pdo->query("SELECT COUNT(*) FROM demandes_activation WHERE statut = 'en_attente'")->fetchColumn();
+        $stats['pending_validations'] = $pdo->query("SELECT COUNT(*) FROM demandes_upgrade WHERE statut = 'en_attente'")->fetchColumn();
         $stats['prestataires'] = $pdo->query("SELECT COUNT(*) FROM utilisateurs WHERE type_utilisateur = 'prestataire'")->fetchColumn();
         $stats['candidats'] = $pdo->query("SELECT COUNT(*) FROM utilisateurs WHERE type_utilisateur = 'candidat'")->fetchColumn();
         $stats['clients'] = $pdo->query("SELECT COUNT(*) FROM utilisateurs WHERE type_utilisateur = 'client'")->fetchColumn();

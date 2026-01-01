@@ -161,6 +161,26 @@ class CvUtils {
     }
     
     /**
+     * Extrait le texte d'une image en utilisant Tesseract OCR
+     * @param string $filePath Chemin vers le fichier image
+     * @return string|null Texte extrait
+     * @throws Exception Si Tesseract n'est pas fonctionnel
+     */
+    public static function extractTextFromImage(string $filePath): ?string
+    {
+        if (!class_exists('\TesseractOCR')) {
+            throw new Exception("La librairie Tesseract OCR pour PHP n'est pas installée. Exécutez : composer require thiagoalessio/tesseract-ocr-for-php");
+        }
+
+        try {
+            return (new \TesseractOCR($filePath))->lang('fra', 'eng')->run();
+        } catch (Exception $e) {
+            error_log("Tesseract OCR execution error: " . $e->getMessage());
+            throw new Exception("L'outil d'analyse d'images (Tesseract OCR) n'est pas installé ou n'est pas dans le PATH du serveur. Impossible de lire l'image.");
+        }
+    }
+
+    /**
      * Extrait le texte d'un fichier PDF ou document d'offre
      * @param string $filePath Chemin vers le fichier
      * @return string|null Texte extrait ou null si échec
@@ -175,9 +195,21 @@ class CvUtils {
         
         switch ($extension) {
             case 'pdf':
-                $text = self::extractTextFromPdf($filePath);
+                if (class_exists('SimplePdfExtractor')) {
+                    $text = SimplePdfExtractor::extractText($filePath);
+                } else {
+                    $text = self::extractTextFromPdf($filePath); // Fallback
+                }
                 break;
                 
+            case 'png':
+            case 'jpg':
+            case 'jpeg':
+            case 'gif':
+            case 'bmp':
+                $text = self::extractTextFromImage($filePath);
+                break;
+
             case 'docx':
                 $text = self::simulateDocxExtraction($filePath);
                 break;

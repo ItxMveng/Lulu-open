@@ -67,25 +67,26 @@ try {
             if (in_array($user['type_utilisateur'], ['prestataire', 'prestataire_candidat'])) {
                 $stmt = $db->prepare("
                     SELECT c.nom, c.icone, c.couleur
-                    FROM prestataire_categories pc
-                    JOIN categories_services c ON pc.categorie_id = c.id
-                    WHERE pc.prestataire_id = ?
+                    FROM profils_prestataires pp
+                    LEFT JOIN categories_services c ON pp.categorie_id = c.id
+                    WHERE pp.utilisateur_id = ? AND pp.categorie_id IS NOT NULL AND c.id IS NOT NULL
                     ORDER BY c.nom
                 ");
                 $stmt->execute([$userId]);
-                $categories = array_merge($categories, $stmt->fetchAll(PDO::FETCH_ASSOC));
+                $prestataireCategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $categories = array_merge($categories, $prestataireCategories);
             }
             if (in_array($user['type_utilisateur'], ['candidat', 'prestataire_candidat'])) {
                 $stmt = $db->prepare("
                     SELECT c.nom, c.icone, c.couleur
-                    FROM cv_categories cc
-                    JOIN cvs cv ON cc.cv_id = cv.id
-                    JOIN categories_services c ON cc.categorie_id = c.id
-                    WHERE cv.utilisateur_id = ?
+                    FROM cvs cv
+                    LEFT JOIN categories_services c ON cv.categorie_id = c.id
+                    WHERE cv.utilisateur_id = ? AND cv.categorie_id IS NOT NULL AND c.id IS NOT NULL
                     ORDER BY c.nom
                 ");
                 $stmt->execute([$userId]);
-                $categories = array_merge($categories, $stmt->fetchAll(PDO::FETCH_ASSOC));
+                $candidatCategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $categories = array_merge($categories, $candidatCategories);
             }
             // Supprimer les doublons
             $categories = array_unique($categories, SORT_REGULAR);

@@ -63,7 +63,14 @@ $categories = $database->fetchAll("SELECT * FROM categories_services ORDER BY no
                         <?php foreach ($categories as $cat): ?>
                         <tr>
                             <td><?= $cat['id'] ?></td>
-                            <td><strong><?= htmlspecialchars($cat['nom']) ?></strong></td>
+                            <td>
+                                <strong>
+                                    <a href="#" onclick="showCategoryUsers(<?= $cat['id'] ?>, '<?= htmlspecialchars($cat['nom']) ?>')" 
+                                       class="text-decoration-none text-primary">
+                                        <?= htmlspecialchars($cat['nom']) ?>
+                                    </a>
+                                </strong>
+                            </td>
                             <td><?= htmlspecialchars($cat['description'] ?? 'N/A') ?></td>
                             <td>
                                 <?php if ($cat['icone']): ?>
@@ -74,12 +81,20 @@ $categories = $database->fetchAll("SELECT * FROM categories_services ORDER BY no
                             </td>
                             <td>
                                 <?php
-                                $count = $database->fetchColumn(
-                                    "SELECT COUNT(*) FROM profils_prestataires WHERE categorie_id = ?",
-                                    [$cat['id']]
-                                );
+                                // Compter le nombre total d'utilisateurs uniques liés à cette catégorie
+                                $totalUsers = $database->fetchColumn("
+                                    SELECT COUNT(DISTINCT user_id) FROM (
+                                        SELECT utilisateur_id as user_id FROM profils_prestataires WHERE categorie_id = ?
+                                        UNION
+                                        SELECT utilisateur_id as user_id FROM cvs WHERE categorie_id = ?
+                                    ) as combined_users
+                                ", [$cat['id'], $cat['id']]);
                                 ?>
-                                <span class="badge bg-info"><?= $count ?> prestataires</span>
+                                <?php if ($totalUsers > 0): ?>
+                                    <span class="badge bg-info"><?= $totalUsers ?> utilisateurs</span>
+                                <?php else: ?>
+                                    <span class="badge bg-secondary">Non utilisée</span>
+                                <?php endif; ?>
                             </td>
                             <td>
                                 <button class="btn btn-sm btn-outline-primary btn-action" onclick="editCategory(<?= $cat['id'] ?>)">
@@ -131,10 +146,169 @@ $categories = $database->fetchAll("SELECT * FROM categories_services ORDER BY no
         </div>
     </div>
 
+    <!-- Modal Utilisateurs de la Catégorie -->
+    <div class="modal fade" id="categoryUsersModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Utilisateurs de la catégorie : <span id="categoryName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="categoryUsersContent">
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Modifier Catégorie -->
+    <div class="modal fade" id="editCategoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modifier Catégorie</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editCategoryForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="edit_id" name="id">
+                        <div class="mb-3">
+                            <label class="form-label">Nom *</label>
+                            <input type="text" class="form-control" id="edit_nom" name="nom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="edit_description" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Icône (classe Bootstrap Icons)</label>
+                            <input type="text" class="form-control" id="edit_icone" name="icone" placeholder="bi bi-briefcase">
+                            <small class="text-muted">Ex: bi bi-briefcase, bi bi-code-slash</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary-custom">Modifier</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Afficher message de succès
+        <?php if (isset($_GET['success'])): ?>
+        const toast = document.createElement('div');
+        toast.className = 'alert alert-success alert-dismissible fade show position-fixed';
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
+        toast.innerHTML = `
+            Catégorie créée avec succès!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+        <?php endif; ?>
+
+        function showCategoryUsers(categoryId, categoryName) {
+            document.getElementById('categoryName').textContent = categoryName;
+            document.getElementById('categoryUsersContent').innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+            `;
+            
+            fetch('../../api/admin-categories.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: 'get_users', id: categoryId})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    let html = '';
+                    if (data.users.length === 0) {
+                        html = '<p class="text-muted text-center">Aucun utilisateur dans cette catégorie</p>';
+                    } else {
+                        html = `
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Utilisateur</th>
+                                            <th>Type</th>
+                                            <th>Email</th>
+                                            <th>Statut</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+                        data.users.forEach(user => {
+                            const statusClass = user.statut === 'Actif' ? 'success' : 'secondary';
+                            let typeClass = 'secondary';
+                            let roleText = user.source;
+                            
+                            if (user.source === 'prestataire') {
+                                typeClass = 'primary';
+                                roleText = 'Prestataire';
+                            } else if (user.source === 'candidat') {
+                                typeClass = 'info';
+                                roleText = 'Candidat';
+                            }
+                            
+                            html += `
+                                <tr>
+                                    <td><strong>${user.prenom} ${user.nom}</strong></td>
+                                    <td><span class="badge bg-${typeClass}">${roleText}</span></td>
+                                    <td>${user.email}</td>
+                                    <td><span class="badge bg-${statusClass}">${user.statut}</span></td>
+                                </tr>
+                            `;
+                        });
+                        html += '</tbody></table></div>';
+                    }
+                    document.getElementById('categoryUsersContent').innerHTML = html;
+                } else {
+                    document.getElementById('categoryUsersContent').innerHTML = 
+                        '<p class="text-danger">Erreur: ' + data.message + '</p>';
+                }
+            })
+            .catch(e => {
+                document.getElementById('categoryUsersContent').innerHTML = 
+                    '<p class="text-danger">Erreur de connexion</p>';
+            });
+            
+            new bootstrap.Modal(document.getElementById('categoryUsersModal')).show();
+        }
+
         function editCategory(id) {
-            alert('Fonctionnalité d\'édition à implémenter');
+            fetch('../../api/admin-categories.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: 'get', id: id})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const cat = data.data;
+                    document.getElementById('edit_id').value = cat.id;
+                    document.getElementById('edit_nom').value = cat.nom;
+                    document.getElementById('edit_description').value = cat.description || '';
+                    document.getElementById('edit_icone').value = cat.icone || '';
+                    new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
+                } else {
+                    alert('Erreur: ' + data.message);
+                }
+            })
+            .catch(e => alert('Erreur de connexion'));
         }
 
         function deleteCategory(id) {
@@ -151,9 +325,39 @@ $categories = $database->fetchAll("SELECT * FROM categories_services ORDER BY no
                     } else {
                         alert('Erreur: ' + data.message);
                     }
-                });
+                })
+                .catch(e => alert('Erreur de connexion'));
             }
         }
+
+        // Gestion du formulaire de modification
+        document.getElementById('editCategoryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {
+                action: 'update',
+                id: formData.get('id'),
+                nom: formData.get('nom'),
+                description: formData.get('description'),
+                icone: formData.get('icone')
+            };
+            
+            fetch('../../api/admin-categories.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Erreur: ' + data.message);
+                }
+            })
+            .catch(e => alert('Erreur de connexion'));
+        });
     </script>
 </body>
 </html>

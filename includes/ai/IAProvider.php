@@ -6,38 +6,67 @@ class IAProvider {
     
     private static function getAnalyzeSystemPrompt(): string {
         return <<<EOT
-Tu es un expert RH très exigeant.
+Tu es un expert RH très exigeant spécialisé dans l'analyse de compatibilité CV/Offre.
 
-ANALYSE STRICTE CV vs OFFRE :
-- Domaine/sectoriel (tech vs cuisine = faible)
-- Années d'expérience requises
-- Compétences techniques précises
-- Soft skills mentionnés
+TACHE :
+1. Extraire les informations clés du CV et de l'offre telles qu'elles apparaissent dans les textes
+2. Évaluer la compatibilité de manière critique et honnête
+3. Fournir une analyse détaillée avec recommandations
 
-RÈGLES :
-- Score honnête 0-100 (ne pas surévaluer)
-- Si CV cuisinier + offre dev → score < 20%
-- Répondre UNIQUEMENT avec JSON valide
+RÈGLES STRICTES :
+- Score réaliste 0-100 (ne pas surévaluer)
+- Utilise UNIQUEMENT les informations présentes dans les textes
+- Sois critique et exigeant dans l'évaluation
+- Réponds UNIQUEMENT en JSON valide
 
 FORMAT OBLIGATOIRE :
 {
+"cv_parsing": {
+    "title": "Titre/Poste exact identifié dans le CV",
+    "experience": "Résumé précis de l'expérience (années + domaine)",
+    "skills": "Top 3-5 compétences clés extraites du CV"
+},
+"job_parsing": {
+    "title": "Titre exact du poste recherché",
+    "experience": "Expérience requise selon l'offre",
+    "skills": "Top 3-5 compétences demandées dans l'offre"
+},
 "score": 45,
 "global_fit": "faible",
 "domain_match": "faible",
 "experience_match": "moyen",
 "skills_match": "faible",
-"reasons": ["Secteur incompatible"],
-"critical_gaps": ["Aucune exp en dev"],
-"missing_keywords": ["PHP", "Laravel"],
-"recommendations": ["Formation dev nécessaire"]
+"reasons": ["Raison précise 1", "Raison précise 2"],
+"critical_gaps": ["Lacune critique 1", "Lacune critique 2"],
+"missing_keywords": ["Mot-clé 1", "Mot-clé 2"],
+"recommendations": ["Recommandation actionnable 1", "Recommandation actionnable 2"]
 }
 EOT;
     }
     
     public static function analyzeCvAndJob(string $cvText, string $jobText): array {
+        // Nettoyer et valider les entrées
+        $cvText = self::cleanInputText($cvText);
+        $jobText = self::cleanInputText($jobText);
+        
+        // Vérifier la qualité des données
+        if (strlen($cvText) < 100) {
+            error_log("CV TEXT TOO SHORT: " . strlen($cvText) . " chars");
+            return self::getCriticalFallbackAnalysis($cvText, $jobText);
+        }
+        
+        if (strlen($jobText) < 50) {
+            error_log("JOB TEXT TOO SHORT: " . strlen($jobText) . " chars");
+            return ['error' => 'Veuillez fournir une description d\'offre plus détaillée (minimum 50 caractères).'];
+        }
+        
+        // Tronquer intelligemment pour l'API
+        $cvText = mb_substr($cvText, 0, 15000, 'UTF-8');
+        $jobText = mb_substr($jobText, 0, 10000, 'UTF-8');
+        
         $systemPrompt = self::getAnalyzeSystemPrompt();
         
-        $userPrompt = "CV du candidat :\n```\n$cvText\n```\n\nOffre d'emploi :\n```\n$jobText\n```\n\nAnalyse la compatibilité de manière **très critique**.";
+        $userPrompt = "CV CANDIDAT:\n```\n$cvText\n```\n\nOFFRE EMPLOI:\n```\n$jobText\n```\n\nAnalyse cette compatibilité de manière TRÈS CRITIQUE. Extrais les informations exactes des textes et évalue honnêtement.";
         
         $raw = self::callLLM($systemPrompt, $userPrompt);
         
@@ -46,14 +75,138 @@ EOT;
             return self::getCriticalFallbackAnalysis($cvText, $jobText);
         }
         
-        // FORCER l'exécution Mistral
         $decoded = json_decode($raw, true);
         if (!$decoded || !isset($decoded['score'])) {
-            error_log("MISTRAL INVALID JSON: " . substr($raw, 0, 1000));
+            error_log("MISTRAL INVALID JSON: " . substr($raw, 0, 500));
             return self::getCriticalFallbackAnalysis($cvText, $jobText);
         }
         
-        return $decoded;
+        // Valider et enrichir la réponse
+        return self::validateAndEnrichAnalysis($decoded, $cvText, $jobText);
+    }
+    
+    /**
+     * Nettoie et valide le texte d'entrée
+     */
+    private static function cleanInputText(string $text): string {
+        // Supprimer les caractères de contrôle et le bruit
+        $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $text);
+        
+        // Supprimer les répétitions excessives de symboles
+        $text = preg_replace('/([^\w\s])\s*\1\s*\1+/', ' ', $text);
+        
+        // Supprimer les lignes de bruit pur (plus de 80% de symboles)
+        $lines = explode("\n", $text);
+        $cleanLines = [];
+        
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (strlen($line) < 3) continue;
+            
+            $alphaCount = preg_match_all('/[a-zA-Z0-9àâäéèêëïîôöùûüÿç]/', $line);
+            $totalCount = strlen($line);
+            
+            if ($totalCount > 0 && ($alphaCount / $totalCount) > 0.2) {
+                $cleanLines[] = $line;
+            }
+        }
+        
+        return implode("\n", $cleanLines);
+    }
+    
+    /**
+     * Valide et enrichit l'analyse IA
+     */
+    private static function validateAndEnrichAnalysis(array $analysis, string $cvText, string $jobText): array {
+        // Valeurs par défaut
+        $defaults = [
+            'cv_parsing' => ['title' => 'Non extrait', 'experience' => 'Non extrait', 'skills' => 'Non extrait'],
+            'job_parsing' => ['title' => 'Non extrait', 'experience' => 'Non extrait', 'skills' => 'Non extrait'],
+            'score' => 0,
+            'global_fit' => 'tres_faible',
+            'domain_match' => 'faible',
+            'experience_match' => 'faible',
+            'skills_match' => 'faible',
+            'reasons' => ['Analyse incomplète'],
+            'critical_gaps' => [],
+            'missing_keywords' => [],
+            'recommendations' => []
+        ];
+        
+        $analysis = array_merge($defaults, $analysis);
+        
+        // Extraire des informations si l'IA a échoué
+        if ($analysis['cv_parsing']['title'] === 'Non extrait' || empty($analysis['cv_parsing']['title'])) {
+            $analysis['cv_parsing'] = self::extractCvInfo($cvText);
+        }
+        
+        if ($analysis['job_parsing']['title'] === 'Non extrait' || empty($analysis['job_parsing']['title'])) {
+            $analysis['job_parsing'] = self::extractJobInfo($jobText);
+        }
+        
+        return $analysis;
+    }
+    
+    /**
+     * Extraction d'informations CV par regex
+     */
+    private static function extractCvInfo(string $cvText): array {
+        $info = ['title' => 'Profil professionnel', 'experience' => 'Expérience variée', 'skills' => 'Compétences techniques'];
+        
+        // Extraire titre/poste
+        if (preg_match('/(?:développeur|ingénieur|chef|manager|consultant|analyste|cuisinier|pâtissier)\s+[\w\s]+/i', $cvText, $matches)) {
+            $info['title'] = trim($matches[0]);
+        }
+        
+        // Extraire expérience
+        if (preg_match('/(\d+)\s+ans?\s+(?:d[\'\'])?expérience/i', $cvText, $matches)) {
+            $info['experience'] = $matches[1] . ' ans d\'expérience';
+        }
+        
+        // Extraire compétences
+        $skills = [];
+        $skillPatterns = ['PHP', 'JavaScript', 'Python', 'React', 'Vue', 'Laravel', 'MySQL', 'cuisine', 'pâtisserie', 'service'];
+        foreach ($skillPatterns as $skill) {
+            if (stripos($cvText, $skill) !== false) {
+                $skills[] = $skill;
+            }
+        }
+        if (!empty($skills)) {
+            $info['skills'] = implode(', ', array_slice($skills, 0, 3));
+        }
+        
+        return $info;
+    }
+    
+    /**
+     * Extraction d'informations offre par regex
+     */
+    private static function extractJobInfo(string $jobText): array {
+        $info = ['title' => 'Poste spécialisé', 'experience' => 'Expérience requise', 'skills' => 'Compétences spécifiques'];
+        
+        // Extraire titre du poste
+        if (preg_match('/(?:recherchons|recherche)\s+un[e]?\s+([^\n\.]+)/i', $jobText, $matches)) {
+            $info['title'] = trim($matches[1]);
+        }
+        
+        // Extraire expérience requise
+        if (preg_match('/(\d+)\s+ans?\s+(?:d[\'\']expérience|minimum)/i', $jobText, $matches)) {
+            $info['experience'] = $matches[1] . ' ans minimum';
+        }
+        
+        // Extraire compétences demandées
+        $skills = [];
+        $skillPatterns = ['PHP', 'JavaScript', 'Python', 'React', 'Vue', 'Laravel', 'MySQL', 'cuisine', 'pâtisserie', 'service'];
+        foreach ($skillPatterns as $skill) {
+            if (stripos($jobText, $skill) !== false) {
+                $skills[] = $skill;
+            }
+        }
+        if (!empty($skills)) {
+            $info['skills'] = implode(', ', array_slice($skills, 0, 3));
+        }
+        
+        return $info;
     }
     
     public static function generateOptimizedCv(string $cvText, string $jobText, string $style = 'default'): string {
@@ -88,26 +241,19 @@ EOT;
         return json_encode(self::getFallbackOptimizedCvJson($cvText, $jobText, $style));
     }
     
-    public static function generateCoverLetter(array $cvData, array $jobData, string $style = 'professional'): string {
+    public static function generateCoverLetter(string $cvText, array $cvData, array $jobData, string $style = 'professional'): string {
         $systemPrompt = "Tu es un expert en rédaction de lettres de motivation. Tu dois créer une lettre **personnalisée et convaincante** qui :\n- Démontre une compréhension précise du poste et de l'entreprise\n- Met en avant les expériences et compétences les plus pertinentes du candidat\n- Utilise des exemples concrets et des résultats quantifiés quand possible\n- Adopte un ton professionnel mais authentique\n- Fait le lien entre le profil du candidat et les besoins de l'entreprise\n\nLa lettre doit faire 300-500 mots et être structurée en 4-5 paragraphes.";
-        
-        // Construire un résumé CV détaillé
-        $cvSummary = self::buildDetailedCvSummary($cvData);
         
         $prenom = $cvData['prenom'] ?? '';
         $nom = $cvData['nom'] ?? '';
         $poste = $jobData['poste'] ?? '';
         $entreprise = $jobData['entreprise'] ?? '';
         $jobText = $jobData['job_text'] ?? '';
-        
         $uniqueId = uniqid(); // Ajout d'un identifiant unique pour forcer une nouvelle génération
         $userPrompt = "ID de requête unique (à ignorer): $uniqueId\n\n" .
             "Informations du candidat :\n" .
             "Nom : $prenom $nom\n" .
-            "Poste recherché : " . ($cvData['titre_poste_recherche'] ?? 'Non spécifié') . "\n" .
-            "Niveau d'expérience : " . ($cvData['niveau_experience'] ?? 'Non spécifié') . "\n" .
-            "Compétences principales : " . ($cvData['competences'] ?? 'Non spécifiées') . "\n" .
-            "Expériences clés :\n" . self::formatExperiences($cvData) . "\n\n" .
+            "CONTENU INTÉGRAL DU CV DU CANDIDAT:\n```\n$cvText\n```\n\n" .
             "POSTE VISÉ SPÉCIFIQUEMENT : $poste\n" .
             "ENTREPRISE CIBLÉE : $entreprise\n\n" .
             "Description détaillée de l'offre d'emploi :\n```\n$jobText\n```\n\n" .
@@ -161,7 +307,7 @@ EOT;
                 ['role' => 'user', 'content' => $userPrompt],
             ],
             'temperature' => 0.3,
-            'max_tokens' => 1000
+            'max_tokens' => 2000
         ];
         
         curl_setopt_array($ch, [

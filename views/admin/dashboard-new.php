@@ -12,12 +12,9 @@ $db = Database::getInstance()->getConnection();
 $stats = [
     'total_users' => $db->query("SELECT COUNT(*) FROM utilisateurs")->fetchColumn(),
     'new_users_today' => $db->query("SELECT COUNT(*) FROM utilisateurs WHERE DATE(date_inscription) = CURDATE()")->fetchColumn(),
-    'revenue_month' => (
-        $db->query("SELECT COALESCE(SUM(montant), 0) FROM paiements WHERE statut = 'valide' AND MONTH(date_paiement) = MONTH(CURDATE())")->fetchColumn() +
-        $db->query("SELECT COALESCE(SUM(montant), 0) FROM paiements_stripe WHERE status = 'succeeded' AND MONTH(created_at) = MONTH(CURDATE())")->fetchColumn()
-    ),
-    'active_subscriptions' => $db->query("SELECT COUNT(*) FROM utilisateurs WHERE subscription_status = 'Actif' AND subscription_end_date > NOW()")->fetchColumn(),
-    'unread_messages' => $db->query("SELECT COUNT(*) FROM messages WHERE lu = 0 AND destinataire_id = 1")->fetchColumn(),
+    'revenue_month' => $db->query("SELECT COALESCE(SUM(amount/100), 0) FROM paiements_stripe WHERE status = 'succeeded' AND MONTH(created_at) = MONTH(CURDATE())")->fetchColumn(),
+    'active_subscriptions' => $db->query("SELECT COUNT(*) FROM abonnements WHERE statut = 'Actif'")->fetchColumn(),
+    'unread_messages' => $db->query("SELECT COUNT(*) FROM messages WHERE lu = 0")->fetchColumn(),
     'prestataires' => $db->query("SELECT COUNT(*) FROM utilisateurs WHERE type_utilisateur = 'prestataire'")->fetchColumn(),
     'candidats' => $db->query("SELECT COUNT(*) FROM utilisateurs WHERE type_utilisateur = 'candidat'")->fetchColumn(),
     'clients' => $db->query("SELECT COUNT(*) FROM utilisateurs WHERE type_utilisateur = 'client'")->fetchColumn(),
@@ -27,34 +24,13 @@ $stats = [
 // Utilisateurs récents
 $recentUsers = $db->query("SELECT prenom, nom, email, type_utilisateur, statut, date_inscription FROM utilisateurs ORDER BY date_inscription DESC LIMIT 5")->fetchAll(PDO::FETCH_ASSOC);
 
-// Paiements récents (combinant les deux tables)
-$recentPayments = [];
-
-// Paiements classiques
-$classicPayments = $db->query("
-    SELECT p.montant, p.date_paiement as date_payment, p.statut, u.prenom, u.nom, 'classic' as type
-    FROM paiements p 
-    JOIN utilisateurs u ON p.utilisateur_id = u.id 
-    WHERE p.statut = 'valide'
-    ORDER BY p.date_paiement DESC LIMIT 10
-")->fetchAll(PDO::FETCH_ASSOC);
-
-// Paiements Stripe
-$stripePayments = $db->query("
-    SELECT ps.montant, ps.created_at as date_payment, ps.status as statut, u.prenom, u.nom, 'stripe' as type
+// Paiements récents
+$recentPayments = $db->query("
+    SELECT ps.amount, ps.created_at, ps.status, u.prenom, u.nom 
     FROM paiements_stripe ps 
-    JOIN utilisateurs u ON ps.utilisateur_id = u.id 
-    WHERE ps.status = 'succeeded'
-    ORDER BY ps.created_at DESC LIMIT 10
+    JOIN utilisateurs u ON ps.user_id = u.id 
+    ORDER BY ps.created_at DESC LIMIT 5
 ")->fetchAll(PDO::FETCH_ASSOC);
-
-// Combiner et trier par date
-$allPayments = array_merge($classicPayments, $stripePayments);
-usort($allPayments, function($a, $b) {
-    return strtotime($b['date_payment']) - strtotime($a['date_payment']);
-});
-
-$recentPayments = array_slice($allPayments, 0, 5);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -233,14 +209,9 @@ $recentPayments = array_slice($allPayments, 0, 5);
                                     <tbody>
                                         <?php foreach ($recentPayments as $payment): ?>
                                         <tr>
-                                            <td>
-                                                <?= htmlspecialchars($payment['prenom'] . ' ' . $payment['nom']) ?>
-                                                <?php if ($payment['type'] === 'stripe'): ?>
-                                                    <span class="badge bg-info ms-1">Stripe</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td class="text-success fw-bold"><?= number_format($payment['montant'], 2) ?>€</td>
-                                            <td><?= date('d/m/Y H:i', strtotime($payment['date_payment'])) ?></td>
+                                            <td><?= htmlspecialchars($payment['prenom'] . ' ' . $payment['nom']) ?></td>
+                                            <td class="text-success fw-bold"><?= number_format($payment['amount']/100, 2) ?>€</td>
+                                            <td><?= date('d/m/Y H:i', strtotime($payment['created_at'])) ?></td>
                                         </tr>
                                         <?php endforeach; ?>
                                     </tbody>

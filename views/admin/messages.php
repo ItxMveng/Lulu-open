@@ -81,6 +81,87 @@ $page_title = "Messages - Admin LULU-OPEN";
         font-size: 0.75rem;
         font-weight: bold;
     }
+
+    .message-bubble {
+        border-radius: 18px;
+        position: relative;
+        word-wrap: break-word;
+    }
+
+    .message-bubble.from-admin {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+    }
+
+    .message-bubble.from-user {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+    }
+
+    .emoji-picker {
+        position: absolute;
+        bottom: 100%;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        z-index: 1000;
+        display: none;
+        max-width: 300px;
+    }
+
+    .emoji-grid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 5px;
+    }
+
+    .emoji-btn {
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        padding: 5px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .emoji-btn:hover {
+        background: #f0f0f0;
+    }
+
+    .file-preview {
+        max-width: 200px;
+        border-radius: 10px;
+        margin-top: 5px;
+    }
+
+    .file-attachment {
+        background: rgba(0,0,0,0.1);
+        padding: 10px;
+        border-radius: 10px;
+        margin-top: 5px;
+        display: inline-block;
+    }
+
+    .message-actions {
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .message-bubble:hover .message-actions {
+        opacity: 1;
+    }
+
+    .bi-check2-all {
+        color: #007bff !important;
+    }
+
+    .bi-check2 {
+        color: #6c757d;
+    }
     </style>
 </head>
 <body>
@@ -129,9 +210,10 @@ $page_title = "Messages - Admin LULU-OPEN";
                                 <div class="list-group-item conversation-item p-3 border-0"
                                      onclick="openConversation(<?= $conv['interlocuteur_id'] ?>)">
                                     <div class="d-flex align-items-center">
-                                        <img src="<?= $conv['photo_profil'] ? url($conv['photo_profil']) : url('assets/images/default-avatar.png') ?>"
+                                        <img src="<?= getPhotoUrl($conv['photo_profil']) ?>"
                                              class="rounded-circle me-3"
-                                             style="width: 50px; height: 50px; object-fit: cover;">
+                                             style="width: 50px; height: 50px; object-fit: cover;"
+                                             onerror="this.src='<?= url('assets/images/default-avatar.png') ?>';">
                                         <div class="flex-grow-1">
                                             <div class="d-flex justify-content-between align-items-start">
                                                 <h6 class="mb-1 fw-bold">
@@ -176,13 +258,59 @@ $page_title = "Messages - Admin LULU-OPEN";
                         </div>
                     </div>
                     <div class="card-footer" id="message-form" style="display: none;">
-                        <form id="sendMessageForm">
-                            <div class="input-group">
+                        <form id="sendMessageForm" enctype="multipart/form-data">
+                            <div class="mb-2" id="file-preview" style="display: none;">
+                                <div class="d-flex align-items-center gap-2 p-2 bg-light rounded">
+                                    <i class="bi bi-paperclip"></i>
+                                    <span id="file-name"></span>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile()">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="input-group position-relative">
+                                <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf,.doc,.docx,.txt">
                                 <input type="text" class="form-control" id="messageInput"
                                        placeholder="Tapez votre message..." required>
+                                <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('fileInput').click()">
+                                    <i class="bi bi-paperclip"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="toggleEmojiPicker()">
+                                    <i class="bi bi-emoji-smile"></i>
+                                </button>
                                 <button class="btn btn-primary" type="submit">
                                     <i class="bi bi-send"></i>
                                 </button>
+                                
+                                <!-- Emoji Picker -->
+                                <div class="emoji-picker" id="emojiPicker">
+                                    <div class="emoji-grid">
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('😀')">😀</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('😃')">😃</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('😄')">😄</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('😁')">😁</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('😊')">😊</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('😍')">😍</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('🤔')">🤔</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('😢')">😢</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('😭')">😭</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('😡')">😡</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('👍')">👍</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('👎')">👎</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('👌')">👌</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('✌️')">✌️</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('🤝')">🤝</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('🙏')">🙏</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('❤️')">❤️</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('💯')">💯</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('🔥')">🔥</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('⭐')">⭐</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('✅')">✅</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('❌')">❌</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('⚠️')">⚠️</button>
+                                        <button type="button" class="emoji-btn" onclick="addEmoji('💡')">💡</button>
+                                    </div>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -207,12 +335,153 @@ $page_title = "Messages - Admin LULU-OPEN";
         async function loadConversation(interlocutorId) {
             try {
                 const response = await fetch(`<?= url('api/admin-messages.php') ?>?action=get_conversation&user_id=${interlocutorId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
 
                 if (data.success) {
                     displayConversation(data.conversation, data.user);
-                    document.getElementById('message-form').style.display = 'block';
-                    document.getElementById('no-conversation').style.display = 'none';
+                    const messageForm = document.getElementById('message-form');
+                    const noConversation = document.getElementById('no-conversation');
+                    if (messageForm) messageForm.style.display = 'block';
+                    if (noConversation) noConversation.style.display = 'none';
+                } else {
+                    throw new Error(data.message || 'Erreur inconnue');
+                }
+            } catch (error) {
+                console.error('Erreur loadConversation:', error);
+                alert('Erreur lors du chargement: ' + error.message);
+            }
+        }
+
+        function displayConversation(messages, user) {
+            const content = document.getElementById('conversation-content');
+            const title = document.getElementById('conversation-title');
+
+            title.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><i class="bi bi-chat-dots me-2"></i>Conversation avec ${user.prenom} ${user.nom}</div>
+                    <button class="btn btn-outline-danger btn-sm" onclick="deleteConversation(${currentInterlocutorId})">
+                        <i class="bi bi-trash"></i> Supprimer
+                    </button>
+                </div>
+            `;
+
+            let html = '';
+            messages.forEach(message => {
+                const isFromAdmin = message.expediteur_id == <?= $adminId ?>;
+                const alignClass = isFromAdmin ? 'justify-content-end' : 'justify-content-start';
+                const bubbleClass = isFromAdmin ? 'from-admin' : 'from-user';
+
+                let messageContent = message.contenu;
+                
+                if (message.fichier_joint) {
+                    const fileName = message.fichier_joint.split('/').pop();
+                    const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(fileName);
+                    
+                    if (isImage) {
+                        messageContent += `<br><img src="<?= url('') ?>${message.fichier_joint}" class="file-preview" alt="Image">`;
+                    } else {
+                        messageContent += `<br><div class="file-attachment"><i class="bi bi-file-earmark"></i> <a href="<?= url('') ?>${message.fichier_joint}" target="_blank">${fileName}</a></div>`;
+                    }
+                }
+
+                const readStatus = message.lu == 1 ? '<i class="bi bi-check2-all text-primary"></i>' : '<i class="bi bi-check2"></i>';
+                const canDelete = isFromAdmin; // Seul l'admin peut supprimer ses propres messages
+
+                html += `
+                    <div class="d-flex mb-3 ${alignClass}" data-message-id="${message.id}">
+                        <div class="message-bubble ${bubbleClass} p-3 position-relative" style="max-width: 70%;">
+                            ${canDelete ? `<div class="message-actions position-absolute top-0 end-0 p-1" style="display: none;">
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteMessage(${message.id})" title="Supprimer">
+                                    <i class="bi bi-trash" style="font-size: 0.7rem;"></i>
+                                </button>
+                            </div>` : ''}
+                            <div class="fw-bold small mb-1">${message.prenom} ${message.nom}</div>
+                            <div>${messageContent}</div>
+                            <div class="small opacity-75 mt-1 d-flex justify-content-between align-items-center">
+                                <span>${new Date(message.date_envoi).toLocaleString('fr-FR')}</span>
+                                ${isFromAdmin ? readStatus : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            content.innerHTML = html;
+            content.scrollTop = content.scrollHeight;
+            
+            // Ajouter les événements hover pour les actions
+            document.querySelectorAll('.message-bubble').forEach(bubble => {
+                const actions = bubble.querySelector('.message-actions');
+                if (actions) {
+                    bubble.addEventListener('mouseenter', function() {
+                        actions.style.display = 'block';
+                    });
+                    bubble.addEventListener('mouseleave', function() {
+                        actions.style.display = 'none';
+                    });
+                }
+            });
+        }
+
+        let selectedFile = null;
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                document.getElementById('file-name').textContent = file.name;
+                document.getElementById('file-preview').style.display = 'block';
+            }
+        });
+
+        function removeFile() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('file-preview').style.display = 'none';
+        }
+
+        function toggleEmojiPicker() {
+            const picker = document.getElementById('emojiPicker');
+            picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function addEmoji(emoji) {
+            const input = document.getElementById('messageInput');
+            input.value += emoji;
+            input.focus();
+            document.getElementById('emojiPicker').style.display = 'none';
+        }
+
+        // Fermer le picker d'emoji en cliquant ailleurs
+        document.addEventListener('click', function(e) {
+            const picker = document.getElementById('emojiPicker');
+            const emojiBtn = e.target.closest('.btn-outline-secondary');
+            if (!picker.contains(e.target) && !emojiBtn) {
+                picker.style.display = 'none';
+            }
+        });
+
+        async function deleteMessage(messageId) {
+            if (!confirm('Supprimer ce message ?')) return;
+            
+            try {
+                const formData = new FormData();
+                formData.append('action', 'delete_message');
+                formData.append('message_id', messageId);
+
+                const response = await fetch('<?= url('api/admin-messages.php') ?>', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    document.querySelector(`[data-message-id="${messageId}"]`).remove();
                 } else {
                     alert('Erreur: ' + data.message);
                 }
@@ -222,32 +491,37 @@ $page_title = "Messages - Admin LULU-OPEN";
             }
         }
 
-        function displayConversation(messages, user) {
-            const content = document.getElementById('conversation-content');
-            const title = document.getElementById('conversation-title');
+        async function deleteConversation(userId) {
+            if (!confirm('Supprimer toute la conversation ? Cette action est irréversible.')) return;
+            
+            try {
+                const formData = new FormData();
+                formData.append('action', 'delete_conversation');
+                formData.append('user_id', userId);
 
-            title.innerHTML = `<i class="bi bi-chat-dots me-2"></i>Conversation avec ${user.prenom} ${user.nom}`;
+                const response = await fetch('<?= url('api/admin-messages.php') ?>', {
+                    method: 'POST',
+                    body: formData
+                });
 
-            let html = '';
-            messages.forEach(message => {
-                const isFromAdmin = message.expediteur_id == <?= $adminId ?>;
-                const alignClass = isFromAdmin ? 'justify-content-end' : 'justify-content-start';
-                const bgClass = isFromAdmin ? 'bg-primary text-white' : 'bg-light';
-
-                html += `
-                    <div class="d-flex mb-3 ${alignClass}">
-                        <div class="message-bubble ${bgClass} p-3 rounded" style="max-width: 70%;">
-                            <div class="fw-bold small mb-1">${message.prenom} ${message.nom}</div>
-                            <div>${message.contenu}</div>
-                            <div class="small opacity-75 mt-1">${new Date(message.date_envoi).toLocaleString('fr-FR')}</div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            content.innerHTML = html;
-            content.scrollTop = content.scrollHeight;
+                const data = await response.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Erreur: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur réseau');
+            }
         }
+
+        // Actualisation automatique toutes les 30 secondes
+        setInterval(() => {
+            if (currentInterlocutorId) {
+                loadConversation(currentInterlocutorId);
+            }
+        }, 30000);
 
         document.getElementById('sendMessageForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -257,33 +531,64 @@ $page_title = "Messages - Admin LULU-OPEN";
             const messageInput = document.getElementById('messageInput');
             const message = messageInput.value.trim();
 
-            if (!message) return;
+            if (!message && !selectedFile) return;
 
             try {
+                const formData = new FormData();
+                formData.append('action', 'send_message');
+                formData.append('destinataire_id', currentInterlocutorId);
+                formData.append('sujet', 'Réponse admin');
+                formData.append('contenu', message);
+                
+                if (selectedFile) {
+                    formData.append('fichier', selectedFile);
+                }
+
                 const response = await fetch('<?= url('api/admin-messages.php') ?>', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'send_message',
-                        destinataire_id: currentInterlocutorId,
-                        sujet: 'Réponse admin',
-                        contenu: message
-                    })
+                    body: formData
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
                     messageInput.value = '';
-                    loadConversation(currentInterlocutorId);
+                    removeFile();
+                    // Recharger immédiatement la conversation
+                    await loadConversation(currentInterlocutorId);
                 } else {
                     alert('Erreur: ' + data.message);
                 }
             } catch (error) {
                 console.error('Erreur:', error);
-                alert('Erreur réseau');
+                alert('Erreur réseau: ' + error.message);
             }
         });
     </script>
 </body>
 </html>
+
+<?php
+function getPhotoUrl($photo) {
+    if (!$photo) {
+        return url('assets/images/default-avatar.png');
+    }
+    
+    // Si c'est déjà une URL complète
+    if (strpos($photo, 'http') === 0) {
+        return $photo;
+    }
+    
+    // Nettoyer les doublons de chemin
+    $photo = str_replace('uploads/profiles/profiles/', 'uploads/profiles/', $photo);
+    $photo = str_replace('profiles/profiles/', 'uploads/profiles/', $photo);
+    
+    // Si c'est un chemin relatif commençant par uploads/
+    if (strpos($photo, 'uploads/') === 0) {
+        return url($photo);
+    }
+    
+    // Si c'est juste le nom du fichier
+    return url('uploads/profiles/' . $photo);
+}
+?>

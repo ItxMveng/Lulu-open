@@ -44,6 +44,9 @@ define('SUBSCRIPTION_PRICE_MONTHLY', 29.99);
 define('SUBSCRIPTION_PRICE_QUARTERLY', 79.99);
 define('SUBSCRIPTION_PRICE_YEARLY', 299.99);
 
+// Chargement de la configuration Stripe
+require_once BASE_PATH . '/config/stripe.php';
+
 // Configuration IA / Mistral
 define('AI_PROVIDER', 'mistral');
 define('AI_API_KEY', 'XYMWAJsj6AbocHzCfQLwrpvjeCjrf38T'); // TODO: Déplacer en variable d'environnement en production LWS

@@ -48,18 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flashMessage('Préférences de notification mises à jour !', 'success');
     }
     
-    if ($action === 'update_privacy') {
-        $profil_public = isset($_POST['profil_public']) ? 1 : 0;
-        $recherche_visible = isset($_POST['recherche_visible']) ? 1 : 0;
-        
-        $database->query("UPDATE utilisateurs SET 
-            profil_public = ?, recherche_visible = ? 
-            WHERE id = ?", 
-            [$profil_public, $recherche_visible, $_SESSION['user_id']]);
-        
-        flashMessage('Paramètres de confidentialité mis à jour !', 'success');
-    }
-    
     if ($action === 'delete_account') {
         $password_confirm = $_POST['password_confirm'];
         
@@ -231,46 +219,6 @@ $user = $database->fetch("SELECT * FROM utilisateurs WHERE id = ?", [$_SESSION['
                     </div>
                 </div>
 
-                <!-- Confidentialité -->
-                <div class="col-lg-6">
-                    <div class="settings-card">
-                        <div class="settings-header">
-                            <h5 class="mb-0">🔐 Confidentialité</h5>
-                        </div>
-                        <div class="card-body">
-                            <form method="POST">
-                                <input type="hidden" name="action" value="update_privacy">
-                                
-                                <div class="switch-container">
-                                    <div>
-                                        <strong>Profil public</strong>
-                                        <div class="text-muted small">Permettre aux autres utilisateurs de voir votre profil</div>
-                                    </div>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" name="profil_public" 
-                                               <?= ($user['profil_public'] ?? 1) ? 'checked' : '' ?>>
-                                    </div>
-                                </div>
-                                
-                                <div class="switch-container">
-                                    <div>
-                                        <strong>Visible dans les recherches</strong>
-                                        <div class="text-muted small">Apparaître dans les résultats de recherche des recruteurs</div>
-                                    </div>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" name="recherche_visible" 
-                                               <?= ($user['recherche_visible'] ?? 1) ? 'checked' : '' ?>>
-                                    </div>
-                                </div>
-                                
-                                <button type="submit" class="btn btn-primary mt-3">
-                                    <i class="bi bi-shield-lock me-2"></i>Sauvegarder la confidentialité
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Informations du compte -->
                 <div class="col-lg-6">
                     <div class="settings-card">
@@ -299,7 +247,7 @@ $user = $database->fetch("SELECT * FROM utilisateurs WHERE id = ?", [$_SESSION['
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label text-muted">Membre depuis</label>
-                                    <div class="fw-bold"><?= date('d/m/Y', strtotime($user['created_at'])) ?></div>
+                                    <div class="fw-bold"><?= date('d/m/Y', strtotime($user['date_inscription'])) ?></div>
                                 </div>
                             </div>
                             

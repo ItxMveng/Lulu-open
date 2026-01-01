@@ -593,6 +593,6 @@ $page_title = "Gestion Utilisateurs - Admin LULU-OPEN";
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="<?= url('assets/js/admin-users.js') ?>"></script>
+<script src="<?= url('assets/js/admin-users.js?v=' . time()) ?>"></script>
 </body>
 </html>

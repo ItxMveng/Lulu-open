@@ -30,14 +30,6 @@ $pending = $stmt->fetchColumn();
             <span>Utilisateurs</span>
         </a>
 
-        <a href="<?= url('views/admin/validations.php') ?>" class="menu-item <?= $current_page === 'validations.php' ? 'active' : '' ?>">
-            <i class="bi bi-check-circle-fill"></i>
-            <span>Validations</span>
-            <?php if ($pending > 0): ?>
-                <span class="badge bg-danger"><?= $pending ?></span>
-            <?php endif; ?>
-        </a>
-
         <a href="<?= url('views/admin/messages.php') ?>" class="menu-item <?= $current_page === 'messages.php' ? 'active' : '' ?>">
             <i class="bi bi-chat-dots-fill"></i>
             <span>Messages</span>

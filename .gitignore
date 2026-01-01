@@ -1,73 +1,28 @@
-# Configuration et fichiers sensibles
+# Configuration files with sensitive data
+config/stripe.php
 config/db.php
-.env
-.env.local
-.env.production
+
+# Uploads directory
+uploads/*
+!uploads/.gitkeep
 
 # Logs
 logs/
 *.log
-error_log
 
-# Uploads et fichiers utilisateurs
-uploads/profiles/*
-uploads/cv/*
-uploads/portfolios/*
-uploads/proofs/*
-!uploads/profiles/.gitkeep
-!uploads/cv/.gitkeep
-!uploads/portfolios/.gitkeep
-!uploads/proofs/.gitkeep
-
-# Dépendances
+# Composer
 vendor/
-node_modules/
 
-# Cache et fichiers temporaires
-cache/
-tmp/
-temp/
-*.tmp
-*.cache
-
-# Fichiers système
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
-
-# IDE et éditeurs
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# Composer
-composer.phar
-composer.lock
+# OS files
+.DS_Store
+Thumbs.db
 
-# Backup files
-*.bak
-*.backup
-*.sql.gz
-
-# OS generated files
-.directory
-.fuse_hidden*
-.nfs*
-
-# Fichiers de développement
-phpunit.xml
-.phpunit.result.cache
-coverage/
-
-# Clés API et secrets (sécurité)
-secrets/
-keys/
-*.key
-*.pem
+# Temporary files
+*.tmp
+*.temp
