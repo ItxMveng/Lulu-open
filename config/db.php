@@ -30,7 +30,10 @@ final class Database
 
         self::$connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         self::$connection->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-        self::$connection->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+        // Émulation activée : autorise la réutilisation d'un même placeholder nommé
+        // dans une requête (ex. :user_id utilisé plusieurs fois). PDO échappe toujours
+        // les valeurs, donc la protection contre l'injection est conservée.
+        self::$connection->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
 
         return self::$connection;
     }

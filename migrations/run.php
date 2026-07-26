@@ -38,18 +38,14 @@ foreach ($files as $file) {
         throw new RuntimeException(sprintf('Impossible de lire la migration %s', $migration));
     }
 
+    // NB: en MySQL, le DDL (CREATE/ALTER TABLE) déclenche un COMMIT implicite ;
+    // on ne peut donc pas envelopper les migrations de schéma dans une transaction.
     try {
-        $pdo->beginTransaction();
         $pdo->exec($sql);
         $statement = $pdo->prepare('INSERT INTO schema_migrations (migration) VALUES (:migration)');
         $statement->execute(['migration' => $migration]);
-        $pdo->commit();
         echo "[OK] {$migration}" . PHP_EOL;
     } catch (Throwable $throwable) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-
         echo "[FAIL] {$migration} - {$throwable->getMessage()}" . PHP_EOL;
         throw $throwable;
     }
