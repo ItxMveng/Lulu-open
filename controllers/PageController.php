@@ -1,144 +1,77 @@
 <?php
-/**
- * Contrôleur des pages statiques - LULU-OPEN
- */
+declare(strict_types=1);
 
-require_once 'BaseController.php';
+final class PageController extends Controller
+{
+    public function home(): void
+    {
+        $this->render('pages/home', ['title' => 'Accueil']);
+    }
 
-class PageController extends BaseController {
-    
-    /**
-     * Page À propos
-     */
-    public function about() {
-        $data = [
-            'title' => 'À propos - ' . APP_NAME,
-            'page' => 'about'
-        ];
-        
-        $this->render('pages/about', $data);
+    public function about(): void
+    {
+        $this->render('pages/about', ['title' => 'À propos']);
     }
-    
-    /**
-     * Page Contact - Affichage formulaire
-     */
-    public function contact() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->handleContactForm();
-            return;
+
+    public function contact(): void
+    {
+        $this->render('pages/contact', ['title' => 'Contact']);
+    }
+
+    public function handleContactForm(): void
+    {
+        verify_csrf();
+
+        $name = trim((string) ($_POST['name'] ?? ''));
+        $email = trim((string) ($_POST['email'] ?? ''));
+        $message = trim((string) ($_POST['message'] ?? ''));
+
+        if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $message === '') {
+            store_old_input($_POST);
+            flash('Merci de compléter correctement le formulaire de contact.', 'danger');
+            redirect('/contact');
         }
-        
-        $data = [
-            'title' => 'Contact - ' . APP_NAME,
-            'page' => 'contact'
-        ];
-        
-        $this->render('pages/contact', $data);
+
+        $html = sprintf(
+            '<p><strong>%s</strong> (%s) vous a contacté.</p><p>%s</p>',
+            e($name),
+            e($email),
+            nl2br(e($message))
+        );
+
+        MailHelper::send((string) env('MAIL_FROM_ADDRESS', 'contact@localhost'), 'Nouveau message de contact', $html, $message);
+        clear_old_input();
+        flash('Votre message a bien été envoyé. Nous revenons vers vous rapidement.', 'success');
+        redirect('/contact');
     }
-    
-    /**
-     * Traitement formulaire contact
-     */
-    public function handleContactForm() {
-        // Vérifier CSRF
-        verify_csrf_or_die();
-        
-        // Valider les données
-        $errors = Validator::validate($_POST, [
-            'nom' => ['required', ['min' => 2], ['max' => 100]],
-            'email' => ['required', 'email'],
-            'sujet' => ['required', ['min' => 5], ['max' => 200]],
-            'message' => ['required', ['min' => 10], ['max' => 2000]]
-        ]);
-        
-        if (!empty($errors)) {
-            $_SESSION['form_errors'] = $errors;
-            $_SESSION['form_data'] = $_POST;
-            flashMessage('Veuillez corriger les erreurs dans le formulaire.', 'error');
-            redirect('/lulu/contact');
-            return;
-        }
-        
-        // Sanitizer les données
-        $nom = Validator::sanitizeString($_POST['nom']);
-        $email = Validator::sanitizeEmail($_POST['email']);
-        $sujet = Validator::sanitizeString($_POST['sujet']);
-        $message = Validator::sanitizeString($_POST['message']);
-        
-        // Enregistrer dans la base (optionnel)
-        try {
-            global $database;
-            $database->insert('messages_contact', [
-                'nom' => $nom,
-                'email' => $email,
-                'sujet' => $sujet,
-                'message' => $message,
-                'ip_address' => $_SERVER['REMOTE_ADDR'],
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
-        } catch (Exception $e) {
-            ErrorHandler::log('Erreur enregistrement message contact: ' . $e->getMessage());
-        }
-        
-        // TODO: Envoyer email (à implémenter selon configuration SMTP)
-        
-        // Message de succès
-        flashMessage('Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.', 'success');
-        unset($_SESSION['form_data']);
-        redirect('/lulu/contact');
+
+    public function cgu(): void
+    {
+        $this->render('pages/cgu', ['title' => 'Conditions générales']);
     }
-    
-    /**
-     * Page CGU
-     */
-    public function cgu() {
-        global $database;
-        
-        // Récupérer depuis la base
-        $page = $database->fetch("SELECT * FROM pages_statiques WHERE slug = 'cgu' AND actif = 1");
-        
-        $data = [
-            'title' => 'Conditions Générales d\'Utilisation - ' . APP_NAME,
-            'page' => 'cgu',
-            'content' => $page
-        ];
-        
-        $this->render('pages/cgu', $data);
+
+    public function privacy(): void
+    {
+        $this->render('pages/privacy', ['title' => 'Confidentialité']);
     }
-    
-    /**
-     * Page Politique de confidentialité
-     */
-    public function privacy() {
-        global $database;
-        
-        // Récupérer depuis la base
-        $page = $database->fetch("SELECT * FROM pages_statiques WHERE slug = 'politique-confidentialite' AND actif = 1");
-        
-        $data = [
-            'title' => 'Politique de Confidentialité - ' . APP_NAME,
-            'page' => 'privacy',
-            'content' => $page
-        ];
-        
-        $this->render('pages/privacy', $data);
+
+    public function legal(): void
+    {
+        $this->render('pages/legal', ['title' => 'Mentions légales']);
     }
-    
-    /**
-     * Page Mentions légales
-     */
-    public function legal() {
-        global $database;
-        
-        $page = $database->fetch("SELECT * FROM pages_statiques WHERE slug = 'mentions-legales' AND actif = 1");
-        
-        $data = [
-            'title' => 'Mentions Légales - ' . APP_NAME,
-            'page' => 'legal',
-            'content' => $page
-        ];
-        
-        $this->render('pages/legal', $data);
+
+    public function services(): void
+    {
+        $this->render('pages/services', ['title' => 'Prestations']);
+    }
+
+    public function emplois(): void
+    {
+        $this->render('pages/emplois', ['title' => 'Offres et recrutement']);
+    }
+
+    public function pricing(): void
+    {
+        $this->render('pages/pricing', ['title' => 'Tarifs']);
     }
 }
-?>

@@ -1,6 +1,7 @@
 {
     "require": {
         "spatie/pdf-to-text": "^1.54",
-        "stripe/stripe-php": "^19.1"
+        "stripe/stripe-php": "^19.1",
+        "symfony/mailer": "^7.4"
     }
 }

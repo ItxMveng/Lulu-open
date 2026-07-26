@@ -1,79 +1,153 @@
 <?php
+declare(strict_types=1);
 
-class User {
+final class User extends Model
+{
+    public function findById(int $id): ?array
+    {
+        $statement = $this->db->prepare('SELECT * FROM users WHERE id = :id LIMIT 1');
+        $statement->execute(['id' => $id]);
+        $user = $statement->fetch();
 
-    private $db;
-
-    public function __construct($database = null) {
-        global $database;
-        $this->db = $database ?? $database;
+        return $user ?: null;
     }
 
-    public function findByEmail($email) {
-        return $this->db->fetch("SELECT * FROM utilisateurs WHERE email = ?", [$email]);
+    public function findByEmail(string $email): ?array
+    {
+        $statement = $this->db->prepare('SELECT * FROM users WHERE email = :email LIMIT 1');
+        $statement->execute(['email' => strtolower(trim($email))]);
+        $user = $statement->fetch();
+
+        return $user ?: null;
     }
 
-    public function findById($id) {
-        return $this->db->fetch("SELECT * FROM utilisateurs WHERE id = ?", [$id]);
+    public function create(array $data): int
+    {
+        $statement = $this->db->prepare(
+            'INSERT INTO users (name, email, password_hash, role, status, subscription_status, created_at, updated_at)
+             VALUES (:name, :email, :password_hash, :role, :status, :subscription_status, NOW(), NOW())'
+        );
+
+        $statement->execute([
+            'name' => $data['name'],
+            'email' => strtolower(trim((string) $data['email'])),
+            'password_hash' => $data['password_hash'],
+            'role' => $data['role'],
+            'status' => $data['status'] ?? 'active',
+            'subscription_status' => $data['subscription_status'] ?? 'inactive',
+        ]);
+
+        return (int) $this->db->lastInsertId();
     }
 
-    public function authenticate($email, $password) {
-        $user = $this->findByEmail($email);
+    public function createProfileForUser(int $userId, string $displayName, string $type = 'services'): void
+    {
+        $statement = $this->db->prepare(
+            'INSERT INTO profiles (user_id, type, display_name, created_at, updated_at)
+             VALUES (:user_id, :type, :display_name, NOW(), NOW())'
+        );
 
-        if (!$user) {
-            throw new Exception("Email ou mot de passe incorrect");
+        $statement->execute([
+            'user_id' => $userId,
+            'type' => $type,
+            'display_name' => $displayName,
+        ]);
+    }
+
+    public function assignDefaultSubscription(int $userId, string $role): void
+    {
+        $planSlug = $role === 'entreprise' ? 'entreprise_starter' : 'client_free';
+        $planStatement = $this->db->prepare('SELECT id FROM plans WHERE slug = :slug LIMIT 1');
+        $planStatement->execute(['slug' => $planSlug]);
+        $plan = $planStatement->fetch();
+
+        if (!$plan) {
+            return;
         }
 
-        if (!password_verify($password, $user['mot_de_passe'])) {
-            throw new Exception("Email ou mot de passe incorrect");
-        }
+        $statement = $this->db->prepare(
+            'INSERT INTO subscriptions (user_id, plan_id, status, starts_at, created_at, updated_at)
+             VALUES (:user_id, :plan_id, :status, NOW(), NOW(), NOW())'
+        );
 
-        return $user;
+        $statement->execute([
+            'user_id' => $userId,
+            'plan_id' => $plan['id'],
+            'status' => 'active',
+        ]);
+
+        $update = $this->db->prepare('UPDATE users SET subscription_status = :status WHERE id = :id');
+        $update->execute(['status' => 'active', 'id' => $userId]);
     }
 
-    public function getRecentProfiles($limit = 6) {
-        $sql = "
-            SELECT u.id, u.nom, u.prenom, u.photo_profil, u.type_utilisateur, l.ville,
-                   COALESCE(pp.titre_professionnel, cv.titre_poste_recherche) as titre,
-                   cs.nom as categorie_nom
-            FROM utilisateurs u
-            LEFT JOIN localisations l ON u.localisation_id = l.id
-            LEFT JOIN profils_prestataires pp ON u.id = pp.utilisateur_id
-            LEFT JOIN cvs cv ON u.id = cv.utilisateur_id
-            LEFT JOIN categories_services cs ON cs.id = COALESCE(pp.categorie_id, cv.categorie_id)
-            WHERE u.statut = 'actif'
-              AND u.type_utilisateur IN ('prestataire', 'candidat', 'prestataire_candidat')
-              AND (pp.id IS NOT NULL OR cv.id IS NOT NULL)
-            ORDER BY u.date_inscription DESC
-            LIMIT ?
-        ";
-
-        return $this->db->fetchAll($sql, [$limit]);
+    public function updateProfile(int $userId, array $data): bool
+    {
+        $statement = $this->db->prepare('UPDATE users SET name = :name, updated_at = NOW() WHERE id = :id');
+        return $statement->execute([
+            'id' => $userId,
+            'name' => $data['name'] ?? '',
+        ]);
     }
 
-    /**
-     * Vérifie si l'utilisateur a un abonnement payant actif
-     *
-     * @param int $userId ID de l'utilisateur
-     * @return bool True si l'utilisateur a un abonnement payant actif
-     */
-    public function hasActivePaidSubscription($userId) {
-        try {
-            $sql = "
-                SELECT COUNT(*) as count
-                FROM abonnements a
-                JOIN plans_abonnement p ON a.plan_id = p.id
-                WHERE a.utilisateur_id = ?
-                  AND a.statut = 'actif'
-                  AND p.prix_mensuel > 0
-                  AND a.date_fin >= CURDATE()
-            ";
-            $result = $this->db->fetch($sql, [$userId]);
-            return $result && $result['count'] > 0;
-        } catch (Exception $e) {
-            error_log("Erreur dans hasActivePaidSubscription: " . $e->getMessage());
-            return false;
-        }
+    public function updatePassword(int $userId, string $passwordHash): bool
+    {
+        $statement = $this->db->prepare('UPDATE users SET password_hash = :password_hash, updated_at = NOW() WHERE id = :id');
+        return $statement->execute([
+            'id' => $userId,
+            'password_hash' => $passwordHash,
+        ]);
+    }
+
+    public function delete(int $userId): bool
+    {
+        $statement = $this->db->prepare('UPDATE users SET status = :status, updated_at = NOW() WHERE id = :id');
+        return $statement->execute([
+            'id' => $userId,
+            'status' => 'deleted',
+        ]);
+    }
+
+    public function updateLoginTimestamp(int $userId): void
+    {
+        $statement = $this->db->prepare('UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = :id');
+        $statement->execute(['id' => $userId]);
+    }
+
+    public function createPasswordReset(int $userId, string $token, DateTimeInterface $expiresAt): void
+    {
+        $cleanup = $this->db->prepare('UPDATE password_resets SET used_at = NOW() WHERE user_id = :user_id AND used_at IS NULL');
+        $cleanup->execute(['user_id' => $userId]);
+
+        $statement = $this->db->prepare(
+            'INSERT INTO password_resets (user_id, token, expires_at, created_at)
+             VALUES (:user_id, :token, :expires_at, NOW())'
+        );
+
+        $statement->execute([
+            'user_id' => $userId,
+            'token' => $token,
+            'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
+        ]);
+    }
+
+    public function findPasswordResetByToken(string $token): ?array
+    {
+        $statement = $this->db->prepare(
+            'SELECT password_resets.*, users.email, users.name, users.id AS linked_user_id
+             FROM password_resets
+             INNER JOIN users ON users.id = password_resets.user_id
+             WHERE password_resets.token = :token
+             LIMIT 1'
+        );
+        $statement->execute(['token' => $token]);
+        $reset = $statement->fetch();
+
+        return $reset ?: null;
+    }
+
+    public function markPasswordResetUsed(string $token): void
+    {
+        $statement = $this->db->prepare('UPDATE password_resets SET used_at = NOW() WHERE token = :token');
+        $statement->execute(['token' => $token]);
     }
 }
-?>

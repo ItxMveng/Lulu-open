@@ -1,226 +1,90 @@
 <?php
-require_once 'BaseController.php';
-require_once 'models/Message.php';
+declare(strict_types=1);
 
-class MessageController extends BaseController {
-    
-    public function __construct() {
-        $this->requireAuth();
+final class MessageController extends Controller
+{
+    private Message $messages;
+    private Notification $notifications;
+
+    public function __construct()
+    {
+        $this->messages = new Message();
+        $this->notifications = new Notification();
     }
-    
-    public function inbox() {
-        try {
-            $messageModel = new Message();
-            $conversations = $messageModel->getConversations($_SESSION['user_id']);
-            $unreadCount = $messageModel->getUnreadCount($_SESSION['user_id']);
-            
-            $data = [
-                'title' => 'Messages - ' . APP_NAME,
-                'conversations' => $conversations,
-                'unread_count' => $unreadCount
-            ];
-            
-            $this->render('prestataire/messages/inbox', $data);
-            
-        } catch (Exception $e) {
-            flashMessage('Erreur lors du chargement des messages', 'error');
-            redirect('prestataire/dashboard.php');
-        }
+
+    public function index(): void
+    {
+        AuthMiddleware::requireAuth();
+        $conversations = $this->messages->getConversations((int) current_user_id());
+        $selectedConversation = $conversations[0] ?? null;
+        $messages = $selectedConversation ? $this->messages->getMessages((int) $selectedConversation['id'], (int) current_user_id()) : [];
+        $view = current_role() === 'entreprise' ? 'entreprise/messages' : 'client/messages';
+
+        $this->render($view, [
+            'title' => 'Messagerie',
+            'conversations' => $conversations,
+            'messages' => $messages,
+            'selectedConversationId' => $selectedConversation['id'] ?? null,
+            'selectedConversation' => $selectedConversation,
+        ]);
     }
-    
-    public function conversation() {
-        try {
-            $contactId = $this->getInput('contact_id');
-            
-            if (!$contactId) {
-                throw new Exception('Contact non spécifié');
+
+    public function conversation(string $id): void
+    {
+        AuthMiddleware::requireAuth();
+        $conversations = $this->messages->getConversations((int) current_user_id());
+        $selectedConversation = null;
+        foreach ($conversations as $conversation) {
+            if ((int) $conversation['id'] === (int) $id) {
+                $selectedConversation = $conversation;
+                break;
             }
-            
-            $messageModel = new Message();
-            $messages = $messageModel->getConversation($_SESSION['user_id'], $contactId);
-            
-            // Récupération des infos du contact
-            global $database;
-            $contact = $database->fetch(
-                "SELECT id, nom, prenom, photo_profil, type_utilisateur FROM utilisateurs WHERE id = :id",
-                ['id' => $contactId]
-            );
-            
-            if (!$contact) {
-                throw new Exception('Contact non trouvé');
-            }
-            
-            $data = [
-                'title' => 'Conversation avec ' . $contact['prenom'] . ' ' . $contact['nom'],
-                'messages' => $messages,
-                'contact' => $contact,
-                'csrf_token' => $this->generateCSRF()
-            ];
-            
-            $this->render('prestataire/messages/conversation', $data);
-            
-        } catch (Exception $e) {
-            flashMessage($e->getMessage(), 'error');
-            redirect('prestataire/messages/inbox.php');
         }
+        $messages = $this->messages->getMessages((int) $id, (int) current_user_id());
+        $view = current_role() === 'entreprise' ? 'entreprise/messages' : 'client/messages';
+
+        $this->render($view, [
+            'title' => 'Messagerie',
+            'conversations' => $conversations,
+            'messages' => $messages,
+            'selectedConversationId' => (int) $id,
+            'selectedConversation' => $selectedConversation,
+        ]);
     }
-    
-    public function sendMessage() {
-        if (!$this->isPost()) {
-            $this->json(['error' => 'Méthode non autorisée'], 405);
+
+    public function sendMessage(): never
+    {
+        AuthMiddleware::requireAuth();
+        if (!SubscriptionHelper::canSendMessage((int) current_user_id())) {
+            json_response(['success' => false, 'upgrade_required' => true], 403);
         }
-        
-        try {
-            $this->validateCSRF();
-            
-            $destinataireId = $this->getInput('destinataire_id');
-            $sujet = $this->getInput('sujet');
-            $contenu = $this->getInput('contenu');
-            
-            if (!$destinataireId || !$sujet || !$contenu) {
-                throw new Exception('Données manquantes');
-            }
-            
-            $messageModel = new Message();
-            $messageId = $messageModel->sendMessage([
-                'expediteur_id' => $_SESSION['user_id'],
-                'destinataire_id' => $destinataireId,
-                'sujet' => $sujet,
-                'contenu' => $contenu
-            ]);
-            
-            $this->logActivity('message_sent', [
-                'message_id' => $messageId,
-                'recipient_id' => $destinataireId
-            ]);
-            
-            $this->json([
-                'success' => true,
-                'message_id' => $messageId,
-                'message' => 'Message envoyé avec succès'
-            ]);
-            
-        } catch (Exception $e) {
-            $this->json(['error' => $e->getMessage()], 400);
-        }
+
+        $payload = json_decode((string) file_get_contents('php://input'), true) ?: $_POST;
+        verify_csrf($payload['_csrf_token'] ?? null);
+
+        $result = $this->messages->send([
+            'sender_id' => (int) current_user_id(),
+            'receiver_id' => (int) ($payload['receiver_id'] ?? 0),
+            'body' => trim((string) ($payload['body'] ?? '')),
+        ]);
+
+        $this->notifications->create((int) ($payload['receiver_id'] ?? 0), 'message_received', ['conversation_id' => $result['conversation_id']]);
+        json_response(['success' => true] + $result);
     }
-    
-    public function getConversation() {
-        try {
-            $contactId = $this->getInput('contact_id');
-            $lastMessageId = $this->getInput('last_message_id', 0);
-            
-            if (!$contactId) {
-                throw new Exception('Contact non spécifié');
-            }
-            
-            $messageModel = new Message();
-            $messages = $messageModel->getConversation($_SESSION['user_id'], $contactId);
-            
-            // Filtrer les nouveaux messages si last_message_id est fourni
-            if ($lastMessageId > 0) {
-                $messages = array_filter($messages, function($message) use ($lastMessageId) {
-                    return $message['id'] > $lastMessageId;
-                });
-            }
-            
-            $this->json([
-                'success' => true,
-                'messages' => array_values($messages),
-                'unread_count' => $messageModel->getUnreadCount($_SESSION['user_id'])
-            ]);
-            
-        } catch (Exception $e) {
-            $this->json(['error' => $e->getMessage()], 400);
-        }
+
+    public function deleteMessage(string $id): never
+    {
+        AuthMiddleware::requireAuth();
+        verify_csrf();
+        $this->messages->deleteMessage((int) $id, (int) current_user_id());
+        json_response(['success' => true]);
     }
-    
-    public function markAsRead() {
-        if (!$this->isPost()) {
-            $this->json(['error' => 'Méthode non autorisée'], 405);
-        }
-        
-        try {
-            $contactId = $this->getInput('contact_id');
-            
-            if (!$contactId) {
-                throw new Exception('Contact non spécifié');
-            }
-            
-            $messageModel = new Message();
-            $messageModel->markAsRead($_SESSION['user_id'], $contactId);
-            
-            $this->json([
-                'success' => true,
-                'unread_count' => $messageModel->getUnreadCount($_SESSION['user_id'])
-            ]);
-            
-        } catch (Exception $e) {
-            $this->json(['error' => $e->getMessage()], 400);
-        }
-    }
-    
-    public function deleteMessage() {
-        if (!$this->isPost()) {
-            $this->json(['error' => 'Méthode non autorisée'], 405);
-        }
-        
-        try {
-            $this->validateCSRF();
-            
-            $messageId = $this->getInput('message_id');
-            
-            if (!$messageId) {
-                throw new Exception('Message non spécifié');
-            }
-            
-            $messageModel = new Message();
-            $messageModel->deleteMessage($messageId, $_SESSION['user_id']);
-            
-            $this->logActivity('message_deleted', ['message_id' => $messageId]);
-            
-            $this->json(['success' => true, 'message' => 'Message supprimé']);
-            
-        } catch (Exception $e) {
-            $this->json(['error' => $e->getMessage()], 400);
-        }
-    }
-    
-    public function search() {
-        try {
-            $query = $this->getInput('q', '');
-            
-            if (strlen($query) < 2) {
-                throw new Exception('Requête trop courte');
-            }
-            
-            $messageModel = new Message();
-            $results = $messageModel->searchMessages($_SESSION['user_id'], $query);
-            
-            $this->json([
-                'success' => true,
-                'results' => $results,
-                'total' => count($results)
-            ]);
-            
-        } catch (Exception $e) {
-            $this->json(['error' => $e->getMessage()], 400);
-        }
-    }
-    
-    public function getStats() {
-        try {
-            $messageModel = new Message();
-            $stats = $messageModel->getMessageStats($_SESSION['user_id']);
-            
-            $this->json([
-                'success' => true,
-                'stats' => $stats
-            ]);
-            
-        } catch (Exception $e) {
-            $this->json(['error' => $e->getMessage()], 400);
-        }
+
+    public function deleteConversation(string $id): never
+    {
+        AuthMiddleware::requireAuth();
+        verify_csrf();
+        $this->messages->deleteConversation((int) $id, (int) current_user_id());
+        json_response(['success' => true]);
     }
 }
-?>

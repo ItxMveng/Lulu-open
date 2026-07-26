@@ -1,272 +1,305 @@
 <?php
-/**
- * Configuration générale - LULU-OPEN
- */
+declare(strict_types=1);
 
-// Démarrage de la session
-if (session_status() === PHP_SESSION_NONE) {
+if (defined('APP_BOOTSTRAPPED')) {
+    return;
+}
+
+define('APP_BOOTSTRAPPED', true);
+define('BASE_PATH', dirname(__DIR__));
+
+function base_path(string $path = ''): string
+{
+    $normalized = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+
+    if ($normalized === '') {
+        return BASE_PATH;
+    }
+
+    return BASE_PATH . DIRECTORY_SEPARATOR . ltrim($normalized, DIRECTORY_SEPARATOR);
+}
+
+function load_environment_file(string $filePath): void
+{
+    if (!is_file($filePath)) {
+        return;
+    }
+
+    $lines = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($lines === false) {
+        return;
+    }
+
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#') || !str_contains($line, '=')) {
+            continue;
+        }
+
+        [$name, $value] = explode('=', $line, 2);
+        $name = trim($name);
+        $value = trim($value);
+
+        if ($value !== '' && (($value[0] === '"' && str_ends_with($value, '"')) || ($value[0] === "'" && str_ends_with($value, "'")))) {
+            $value = substr($value, 1, -1);
+        }
+
+        if (!array_key_exists($name, $_ENV) && !array_key_exists($name, $_SERVER)) {
+            $_ENV[$name] = $value;
+            $_SERVER[$name] = $value;
+            putenv(sprintf('%s=%s', $name, $value));
+        }
+    }
+}
+
+function env(string $key, mixed $default = null): mixed
+{
+    $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+
+    if ($value === false || $value === null || $value === '') {
+        return $default;
+    }
+
+    $normalized = strtolower((string) $value);
+
+    return match ($normalized) {
+        'true', '(true)' => true,
+        'false', '(false)' => false,
+        'null', '(null)' => null,
+        'empty', '(empty)' => '',
+        default => $value,
+    };
+}
+
+function env_bool(string $key, bool $default = false): bool
+{
+    $value = env($key, $default);
+
+    if (is_bool($value)) {
+        return $value;
+    }
+
+    return filter_var((string) $value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
+}
+
+function normalize_base_uri(?string $uri): string
+{
+    $uri = trim((string) $uri);
+    if ($uri === '' || $uri === '/') {
+        return '';
+    }
+
+    return '/' . trim($uri, '/');
+}
+
+function is_https(): bool
+{
+    return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
+}
+
+load_environment_file(BASE_PATH . DIRECTORY_SEPARATOR . '.env');
+
+define('APP_NAME', (string) env('APP_NAME', 'LULU-OPEN'));
+define('APP_ENV', (string) env('APP_ENV', 'development'));
+define('APP_DEBUG', env_bool('APP_DEBUG', APP_ENV !== 'production'));
+define('APP_URL', rtrim((string) env('APP_URL', 'http://localhost/lulu'), '/'));
+define('APP_VERSION', '2.0.0');
+define('APP_KEY', (string) env('APP_KEY', 'change-me'));
+define('APP_LOCALE', (string) env('APP_LOCALE', 'fr_FR'));
+define('APP_BASE_URI', normalize_base_uri((string) parse_url(APP_URL, PHP_URL_PATH)));
+define('CONFIG_PATH', base_path('config'));
+define('LOG_PATH', base_path('logs'));
+define('UPLOADS_PATH', base_path('uploads'));
+
+ini_set('default_charset', 'UTF-8');
+ini_set('output_buffering', '4096');
+
+if (!is_dir(LOG_PATH)) {
+    mkdir(LOG_PATH, 0775, true);
+}
+
+if (PHP_SAPI !== 'cli' && session_status() !== PHP_SESSION_ACTIVE) {
+    session_name('lulu_open_session');
+    session_set_cookie_params([
+        'httponly' => true,
+        'secure' => is_https(),
+        'samesite' => 'Lax',
+        'path' => APP_BASE_URI === '' ? '/' : APP_BASE_URI . '/',
+    ]);
     session_start();
 }
 
-// Configuration générale
-define('APP_NAME', 'LULU-OPEN');
-define('APP_VERSION', '1.0.0');
-define('APP_URL', 'http://localhost/lulu');
-define('BASE_URL', '/lulu/');
-define('BASE_PATH', dirname(__DIR__));
-define('ROOT_PATH', dirname(dirname(__DIR__)));
+if (!ob_get_level()) {
+    ob_start();
+}
 
-// Configuration environnement
-define('APP_ENV', 'development'); // 'development' ou 'production'
-define('DISPLAY_ERRORS', APP_ENV === 'development');
+$composerAutoload = base_path('vendor/autoload.php');
+if (is_file($composerAutoload)) {
+    require_once $composerAutoload;
+}
 
-// Configuration de sécurité
-define('HASH_ALGO', PASSWORD_DEFAULT);
-define('TOKEN_LENGTH', 32);
-define('SESSION_LIFETIME', 3600); // 1 heure
-
-// Configuration des uploads
-define('UPLOAD_PATH', BASE_PATH . '/uploads/');
-define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
-define('ALLOWED_IMAGE_TYPES', ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-define('ALLOWED_DOC_TYPES', ['pdf', 'doc', 'docx']);
-
-// Configuration email
-define('SMTP_HOST', 'localhost');
-define('SMTP_PORT', 587);
-define('SMTP_USERNAME', '');
-define('SMTP_PASSWORD', '');
-define('FROM_EMAIL', 'noreply@lulu-open.com');
-define('FROM_NAME', 'LULU-OPEN');
-
-// Configuration paiement
-define('SUBSCRIPTION_PRICE_MONTHLY', 29.99);
-define('SUBSCRIPTION_PRICE_QUARTERLY', 79.99);
-define('SUBSCRIPTION_PRICE_YEARLY', 299.99);
-
-// Chargement de la configuration Stripe
-require_once BASE_PATH . '/config/stripe.php';
-
-// Configuration IA / Mistral
-define('AI_PROVIDER', 'mistral');
-define('AI_API_KEY', 'XYMWAJsj6AbocHzCfQLwrpvjeCjrf38T'); // TODO: Déplacer en variable d'environnement en production LWS
-define('AI_API_BASE_URL', 'https://api.mistral.ai/v1/chat/completions');
-define('AI_MODEL_NAME', 'mistral-large-latest');
-define('AI_DEBUG', APP_ENV === 'development'); // Mode debug IA
-
-// Timezone
-date_default_timezone_set('Europe/Paris');
-
-// Gestion des erreurs
-error_reporting(E_ALL);
-ini_set('display_errors', DISPLAY_ERRORS ? 1 : 0);
-ini_set('log_errors', 1);
-ini_set('error_log', BASE_PATH . '/logs/php_errors.log');
-
-// Autoloader simple
-spl_autoload_register(function ($class) {
-    $paths = [
-        BASE_PATH . '/models/',
-        BASE_PATH . '/controllers/',
-        BASE_PATH . '/config/'
+spl_autoload_register(static function (string $class): void {
+    $directories = [
+        base_path('core'),
+        base_path('controllers'),
+        base_path('models'),
+        base_path('includes'),
+        base_path('includes/helpers'),
+        base_path('includes/middleware'),
+        base_path('includes/ai'),
+        base_path('includes/stripe'),
+        base_path('config'),
     ];
-    
-    foreach ($paths as $path) {
-        $file = $path . $class . '.php';
-        if (file_exists($file)) {
-            require_once $file;
+
+    foreach ($directories as $directory) {
+        $candidate = $directory . DIRECTORY_SEPARATOR . $class . '.php';
+        if (is_file($candidate)) {
+            require_once $candidate;
             return;
         }
     }
 });
 
-// Fonctions utilitaires
-if (!function_exists('sanitize')) {
-    function sanitize($data) {
-        if (is_array($data)) {
-            return array_map('sanitize', $data);
-        }
-        return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
+require_once base_path('config/db.php');
+
+function request_path(): string
+{
+    $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+    $baseUri = APP_BASE_URI;
+
+    if ($baseUri !== '' && str_starts_with($path, $baseUri)) {
+        $path = substr($path, strlen($baseUri)) ?: '/';
+    }
+
+    $path = '/' . trim($path, '/');
+
+    return $path === '//' ? '/' : (rtrim($path, '/') ?: '/');
+}
+
+function url(string $path = ''): string
+{
+    $base = APP_URL;
+    $path = trim($path);
+
+    if ($path === '') {
+        return $base;
+    }
+
+    return $base . '/' . ltrim($path, '/');
+}
+
+function redirect(string $path): never
+{
+    header('Location: ' . (str_starts_with($path, 'http') ? $path : url($path)));
+    exit;
+}
+
+function e(?string $value): string
+{
+    return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+function flash(string $message, string $type = 'info'): void
+{
+    $_SESSION['_flash'][] = ['message' => $message, 'type' => $type];
+}
+
+function get_flash(): array
+{
+    $messages = $_SESSION['_flash'] ?? [];
+    unset($_SESSION['_flash']);
+
+    return is_array($messages) ? $messages : [];
+}
+
+function store_old_input(array $input): void
+{
+    $_SESSION['_old'] = $input;
+}
+
+function old(string $key, mixed $default = ''): mixed
+{
+    $oldInput = $_SESSION['_old'] ?? [];
+    return $oldInput[$key] ?? $default;
+}
+
+function clear_old_input(): void
+{
+    unset($_SESSION['_old']);
+}
+
+function csrf_token(): string
+{
+    if (empty($_SESSION['_csrf_token'])) {
+        $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
+    }
+
+    return (string) $_SESSION['_csrf_token'];
+}
+
+function csrf_field(): string
+{
+    return '<input type="hidden" name="_csrf_token" value="' . e(csrf_token()) . '">';
+}
+
+function verify_csrf(?string $token = null): void
+{
+    $submittedToken = $token ?? ($_POST['_csrf_token'] ?? null);
+    $currentToken = $_SESSION['_csrf_token'] ?? '';
+
+    if (!is_string($submittedToken) || $submittedToken === '' || !hash_equals((string) $currentToken, $submittedToken)) {
+        http_response_code(403);
+        throw new RuntimeException('CSRF token invalide.');
     }
 }
 
-if (!function_exists('generateToken')) {
-    function generateToken($length = TOKEN_LENGTH) {
-        return bin2hex(random_bytes($length / 2));
-    }
+function is_auth(): bool
+{
+    return isset($_SESSION['user_id'], $_SESSION['role']) && is_numeric($_SESSION['user_id']);
 }
 
-if (!function_exists('hashPassword')) {
-    function hashPassword($password) {
-        return password_hash($password, HASH_ALGO);
-    }
+function current_user_id(): ?int
+{
+    return is_auth() ? (int) $_SESSION['user_id'] : null;
 }
 
-if (!function_exists('verifyPassword')) {
-    function verifyPassword($password, $hash) {
-        return password_verify($password, $hash);
-    }
+function current_role(): ?string
+{
+    return is_auth() ? (string) $_SESSION['role'] : null;
 }
 
-if (!function_exists('isLoggedIn')) {
-    function isLoggedIn() {
-        return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
-    }
+function auth_user(): ?array
+{
+    return $_SESSION['user'] ?? null;
 }
 
-if (!function_exists('requireLogin')) {
-    function requireLogin() {
-        if (!isLoggedIn()) {
-            header('Location: login.php');
-            exit;
-        }
-    }
+function dashboard_path_for_role(?string $role): string
+{
+    return match ($role) {
+        'admin' => '/admin/dashboard',
+        'entreprise' => '/entreprise/dashboard',
+        'client' => '/client/dashboard',
+        default => '/',
+    };
 }
 
-if (!function_exists('hasRole')) {
-    function hasRole($role) {
-        return isset($_SESSION['user_type']) && $_SESSION['user_type'] === $role;
-    }
+function json_response(array $payload, int $status = 200): never
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
 }
 
-if (!function_exists('requireRole')) {
-    function requireRole($role) {
-        requireLogin();
-        if (!hasRole($role)) {
-            header('HTTP/1.1 403 Forbidden');
-            exit('Accès refusé');
-        }
+function abort(int $status, string $message = ''): never
+{
+    http_response_code($status);
+
+    if (class_exists('ErrorHandler')) {
+        ErrorHandler::renderHttpError($status, $message);
     }
+
+    echo APP_DEBUG ? e($message !== '' ? $message : 'HTTP error') : 'Une erreur est survenue.';
+    exit;
 }
-
-if (!function_exists('url')) {
-    function url($path = '', $params = []) {
-        $base = BASE_URL;
-        $url = $base . ltrim($path, '/');
-        if (!empty($params)) {
-            $url .= '?' . http_build_query($params);
-        }
-        return $url;
-    }
-}
-
-if (!function_exists('is_current_page')) {
-    function is_current_page($page) {
-        $current = basename($_SERVER['PHP_SELF']);
-        return $current === $page;
-    }
-}
-
-if (!function_exists('redirect')) {
-    function redirect($url, $params = []) {
-        if (strpos($url, 'http') === 0) {
-            header("Location: $url");
-        } else {
-            header('Location: ' . url($url, $params));
-        }
-        exit;
-    }
-}
-
-if (!function_exists('flashMessage')) {
-    function flashMessage($message, $type = 'info') {
-        $_SESSION['flash_message'] = [
-            'message' => $message,
-            'type' => $type
-        ];
-    }
-}
-
-if (!function_exists('getFlashMessage')) {
-    function getFlashMessage() {
-        if (isset($_SESSION['flash_message'])) {
-            $message = $_SESSION['flash_message'];
-            unset($_SESSION['flash_message']);
-            return $message;
-        }
-        return null;
-    }
-}
-
-if (!function_exists('formatPrice')) {
-    function formatPrice($price) {
-        return number_format($price, 2, ',', ' ') . ' €';
-    }
-}
-
-if (!function_exists('formatDate')) {
-    function formatDate($date, $format = 'd/m/Y') {
-        return date($format, strtotime($date));
-    }
-}
-
-if (!function_exists('uploadFile')) {
-    function uploadFile($file, $directory, $allowedTypes = ALLOWED_IMAGE_TYPES) {
-        if ($file['error'] !== UPLOAD_ERR_OK) {
-            throw new Exception('Erreur lors de l\'upload du fichier');
-        }
-        
-        if ($file['size'] > MAX_FILE_SIZE) {
-            throw new Exception('Le fichier est trop volumineux');
-        }
-        
-        $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        if (!in_array($extension, $allowedTypes)) {
-            throw new Exception('Type de fichier non autorisé');
-        }
-        
-        $filename = generateToken() . '.' . $extension;
-        $uploadPath = UPLOAD_PATH . $directory . '/';
-        
-        if (!is_dir($uploadPath)) {
-            mkdir($uploadPath, 0755, true);
-        }
-        
-        $fullPath = $uploadPath . $filename;
-        
-        if (!move_uploaded_file($file['tmp_name'], $fullPath)) {
-            throw new Exception('Erreur lors de la sauvegarde du fichier');
-        }
-        
-        return $directory . '/' . $filename;
-    }
-}
-
-if (!function_exists('deleteFile')) {
-    function deleteFile($filePath) {
-        $fullPath = UPLOAD_PATH . $filePath;
-        if (file_exists($fullPath)) {
-            unlink($fullPath);
-        }
-    }
-}
-
-if (!function_exists('generateCSRFToken')) {
-    function generateCSRFToken() {
-        if (!isset($_SESSION['csrf_token'])) {
-            $_SESSION['csrf_token'] = generateToken();
-        }
-        return $_SESSION['csrf_token'];
-    }
-}
-
-if (!function_exists('verifyCSRFToken')) {
-    function verifyCSRFToken($token) {
-        return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
-    }
-}
-
-// Chargement des composants de sécurité
-require_once BASE_PATH . '/includes/csrf.php';
-require_once BASE_PATH . '/includes/Validator.php';
-require_once BASE_PATH . '/includes/ErrorHandler.php';
-
-// Chargement de la base de données
-require_once 'db.php';
-
-// Headers de sécurité
-header('X-Content-Type-Options: nosniff');
-header('X-Frame-Options: DENY');
-header('X-XSS-Protection: 1; mode=block');
-header('Referrer-Policy: strict-origin-when-cross-origin');
-?>

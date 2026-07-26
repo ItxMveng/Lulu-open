@@ -1,132 +1,51 @@
 <?php
-require_once '../config/config.php';
-require_once '../includes/middleware.php';
-require_once '../models/Message.php';
+declare(strict_types=1);
 
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, DELETE');
-header('Access-Control-Allow-Headers: Content-Type');
+require_once dirname(__DIR__) . '/config/config.php';
 
-require_login();
+header('Content-Type: application/json; charset=UTF-8');
 
-$action = $_GET['action'] ?? ($_POST['action'] ?? '');
+if (!is_auth()) {
+    json_response(['error' => 'Authentification requise'], 401);
+}
+
 $messageModel = new Message();
-$userId = $_SESSION['user_id'];
+$notificationModel = new Notification();
+$action = (string) ($_GET['action'] ?? $_POST['action'] ?? '');
+$payload = $_POST;
 
-try {
-    switch ($action) {
-        case 'get_conversation':
-            $interlocutorId = (int)($_GET['user_id'] ?? 0);
-            if (!$interlocutorId) {
-                throw new Exception("ID utilisateur manquant");
-            }
-
-            $db = Database::getInstance()->getConnection();
-            $stmt = $db->prepare("SELECT prenom, nom, photo_profil FROM utilisateurs WHERE id = ?");
-            $stmt->execute([$interlocutorId]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$user) {
-                throw new Exception("Utilisateur introuvable");
-            }
-
-            $conversation = $messageModel->getConversation($userId, $interlocutorId);
-            $messageModel->markAsRead($userId, $interlocutorId);
-
-            echo json_encode([
-                'success' => true,
-                'conversation' => $conversation,
-                'user' => $user
-            ]);
-            break;
-
-        case 'send_message':
-            $destinataireId = (int)($_POST['destinataire_id'] ?? 0);
-            $sujet = trim($_POST['sujet'] ?? 'Message');
-            $contenu = trim($_POST['contenu'] ?? '');
-
-            if (!$destinataireId || !$sujet || (!$contenu && !isset($_FILES['fichier']))) {
-                throw new Exception("Paramètres manquants");
-            }
-
-            $fichierJoint = null;
-            
-            if (isset($_FILES['fichier']) && $_FILES['fichier']['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = '../uploads/messages/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0755, true);
-                }
-                
-                $fileName = time() . '_' . basename($_FILES['fichier']['name']);
-                $uploadPath = $uploadDir . $fileName;
-                
-                if (move_uploaded_file($_FILES['fichier']['tmp_name'], $uploadPath)) {
-                    $fichierJoint = 'uploads/messages/' . $fileName;
-                }
-            }
-
-            $messageId = $messageModel->send($userId, $destinataireId, $sujet, $contenu, $fichierJoint);
-
-            if ($messageId) {
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Message envoyé avec succès',
-                    'message_id' => $messageId
-                ]);
-            } else {
-                throw new Exception("Erreur lors de l'envoi du message");
-            }
-            break;
-
-        case 'delete_message':
-            $messageId = (int)($_POST['message_id'] ?? 0);
-            if (!$messageId) {
-                throw new Exception("ID message manquant");
-            }
-
-            // Utilisateur ne peut supprimer que ses propres messages
-            $result = $messageModel->deleteMessage($messageId, $userId, false);
-            if ($result) {
-                echo json_encode(['success' => true, 'message' => 'Message supprimé']);
-            } else {
-                throw new Exception("Impossible de supprimer le message ou vous n'êtes pas l'auteur");
-            }
-            break;
-
-        case 'delete_conversation':
-            $interlocutorId = (int)($_POST['user_id'] ?? 0);
-            if (!$interlocutorId) {
-                throw new Exception("ID utilisateur manquant");
-            }
-
-            $result = $messageModel->deleteConversation($userId, $interlocutorId);
-            if ($result) {
-                echo json_encode(['success' => true, 'message' => 'Conversation supprimée']);
-            } else {
-                throw new Exception("Impossible de supprimer la conversation");
-            }
-            break;
-
-        case 'mark_read':
-            $messageId = (int)($_POST['message_id'] ?? 0);
-            if (!$messageId) {
-                throw new Exception("ID message manquant");
-            }
-
-            $result = $messageModel->markMessageAsRead($messageId, $userId);
-            echo json_encode(['success' => true]);
-            break;
-
-        default:
-            throw new Exception("Action inconnue: " . $action);
+if ($action === 'send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf($payload['_csrf_token'] ?? null);
+    if (!SubscriptionHelper::canSendMessage((int) current_user_id())) {
+        json_response(['success' => false, 'upgrade_required' => true], 403);
     }
 
-} catch (Exception $e) {
-    http_response_code(400);
-    echo json_encode([
-        'success' => false,
-        'message' => $e->getMessage()
+    $result = $messageModel->send([
+        'sender_id' => (int) current_user_id(),
+        'receiver_id' => (int) ($payload['receiver_id'] ?? 0),
+        'body' => trim((string) ($payload['body'] ?? '')),
     ]);
+    $notificationModel->create((int) ($payload['receiver_id'] ?? 0), 'message_received', ['conversation_id' => $result['conversation_id']]);
+    json_response(['success' => true] + $result);
 }
-?>
+
+if ($action === 'poll') {
+    $conversationId = (int) ($_GET['conversation_id'] ?? 0);
+    $since = (string) ($_GET['since'] ?? date('Y-m-d H:i:s', strtotime('-1 day')));
+    $items = $messageModel->getMessagesSince($conversationId, (int) current_user_id(), $since);
+    json_response(['items' => $items]);
+}
+
+if ($action === 'mark_read' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf($payload['_csrf_token'] ?? null);
+    $messageModel->markRead((int) ($payload['conversation_id'] ?? 0), (int) current_user_id());
+    json_response(['success' => true]);
+}
+
+if ($action === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf($payload['_csrf_token'] ?? null);
+    $messageModel->deleteMessage((int) ($payload['id'] ?? 0), (int) current_user_id());
+    json_response(['success' => true]);
+}
+
+json_response(['error' => 'Action non prise en charge'], 400);

@@ -1,0 +1,4 @@
+<section>
+    <h1 class="mb-4">Abonnements</h1>
+    <div class="card shadow-sm"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>ID</th><th>Utilisateur</th><th>Plan</th><th>Statut</th><th></th></tr></thead><tbody><?php foreach (($subscriptions ?? []) as $subscription): ?><tr><td><?= e((string) $subscription['id']) ?></td><td><?= e((string) $subscription['user_id']) ?></td><td><?= e((string) $subscription['plan_name']) ?></td><td><?= e((string) $subscription['status']) ?></td><td><a class="btn btn-sm btn-outline-danger" href="<?= e(url('/admin/subscriptions/' . $subscription['id'] . '/cancel')) ?>">Annuler</a></td></tr><?php endforeach; ?></tbody></table></div></div>
+</section>

@@ -1,17 +1,12 @@
-# Configuration files with sensitive data
-config/stripe.php
-config/db.php
-
-# Uploads directory
-uploads/*
-!uploads/.gitkeep
-
-# Logs
-logs/
-*.log
-
-# Composer
+.env
 vendor/
+logs/*.log
+uploads/
+_archive_v1/
+
+# Keep shared folders
+!uploads/.gitkeep
+!logs/.gitkeep
 
 # IDE files
 .vscode/
@@ -26,3 +21,10 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Local tooling / junk
+composer.phar
+.amazonq/
+foo.txt
+_probe.php
+# end

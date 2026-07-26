@@ -1,193 +1,248 @@
 <?php
-require_once '../config/config.php';
-require_once '../config/db.php';
-require_once '../includes/functions.php';
-require_once '../models/User.php';
-require_once '../models/Subscription.php';
-require_once 'BaseController.php';
+declare(strict_types=1);
 
-class AuthController extends BaseController {
-    
-    public function login() {
-        if ($this->isPost()) {
-            try {
-                $this->validateCSRF();
-                
-                $email = $this->getInput('email');
-                $password = $this->getInput('password');
-                
-                if (empty($email) || empty($password)) {
-                    throw new Exception('Email et mot de passe requis');
-                }
-                
-                global $database;
-                $userModel = new User($database);
-                $user = $userModel->authenticate($email, $password);
-                
-                // Vérification du statut d'abonnement pour prestataires/candidats
-                if (in_array($user['type_utilisateur'], ['prestataire', 'candidat'])) {
-                    $subscriptionModel = new Subscription();
-                    $activeSubscription = $subscriptionModel->getActiveSubscription($user['id']);
-                    
-                    if (!$activeSubscription) {
-                        $_SESSION['subscription_required'] = true;
-                    }
-                }
-                
-                // Création de la session
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_email'] = $user['email'];
-                $_SESSION['user_type'] = $user['type_utilisateur'];
-                $_SESSION['user_name'] = $user['prenom'] . ' ' . $user['nom'];
-                
-                $this->logActivity('login', ['user_id' => $user['id']]);
-                
-                setFlashMessage('Connexion réussie !', 'success');
-                
-                // Redirection selon le type d'utilisateur
-                $redirectUrl = $this->getRedirectUrl($user['type_utilisateur']);
-                redirect($redirectUrl);
-                
-            } catch (Exception $e) {
-                setFlashMessage($e->getMessage(), 'error');
-            }
+final class AuthController extends Controller
+{
+    private User $users;
+
+    public function __construct()
+    {
+        $this->users = new User();
+    }
+
+    public function showLogin(): void
+    {
+        $this->render('auth/login', ['title' => 'Connexion']);
+    }
+
+    public function handleLogin(): never
+    {
+        verify_csrf();
+
+        $email = strtolower(trim((string) ($_POST['email'] ?? '')));
+        $password = (string) ($_POST['password'] ?? '');
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
+            flash('Merci de saisir un email et un mot de passe valides.', 'danger');
+            store_old_input($_POST);
+            redirect('/login');
         }
-        
-        $data = [
-            'title' => 'Connexion - ' . APP_NAME,
-            'csrf_token' => $this->generateCSRF()
+
+        if ($this->isRateLimited($email)) {
+            flash('Trop de tentatives de connexion. Réessayez dans 15 minutes.', 'danger');
+            redirect('/login');
+        }
+
+        $user = $this->users->findByEmail($email);
+
+        if (!$user || !password_verify($password, (string) $user['password_hash'])) {
+            $this->registerFailedAttempt($email);
+            flash('Identifiants invalides.', 'danger');
+            store_old_input(['email' => $email]);
+            redirect('/login');
+        }
+
+        if (in_array($user['status'], ['suspended', 'deleted'], true)) {
+            flash('Votre compte est actuellement indisponible.', 'danger');
+            redirect('/login');
+        }
+
+        $this->clearFailedAttempts($email);
+        session_regenerate_id(true);
+
+        $_SESSION['user_id'] = (int) $user['id'];
+        $_SESSION['role'] = (string) $user['role'];
+        $_SESSION['user'] = [
+            'id' => (int) $user['id'],
+            'name' => (string) $user['name'],
+            'email' => (string) $user['email'],
+            'role' => (string) $user['role'],
         ];
-        
-        $this->render('auth/login', $data);
+
+        clear_old_input();
+        $this->users->updateLoginTimestamp((int) $user['id']);
+        flash('Connexion réussie.', 'success');
+        redirect(dashboard_path_for_role((string) $user['role']));
     }
-    
-    public function register() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
-                if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-                    throw new Exception('Token CSRF invalide');
-                }
-                
-                $data = $_POST;
-                $userModel = new User();
-                
-                // Validation des mots de passe
-                if ($data['password'] !== $data['confirm_password']) {
-                    throw new Exception('Les mots de passe ne correspondent pas');
-                }
-                
-                // Création ou récupération de la localisation
-                $localisationId = null;
-                if (!empty($data['ville']) && !empty($data['region'])) {
-                    $localisationId = $this->createOrGetLocation($data);
-                }
-                
-                $userData = [
-                    'email' => $data['email'],
-                    'mot_de_passe' => $data['password'],
-                    'nom' => $data['nom'],
-                    'prenom' => $data['prenom'],
-                    'telephone' => $data['telephone'] ?? null,
-                    'type_utilisateur' => $data['type_utilisateur'],
-                    'localisation_id' => $localisationId
-                ];
-                
-                $userId = $userModel->create($userData);
-                
-                // Si c'est un client, redirection directe
-                if ($data['type_utilisateur'] === 'client') {
-                    setFlashMessage('Inscription réussie ! Vous pouvez maintenant vous connecter.', 'success');
-                    header('Location: ../../login.php');
-                    exit;
-                } else {
-                    // Pour prestataire/candidat, redirection vers étape 3
-                    $_SESSION['temp_user_id'] = $userId;
-                    header('Location: ../auth/register.php?step=3&type=' . $data['type_utilisateur']);
-                    exit;
-                }
-                
-            } catch (Exception $e) {
-                setFlashMessage($e->getMessage(), 'error');
-                header('Location: ../auth/register.php?step=2&type=' . ($data['type_utilisateur'] ?? 'client'));
-                exit;
-            }
-        }
+
+    public function showRegister(): void
+    {
+        $this->render('auth/register', ['title' => 'Créer un compte']);
     }
-    
-    private function createOrGetLocation($data) {
-        $pdo = getConnection();
-        
-        // Vérifier si la localisation existe déjà
-        $stmt = $pdo->prepare("SELECT id FROM localisations WHERE ville = ? AND pays = ?");
-        $stmt->execute([$data['ville'], $data['pays']]);
-        $existing = $stmt->fetch();
-        
-        if ($existing) {
-            return $existing['id'];
+
+    public function handleRegister(): never
+    {
+        verify_csrf();
+
+        $name = trim((string) ($_POST['name'] ?? ''));
+        $email = strtolower(trim((string) ($_POST['email'] ?? '')));
+        $password = (string) ($_POST['password'] ?? '');
+        $confirm = (string) ($_POST['password_confirmation'] ?? '');
+        $role = (string) ($_POST['role'] ?? 'client');
+
+        if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 8 || $password !== $confirm) {
+            flash('Merci de vérifier les informations du formulaire.', 'danger');
+            store_old_input($_POST);
+            redirect('/register');
         }
-        
-        // Créer une nouvelle localisation
-        $stmt = $pdo->prepare("INSERT INTO localisations (ville, pays, code_iso) VALUES (?, ?, ?)");
-        $stmt->execute([
-            $data['ville'],
-            $data['pays'],
-            $data['code_iso'] ?? null
+
+        if (!in_array($role, ['client', 'entreprise'], true)) {
+            flash('Le rôle sélectionné est invalide.', 'danger');
+            redirect('/register');
+        }
+
+        if ($this->users->findByEmail($email)) {
+            flash('Un compte existe déjà avec cet email.', 'danger');
+            store_old_input($_POST);
+            redirect('/register');
+        }
+
+        $userId = $this->users->create([
+            'name' => $name,
+            'email' => $email,
+            'password_hash' => password_hash($password, PASSWORD_BCRYPT),
+            'role' => $role,
+            'status' => 'active',
+            'subscription_status' => 'active',
         ]);
-        
-        return $pdo->lastInsertId();
+
+        $profileType = $role === 'entreprise' ? 'mixte' : 'services';
+        $this->users->createProfileForUser($userId, $name, $profileType);
+        $this->users->assignDefaultSubscription($userId, $role);
+
+        $html = sprintf(
+            '<p>Bonjour %s,</p><p>Votre compte LULU-OPEN V2 a bien été créé. Vous pouvez maintenant accéder à votre tableau de bord.</p>',
+            e($name)
+        );
+        MailHelper::send($email, 'Bienvenue sur LULU-OPEN', $html, 'Votre compte LULU-OPEN a été créé.');
+
+        session_regenerate_id(true);
+        $_SESSION['user_id'] = $userId;
+        $_SESSION['role'] = $role;
+        $_SESSION['user'] = ['id' => $userId, 'name' => $name, 'email' => $email, 'role' => $role];
+
+        clear_old_input();
+        flash('Compte créé avec succès.', 'success');
+        redirect(dashboard_path_for_role($role));
     }
-    
-    public function logout() {
-        $this->logActivity('logout', ['user_id' => $_SESSION['user_id'] ?? null]);
-        
+
+    public function logout(): never
+    {
+        $_SESSION = [];
+
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'] ?? '', (bool) $params['secure'], (bool) $params['httponly']);
+        }
+
         session_destroy();
-        flashMessage('Déconnexion réussie', 'info');
-        redirect('index.php');
+        redirect('/login');
     }
-    
-    public function resetPassword() {
-        if ($this->isPost()) {
-            try {
-                $this->validateCSRF();
-                
-                $email = $this->getInput('email');
-                if (empty($email)) {
-                    throw new Exception('Email requis');
-                }
-                
-                $userModel = new User();
-                $token = $userModel->resetPassword($email);
-                
-                // TODO: Envoyer email avec le token
-                
-                flashMessage('Un email de réinitialisation a été envoyé', 'success');
-                redirect('login.php');
-                
-            } catch (Exception $e) {
-                flashMessage($e->getMessage(), 'error');
-            }
-        }
-        
-        $data = [
-            'title' => 'Réinitialisation - ' . APP_NAME,
-            'csrf_token' => $this->generateCSRF()
-        ];
-        
-        $this->render('auth/reset_password', $data);
+
+    public function showForgotPassword(): void
+    {
+        $this->render('auth/forgot-password', ['title' => 'Mot de passe oublié']);
     }
-    
-    private function getRedirectUrl($userType) {
-        switch ($userType) {
-            case 'admin':
-                return 'views/admin/dashboard.php';
-            case 'prestataire':
-            case 'prestataire_candidat':
-                return 'views/prestataire/dashboard.php';
-            case 'candidat':
-                return 'views/candidat/dashboard.php';
-            default:
-                return 'index.php';
+
+    public function handleForgotPassword(): never
+    {
+        verify_csrf();
+
+        $email = strtolower(trim((string) ($_POST['email'] ?? '')));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            flash('Merci de renseigner un email valide.', 'danger');
+            redirect('/forgot-password');
         }
+
+        $user = $this->users->findByEmail($email);
+
+        if ($user) {
+            $token = bin2hex(random_bytes(32));
+            $expiresAt = new DateTimeImmutable('+1 hour');
+            $this->users->createPasswordReset((int) $user['id'], $token, $expiresAt);
+
+            $resetLink = url('/reset-password/' . $token);
+            $html = sprintf('<p>Bonjour %s,</p><p>Voici votre lien de réinitialisation : <a href="%s">%s</a></p>', e((string) $user['name']), e($resetLink), e($resetLink));
+            MailHelper::send((string) $user['email'], 'Réinitialisation de votre mot de passe', $html, 'Lien de réinitialisation: ' . $resetLink);
+        }
+
+        flash('Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.', 'info');
+        redirect('/forgot-password');
+    }
+
+    public function showResetPassword(string $token): void
+    {
+        $reset = $this->users->findPasswordResetByToken($token);
+
+        if (!$reset || $reset['used_at'] !== null || strtotime((string) $reset['expires_at']) < time()) {
+            flash('Le lien de réinitialisation est invalide ou expiré.', 'danger');
+            redirect('/forgot-password');
+        }
+
+        $this->render('auth/reset-password', [
+            'title' => 'Réinitialiser le mot de passe',
+            'token' => $token,
+        ]);
+    }
+
+    public function handleResetPassword(): never
+    {
+        verify_csrf();
+
+        $token = (string) ($_POST['token'] ?? '');
+        $password = (string) ($_POST['password'] ?? '');
+        $confirm = (string) ($_POST['password_confirmation'] ?? '');
+
+        $reset = $this->users->findPasswordResetByToken($token);
+        if (!$reset || $reset['used_at'] !== null || strtotime((string) $reset['expires_at']) < time()) {
+            flash('Le lien de réinitialisation est invalide ou expiré.', 'danger');
+            redirect('/forgot-password');
+        }
+
+        if (strlen($password) < 8 || $password !== $confirm) {
+            flash('Le mot de passe doit faire au moins 8 caractères et correspondre à la confirmation.', 'danger');
+            redirect('/reset-password/' . $token);
+        }
+
+        $this->users->updatePassword((int) $reset['user_id'], password_hash($password, PASSWORD_BCRYPT));
+        $this->users->markPasswordResetUsed($token);
+
+        flash('Votre mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter.', 'success');
+        redirect('/login');
+    }
+
+    private function isRateLimited(string $email): bool
+    {
+        $attempts = $_SESSION['_login_attempts'][$this->attemptKey($email)] ?? null;
+
+        if (!is_array($attempts) || empty($attempts['blocked_until'])) {
+            return false;
+        }
+
+        return (int) $attempts['blocked_until'] > time();
+    }
+
+    private function registerFailedAttempt(string $email): void
+    {
+        $key = $this->attemptKey($email);
+        $attempts = $_SESSION['_login_attempts'][$key] ?? ['count' => 0, 'blocked_until' => null];
+        $attempts['count'] = (int) $attempts['count'] + 1;
+
+        if ($attempts['count'] >= 5) {
+            $attempts['blocked_until'] = time() + (15 * 60);
+            $attempts['count'] = 5;
+        }
+
+        $_SESSION['_login_attempts'][$key] = $attempts;
+    }
+
+    private function clearFailedAttempts(string $email): void
+    {
+        unset($_SESSION['_login_attempts'][$this->attemptKey($email)]);
+    }
+
+    private function attemptKey(string $email): string
+    {
+        return sha1($email);
     }
 }
-?>

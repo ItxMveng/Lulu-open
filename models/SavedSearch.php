@@ -1,47 +1,40 @@
 <?php
-/**
- * Model SavedSearch - Gestion des recherches sauvegardées CLIENT
- */
-require_once __DIR__ . '/../config/db.php';
+declare(strict_types=1);
 
-class SavedSearch {
-    private $db;
-    
-    public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+final class SavedSearch extends Model
+{
+    public function allForUser(int $userId): array
+    {
+        $statement = $this->db->prepare('SELECT * FROM saved_searches WHERE user_id = :user_id ORDER BY created_at DESC');
+        $statement->execute(['user_id' => $userId]);
+        return $statement->fetchAll() ?: [];
     }
-    
-    /**
-     * Créer une recherche sauvegardée
-     */
-    public function create($utilisateurId, $nom, $criteres, $typeRecherche) {
-        $sql = "INSERT INTO recherches_sauvegardees (utilisateur_id, nom, criteres, type) 
-                VALUES (?, ?, ?, ?)";
-        try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$utilisateurId, $nom, json_encode($criteres), $typeRecherche]);
-            return $this->db->lastInsertId();
-        } catch (PDOException $e) {
-            return false;
-        }
+
+    public function create(int $userId, string $name, array $filters, bool $alertEnabled): int
+    {
+        $statement = $this->db->prepare(
+            'INSERT INTO saved_searches (user_id, name, filters, alert_enabled, created_at, updated_at)
+             VALUES (:user_id, :name, :filters, :alert_enabled, NOW(), NOW())'
+        );
+        $statement->execute([
+            'user_id' => $userId,
+            'name' => $name,
+            'filters' => json_encode($filters, JSON_UNESCAPED_UNICODE),
+            'alert_enabled' => $alertEnabled ? 1 : 0,
+        ]);
+
+        return (int) $this->db->lastInsertId();
     }
-    
-    /**
-     * Récupérer toutes les recherches sauvegardées
-     */
-    public function getAll($utilisateurId) {
-        $sql = "SELECT * FROM recherches_sauvegardees WHERE utilisateur_id = ? ORDER BY date_creation DESC";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$utilisateurId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    public function delete(int $userId, int $id): bool
+    {
+        $statement = $this->db->prepare('DELETE FROM saved_searches WHERE id = :id AND user_id = :user_id');
+        return $statement->execute(['id' => $id, 'user_id' => $userId]);
     }
-    
-    /**
-     * Supprimer une recherche
-     */
-    public function delete($rechercheId, $utilisateurId) {
-        $sql = "DELETE FROM recherches_sauvegardees WHERE id = ? AND utilisateur_id = ?";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$rechercheId, $utilisateurId]);
+
+    public function allAlertEnabled(): array
+    {
+        $statement = $this->db->query('SELECT * FROM saved_searches WHERE alert_enabled = 1');
+        return $statement->fetchAll() ?: [];
     }
 }
