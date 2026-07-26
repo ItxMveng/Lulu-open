@@ -5,7 +5,11 @@ final class PageController extends Controller
 {
     public function home(): void
     {
-        $this->render('pages/home', ['title' => 'Accueil']);
+        $this->render('pages/home', [
+            'title' => 'Recrutement & talents',
+            'fullWidth' => true,
+            'categories' => (new Category())->all(),
+        ]);
     }
 
     public function about(): void

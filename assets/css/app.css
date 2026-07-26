@@ -1,0 +1,277 @@
+/* =====================================================================
+   LULU-OPEN — Système de design v2
+   Marketplace de recrutement & talents (client ↔ entreprise)
+   Re-skin de Bootstrap 5 via tokens pour une identité pro et cohérente.
+   ===================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+    /* Palette — bleu confiance + vert succès */
+    --lulu-primary: #0369A1;
+    --lulu-primary-600: #075985;
+    --lulu-primary-700: #0C4A6E;
+    --lulu-secondary: #0EA5E9;
+    --lulu-accent: #16A34A;
+    --lulu-accent-600: #15803D;
+
+    --lulu-fg: #0C4A6E;
+    --lulu-text: #1E293B;
+    --lulu-muted: #64748B;
+    --lulu-bg: #F6FAFD;
+    --lulu-surface: #FFFFFF;
+    --lulu-surface-2: #F0F7FC;
+    --lulu-border: #E2E8F0;
+    --lulu-danger: #DC2626;
+
+    /* Rayons */
+    --lulu-radius-sm: 8px;
+    --lulu-radius: 14px;
+    --lulu-radius-lg: 22px;
+    --lulu-radius-pill: 999px;
+
+    /* Ombres douces et cohérentes */
+    --lulu-shadow-sm: 0 1px 2px rgba(12, 74, 110, 0.05), 0 1px 3px rgba(12, 74, 110, 0.06);
+    --lulu-shadow: 0 4px 12px rgba(12, 74, 110, 0.08), 0 2px 4px rgba(12, 74, 110, 0.05);
+    --lulu-shadow-lg: 0 18px 40px rgba(3, 105, 161, 0.14), 0 6px 14px rgba(12, 74, 110, 0.08);
+
+    /* Transitions */
+    --lulu-t: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Bridge Bootstrap → tokens Lulu */
+    --bs-primary: var(--lulu-primary);
+    --bs-primary-rgb: 3, 105, 161;
+    --bs-body-color: var(--lulu-text);
+    --bs-body-bg: var(--lulu-bg);
+    --bs-border-color: var(--lulu-border);
+    --bs-link-color: var(--lulu-primary);
+    --bs-link-hover-color: var(--lulu-primary-700);
+    --bs-font-sans-serif: 'Plus Jakarta Sans', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* ---------- Base ---------- */
+body {
+    font-family: var(--bs-font-sans-serif);
+    background-color: var(--lulu-bg);
+    color: var(--lulu-text);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5 {
+    font-weight: 700;
+    color: var(--lulu-fg);
+    letter-spacing: -0.02em;
+}
+.display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--lulu-primary-700);
+}
+.lead { color: var(--lulu-muted); font-weight: 400; }
+.text-secondary { color: var(--lulu-muted) !important; }
+a { text-decoration: none; transition: color var(--lulu-t); }
+
+/* ---------- Boutons ---------- */
+.btn {
+    --bs-btn-font-weight: 600;
+    border-radius: var(--lulu-radius-sm);
+    padding: 0.55rem 1.15rem;
+    transition: transform var(--lulu-t), box-shadow var(--lulu-t), background-color var(--lulu-t), border-color var(--lulu-t), color var(--lulu-t);
+}
+.btn-lg { padding: 0.8rem 1.6rem; border-radius: var(--lulu-radius); font-size: 1.02rem; }
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+    --bs-btn-bg: var(--lulu-primary);
+    --bs-btn-border-color: var(--lulu-primary);
+    --bs-btn-hover-bg: var(--lulu-primary-600);
+    --bs-btn-hover-border-color: var(--lulu-primary-600);
+    --bs-btn-active-bg: var(--lulu-primary-700);
+    --bs-btn-active-border-color: var(--lulu-primary-700);
+    --bs-btn-disabled-bg: var(--lulu-primary);
+    --bs-btn-disabled-border-color: var(--lulu-primary);
+    box-shadow: 0 6px 16px rgba(3, 105, 161, 0.24);
+}
+.btn-primary:hover { box-shadow: 0 10px 22px rgba(3, 105, 161, 0.30); transform: translateY(-1px); }
+
+.btn-success, .btn-accent {
+    --bs-btn-bg: var(--lulu-accent);
+    --bs-btn-border-color: var(--lulu-accent);
+    --bs-btn-hover-bg: var(--lulu-accent-600);
+    --bs-btn-hover-border-color: var(--lulu-accent-600);
+    --bs-btn-color: #fff;
+    --bs-btn-hover-color: #fff;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(22, 163, 74, 0.24);
+}
+.btn-accent:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(22, 163, 74, 0.30); }
+
+.btn-outline-primary {
+    --bs-btn-color: var(--lulu-primary);
+    --bs-btn-border-color: var(--lulu-border);
+    --bs-btn-hover-bg: var(--lulu-primary);
+    --bs-btn-hover-border-color: var(--lulu-primary);
+    --bs-btn-hover-color: #fff;
+    background-color: var(--lulu-surface);
+}
+.btn-outline-primary:hover { transform: translateY(-1px); }
+.btn-outline-secondary {
+    --bs-btn-color: var(--lulu-text);
+    --bs-btn-border-color: var(--lulu-border);
+    --bs-btn-hover-bg: var(--lulu-surface-2);
+    --bs-btn-hover-border-color: var(--lulu-primary);
+    --bs-btn-hover-color: var(--lulu-primary-700);
+    background-color: var(--lulu-surface);
+}
+
+/* ---------- Cartes ---------- */
+.card {
+    border: 1px solid var(--lulu-border);
+    border-radius: var(--lulu-radius);
+    background: var(--lulu-surface);
+    box-shadow: var(--lulu-shadow-sm);
+    transition: transform var(--lulu-t), box-shadow var(--lulu-t), border-color var(--lulu-t);
+}
+.card.shadow-sm { box-shadow: var(--lulu-shadow) !important; }
+.card-hover:hover { transform: translateY(-4px); box-shadow: var(--lulu-shadow-lg); border-color: #CFE6F5; }
+
+/* ---------- Navbar ---------- */
+.navbar {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: saturate(180%) blur(10px);
+    border-bottom: 1px solid var(--lulu-border);
+    box-shadow: 0 1px 0 rgba(12, 74, 110, 0.03);
+}
+.navbar .navbar-brand {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--lulu-primary-700);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.navbar .navbar-brand .brand-dot {
+    width: 1.6rem; height: 1.6rem;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--lulu-primary), var(--lulu-secondary));
+    display: inline-block;
+}
+.navbar .nav-link { color: var(--lulu-text); font-weight: 500; border-radius: var(--lulu-radius-sm); padding: 0.4rem 0.75rem; transition: color var(--lulu-t), background-color var(--lulu-t); }
+.navbar .nav-link:hover { color: var(--lulu-primary); background: var(--lulu-surface-2); }
+
+/* ---------- Formulaires ---------- */
+.form-control, .form-select {
+    border-radius: var(--lulu-radius-sm);
+    border-color: var(--lulu-border);
+    padding: 0.6rem 0.85rem;
+    transition: border-color var(--lulu-t), box-shadow var(--lulu-t);
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--lulu-secondary);
+    box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15);
+}
+.form-label { font-weight: 600; color: var(--lulu-fg); margin-bottom: 0.35rem; }
+
+/* ---------- Badges ---------- */
+.badge { font-weight: 600; letter-spacing: 0.01em; padding: 0.4em 0.7em; border-radius: var(--lulu-radius-pill); }
+.badge.text-bg-secondary { background: var(--lulu-surface-2) !important; color: var(--lulu-primary-700) !important; }
+.badge-soft-primary { background: #E0F2FE; color: var(--lulu-primary-700); }
+.badge-soft-success { background: #DCFCE7; color: var(--lulu-accent-600); }
+
+/* ---------- Focus visible (accessibilité) ---------- */
+a:focus-visible, .btn:focus-visible, .form-control:focus-visible, .nav-link:focus-visible {
+    outline: 3px solid rgba(14, 165, 233, 0.5);
+    outline-offset: 2px;
+}
+
+/* =====================================================================
+   Composants marketing (landing)
+   ===================================================================== */
+.hero {
+    position: relative;
+    background:
+        radial-gradient(1200px 500px at 15% -10%, #DBEEFB 0%, rgba(219, 238, 251, 0) 60%),
+        radial-gradient(900px 500px at 100% 0%, #E7F7EE 0%, rgba(231, 247, 238, 0) 55%),
+        var(--lulu-bg);
+    overflow: hidden;
+}
+.hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: #E0F2FE; color: var(--lulu-primary-700);
+    font-weight: 600; font-size: 0.85rem;
+    padding: 0.4rem 0.9rem; border-radius: var(--lulu-radius-pill);
+}
+.hero h1 { font-size: clamp(2.1rem, 4.5vw, 3.4rem); line-height: 1.08; }
+.text-gradient {
+    background: linear-gradient(120deg, var(--lulu-primary), var(--lulu-secondary) 60%, var(--lulu-accent));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* Barre de recherche marketplace (CTA du hero) */
+.search-bar {
+    background: var(--lulu-surface);
+    border: 1px solid var(--lulu-border);
+    border-radius: var(--lulu-radius-lg);
+    box-shadow: var(--lulu-shadow-lg);
+    padding: 0.5rem;
+}
+.search-bar .form-control { border: 0; box-shadow: none; font-size: 1rem; }
+.search-bar .form-control:focus { box-shadow: none; }
+
+/* Puces catégories */
+.category-card {
+    display: flex; flex-direction: column; gap: 0.5rem;
+    padding: 1.25rem; height: 100%;
+    background: var(--lulu-surface); border: 1px solid var(--lulu-border);
+    border-radius: var(--lulu-radius); color: var(--lulu-text);
+    transition: transform var(--lulu-t), box-shadow var(--lulu-t), border-color var(--lulu-t);
+}
+.category-card:hover { transform: translateY(-4px); box-shadow: var(--lulu-shadow-lg); border-color: #CFE6F5; color: var(--lulu-primary-700); }
+.category-icon {
+    width: 2.75rem; height: 2.75rem; border-radius: 12px;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, #E0F2FE, #DCFCE7);
+    color: var(--lulu-primary); font-size: 1.35rem;
+}
+
+/* Blocs "comment ça marche" */
+.step-num {
+    width: 2.5rem; height: 2.5rem; border-radius: var(--lulu-radius-pill);
+    display: grid; place-items: center; font-weight: 700;
+    background: var(--lulu-primary); color: #fff;
+}
+
+/* Bandeau statistiques / confiance */
+.stat-value { font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 800; color: var(--lulu-primary-700); }
+
+/* Section CTA finale */
+.cta-band {
+    background: linear-gradient(120deg, var(--lulu-primary-700), var(--lulu-primary) 55%, var(--lulu-secondary));
+    color: #fff; border-radius: var(--lulu-radius-lg);
+}
+.cta-band h2, .cta-band .h2 { color: #fff; }
+
+/* ---------- Footer ---------- */
+.site-footer { background: #fff; border-top: 1px solid var(--lulu-border); }
+.site-footer a { color: var(--lulu-muted); }
+.site-footer a:hover { color: var(--lulu-primary); }
+
+/* ---------- Utilitaires ---------- */
+.section { padding-top: 4rem; padding-bottom: 4rem; }
+.py-6 { padding-top: 5rem; padding-bottom: 5rem; }
+.p-6 { padding: 4rem; }
+@media (min-width: 992px) {
+    .py-lg-6 { padding-top: 6rem; padding-bottom: 6rem; }
+    .p-lg-6 { padding: 5rem; }
+    .border-start-md { border-left: 1px solid var(--lulu-border); }
+}
+.rounded-xl { border-radius: var(--lulu-radius-lg) !important; }
+.shadow-soft { box-shadow: var(--lulu-shadow) !important; }
+.bg-surface-2 { background: var(--lulu-surface-2) !important; }
+
+/* ---------- Mouvement réduit ---------- */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    .btn:hover, .card-hover:hover, .category-card:hover { transform: none; }
+}

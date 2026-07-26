@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm">
     <div class="container">
-        <a class="navbar-brand fw-semibold" href="<?= e(url('/')) ?>">LULU-OPEN</a>
+        <a class="navbar-brand" href="<?= e(url('/')) ?>"><span class="brand-dot"></span>LULU-OPEN</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
