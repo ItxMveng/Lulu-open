@@ -67,7 +67,7 @@ const renderMessage = (message) => {
 chatForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const formData = new FormData(chatForm);
-    const response = await fetch('<?= e(url('/api/messages.php?action=send')) ?>', { method: 'POST', body: formData });
+    const response = await fetch('<?= e(url('/api/messages?action=send')) ?>', { method: 'POST', body: formData });
     const payload = await response.json();
     if (payload.success) {
         renderMessage({ sender_id: <?= (int) current_user_id() ?>, body: formData.get('body') });
@@ -77,7 +77,7 @@ chatForm?.addEventListener('submit', async (event) => {
     }
 });
 setInterval(async () => {
-    const response = await fetch('<?= e(url('/api/messages.php?action=poll&conversation_id=' . (int) $selectedConversation['id'])) ?>');
+    const response = await fetch('<?= e(url('/api/messages?action=poll&conversation_id=' . (int) $selectedConversation['id'])) ?>');
     const payload = await response.json();
     (payload.items || []).forEach(renderMessage);
 }, 3000);

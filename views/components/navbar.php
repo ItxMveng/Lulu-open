@@ -48,7 +48,7 @@
 <?php if (is_auth()): ?>
 <script>
 document.getElementById('notificationsToggle')?.addEventListener('click', async () => {
-    const response = await fetch('<?= e(url('/api/notifications.php?action=list')) ?>');
+    const response = await fetch('<?= e(url('/api/notifications?action=list')) ?>');
     const payload = await response.json();
     const items = payload.items || [];
     document.getElementById('notificationsCount').textContent = items.length;

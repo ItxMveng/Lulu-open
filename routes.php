@@ -65,6 +65,20 @@ Router::get('/abonnement/cancel', 'SubscriptionController@cancel', ['auth']);
 Router::get('/abonnement/portail', 'SubscriptionController@portal', ['auth']);
 Router::get('/abonnement', 'SubscriptionController@current', ['auth']);
 
+// Messagerie et notifications (JSON) — routées pour fonctionner derrière router.php / Render.
+Router::get('/api/messages', static function (): void {
+    require base_path('api/messages.php');
+}, ['auth']);
+Router::post('/api/messages', static function (): void {
+    require base_path('api/messages.php');
+}, ['auth']);
+Router::get('/api/notifications', static function (): void {
+    require base_path('api/notifications.php');
+}, ['auth']);
+Router::post('/api/notifications', static function (): void {
+    require base_path('api/notifications.php');
+}, ['auth']);
+
 Router::get('/api/saved-searches', static function (): void {
     require base_path('api/saved-searches.php');
 }, ['auth']);
