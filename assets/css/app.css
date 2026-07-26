@@ -252,6 +252,27 @@ a:focus-visible, .btn:focus-visible, .form-control:focus-visible, .nav-link:focu
 }
 .cta-band h2, .cta-band .h2 { color: #fff; }
 
+/* ---------- Sélecteur de rôle (inscription) ---------- */
+.role-option { position: relative; }
+.role-option input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.role-option label {
+    display: flex; gap: 0.85rem; align-items: flex-start;
+    padding: 1rem 1.1rem; height: 100%; cursor: pointer;
+    border: 1.5px solid var(--lulu-border); border-radius: var(--lulu-radius);
+    background: var(--lulu-surface); transition: border-color var(--lulu-t), box-shadow var(--lulu-t), background var(--lulu-t);
+}
+.role-option .role-ic {
+    flex: 0 0 auto; width: 2.5rem; height: 2.5rem; border-radius: 10px;
+    display: grid; place-items: center; font-size: 1.25rem;
+    background: var(--lulu-surface-2); color: var(--lulu-primary);
+}
+.role-option input:checked + label {
+    border-color: var(--lulu-primary);
+    box-shadow: 0 0 0 4px rgba(3, 105, 161, 0.12);
+    background: #F5FBFF;
+}
+.role-option input:focus-visible + label { outline: 3px solid rgba(14, 165, 233, 0.5); outline-offset: 2px; }
+
 /* ---------- Footer ---------- */
 .site-footer { background: #fff; border-top: 1px solid var(--lulu-border); }
 .site-footer a { color: var(--lulu-muted); }
