@@ -1,13 +1,22 @@
-<div class="card shadow-sm h-100 border-0">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start gap-3">
-            <div>
-                <h3 class="h5 mb-1"><?= e((string) ($offer['title'] ?? 'Offre')) ?></h3>
-                <p class="text-secondary small mb-2"><?= e((string) ($offer['location'] ?? 'Localisation non précisée')) ?></p>
-            </div>
-            <span class="badge text-bg-secondary"><?= e((string) ($offer['type'] ?? 'emploi')) ?></span>
+<?php
+$offer = $offer ?? [];
+$type = (string) ($offer['type'] ?? 'emploi');
+$typeLabels = ['emploi' => 'Emploi', 'mission' => 'Mission', 'stage' => 'Stage'];
+?>
+<div class="card card-hover h-100">
+    <div class="card-body p-4 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <span class="badge badge-soft-primary"><i class="bi bi-briefcase me-1"></i><?= e($typeLabels[$type] ?? ucfirst($type)) ?></span>
+            <?php if (!empty($offer['remote_ok'])): ?>
+                <span class="badge badge-soft-success"><i class="bi bi-house-door me-1"></i>Télétravail</span>
+            <?php endif; ?>
         </div>
-        <p class="mb-3"><?= e(mb_strimwidth((string) ($offer['description'] ?? ''), 0, 180, '...')) ?></p>
-        <a class="btn btn-outline-primary btn-sm" href="<?= e(url('/offres/' . $offer['id'])) ?>">Voir l'offre</a>
+        <h3 class="h6 mb-1"><?= e((string) ($offer['title'] ?? 'Offre')) ?></h3>
+        <p class="text-secondary small mb-3">
+            <i class="bi bi-geo-alt me-1"></i><?= e((string) ($offer['location'] ?? 'Non précisé')) ?>
+            <?php if (!empty($offer['contract_type'])): ?> · <?= e((string) $offer['contract_type']) ?><?php endif; ?>
+        </p>
+        <p class="text-secondary small flex-grow-1 mb-3"><?= e(mb_strimwidth((string) ($offer['description'] ?? ''), 0, 140, '…')) ?></p>
+        <a class="btn btn-outline-primary btn-sm align-self-start" href="<?= e(url('/offres/' . (int) ($offer['id'] ?? 0))) ?>">Voir l'offre <i class="bi bi-arrow-right ms-1"></i></a>
     </div>
 </div>

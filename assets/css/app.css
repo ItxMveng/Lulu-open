@@ -252,6 +252,14 @@ a:focus-visible, .btn:focus-visible, .form-control:focus-visible, .nav-link:focu
 }
 .cta-band h2, .cta-band .h2 { color: #fff; }
 
+/* ---------- Avatar ---------- */
+.avatar-circle {
+    flex: 0 0 auto; width: 3rem; height: 3rem; border-radius: 50%;
+    display: grid; place-items: center; font-weight: 700; font-size: 1rem;
+    color: #fff; background: linear-gradient(135deg, var(--lulu-primary), var(--lulu-secondary));
+}
+.min-w-0 { min-width: 0; }
+
 /* ---------- Dashboard ---------- */
 .dash-header {
     background: linear-gradient(120deg, var(--lulu-primary-700), var(--lulu-primary) 60%, var(--lulu-secondary));
