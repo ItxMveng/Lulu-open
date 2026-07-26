@@ -41,16 +41,20 @@ Router::get('/entreprise/offres/{id}/edit', 'OfferController@edit', ['auth', 'ro
 Router::post('/entreprise/offres/{id}', 'OfferController@update', ['auth', 'role:entreprise']);
 Router::post('/entreprise/offres/{id}/delete', 'OfferController@destroy', ['auth', 'role:entreprise']);
 Router::get('/offres/{id}', 'OfferController@showPublic');
-Router::get('/offres/{id}/postuler', 'ApplicationController@apply', ['auth', 'role:entreprise']);
+// Le candidat (rôle client) postule aux offres publiées par les entreprises.
+Router::get('/offres/{id}/postuler', 'ApplicationController@apply', ['auth', 'role:client']);
 
 Router::get('/messages', 'MessageController@index', ['auth']);
 Router::get('/messages/{id}', 'MessageController@conversation', ['auth']);
 
-Router::post('/applications', 'ApplicationController@store', ['auth', 'role:entreprise']);
-Router::get('/entreprise/candidatures', 'ApplicationController@index', ['auth', 'role:entreprise']);
-Router::get('/entreprise/candidatures/recues', 'ApplicationController@received', ['auth', 'role:entreprise']);
+// Côté candidat (client) : envoyer et gérer ses candidatures.
+Router::post('/applications', 'ApplicationController@store', ['auth', 'role:client']);
+Router::get('/client/candidatures', 'ApplicationController@index', ['auth', 'role:client']);
+Router::post('/applications/{id}/delete', 'ApplicationController@destroy', ['auth', 'role:client']);
+
+// Côté entreprise (recruteur) : consulter les candidatures reçues et les traiter.
+Router::get('/entreprise/candidatures', 'ApplicationController@received', ['auth', 'role:entreprise']);
 Router::post('/entreprise/candidatures/{id}/status', 'ApplicationController@updateStatus', ['auth', 'role:entreprise']);
-Router::post('/applications/{id}/delete', 'ApplicationController@destroy', ['auth', 'role:entreprise']);
 
 Router::get('/favoris', 'FavoriteController@index', ['auth']);
 Router::post('/favorites/{id}/toggle', 'FavoriteController@toggle', ['auth']);

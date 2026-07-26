@@ -11,6 +11,16 @@
                 <div class="col-md-3">Télétravail: <?= !empty($offer['remote_ok']) ? 'Oui' : 'Non' ?></div>
             </div>
             <div><?= nl2br(e((string) ($offer['description'] ?? ''))) ?></div>
+
+            <div class="mt-4 pt-3 border-top">
+                <?php if (!is_auth()): ?>
+                    <a class="btn btn-primary" href="<?= e(url('/login')) ?>">Connectez-vous pour postuler</a>
+                <?php elseif (current_role() === 'client'): ?>
+                    <a class="btn btn-primary" href="<?= e(url('/offres/' . ($offer['id'] ?? 0) . '/postuler')) ?>">Postuler à cette offre</a>
+                <?php elseif (current_role() === 'entreprise'): ?>
+                    <span class="text-secondary small">Vous consultez cette offre en tant qu'entreprise.</span>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </section>

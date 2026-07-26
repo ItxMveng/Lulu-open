@@ -30,13 +30,15 @@
                     <a class="btn btn-danger" href="<?= e(url('/logout')) ?>">Déconnexion</a>
                 <?php elseif (current_role() === 'client'): ?>
                     <a class="btn btn-outline-primary" href="<?= e(url('/client/dashboard')) ?>">Espace client</a>
+                    <a class="btn btn-outline-secondary" href="<?= e(url('/client/candidatures')) ?>">Mes candidatures</a>
                     <a class="btn btn-outline-secondary" href="<?= e(url('/messages')) ?>">Messages</a>
                     <a class="btn btn-outline-secondary" href="<?= e(url('/abonnement')) ?>">Abonnement</a>
                     <a class="btn btn-danger" href="<?= e(url('/logout')) ?>">Déconnexion</a>
                 <?php else: ?>
                     <a class="btn btn-outline-primary" href="<?= e(url('/entreprise/dashboard')) ?>">Espace entreprise</a>
-                    <a class="btn btn-outline-secondary" href="<?= e(url('/messages')) ?>">Messages</a>
                     <a class="btn btn-outline-secondary" href="<?= e(url('/entreprise/offres')) ?>">Mes offres</a>
+                    <a class="btn btn-outline-secondary" href="<?= e(url('/entreprise/candidatures')) ?>">Candidatures</a>
+                    <a class="btn btn-outline-secondary" href="<?= e(url('/messages')) ?>">Messages</a>
                     <a class="btn btn-danger" href="<?= e(url('/logout')) ?>">Déconnexion</a>
                 <?php endif; ?>
             </div>

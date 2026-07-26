@@ -14,18 +14,18 @@ final class ApplicationController extends Controller
 
     public function apply(string $offerId): void
     {
-        AuthMiddleware::requireRole(['entreprise']);
+        AuthMiddleware::requireRole(['client']);
         $offer = $this->offers->findById((int) $offerId);
         if (!$offer) {
             abort(404, 'Offre introuvable.');
         }
 
-        $this->render('entreprise/applications/apply', ['title' => 'Postuler à une offre', 'offer' => $offer]);
+        $this->render('client/applications/apply', ['title' => 'Postuler à une offre', 'offer' => $offer]);
     }
 
     public function store(): never
     {
-        AuthMiddleware::requireRole(['entreprise']);
+        AuthMiddleware::requireRole(['client']);
         verify_csrf();
         $cvPath = !empty($_FILES['cv']['name']) ? UploadHelper::storeUploadedFile($_FILES['cv'], 'cv', ['application/pdf'], 5 * 1024 * 1024) : null;
         $id = $this->applications->create([
@@ -37,14 +37,14 @@ final class ApplicationController extends Controller
         ]);
         (new Activity())->log((int) current_user_id(), 'application_sent', ['application_id' => $id]);
         flash('Candidature envoyée.', 'success');
-        redirect('/entreprise/candidatures');
+        redirect('/client/candidatures');
     }
 
     public function index(): void
     {
-        AuthMiddleware::requireRole(['entreprise']);
+        AuthMiddleware::requireRole(['client']);
         $items = $this->applications->sentByApplicant((int) current_user_id());
-        $this->render('entreprise/applications/sent', ['title' => 'Mes candidatures', 'applications' => $items]);
+        $this->render('client/applications/sent', ['title' => 'Mes candidatures', 'applications' => $items]);
     }
 
     public function received(): void
@@ -64,10 +64,10 @@ final class ApplicationController extends Controller
 
     public function destroy(string $id): never
     {
-        AuthMiddleware::requireRole(['entreprise']);
+        AuthMiddleware::requireRole(['client']);
         verify_csrf();
         $this->applications->delete((int) $id, (int) current_user_id());
         flash('Candidature retirée.', 'success');
-        redirect('/entreprise/candidatures');
+        redirect('/client/candidatures');
     }
 }
