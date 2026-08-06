@@ -1,7 +1,8 @@
 <?php $offer = $offer ?? []; ?>
 <section class="py-4">
-    <h1 class="mb-4">Modifier l'offre</h1>
-    <form method="post" action="<?= e(url('/entreprise/offres/' . ($offer['id'] ?? 0))) ?>" class="card shadow-sm border-0">
+    <a class="text-secondary small d-inline-flex align-items-center mb-3" href="<?= e(url('/entreprise/offres')) ?>"><i class="bi bi-arrow-left me-1"></i>Retour à mes offres</a>
+    <h1 class="h3 mb-4">Modifier l'offre</h1>
+    <form method="post" action="<?= e(url('/entreprise/offres/' . ($offer['id'] ?? 0))) ?>" class="card shadow-sm">
         <div class="card-body p-4">
             <?= csrf_field() ?>
             <div class="row g-3">
@@ -27,7 +28,10 @@
                 <div class="col-md-6 form-check mt-5 ms-2"><input class="form-check-input" type="checkbox" name="remote_ok" id="remote_ok" <?= !empty($offer['remote_ok']) ? 'checked' : '' ?>><label class="form-check-label" for="remote_ok">Télétravail accepté</label></div>
                 <div class="col-12"><label class="form-label" for="description">Description</label><textarea class="form-control" id="description" name="description" rows="8" required><?= e((string) ($offer['description'] ?? '')) ?></textarea></div>
             </div>
-            <button class="btn btn-primary mt-4" type="submit">Enregistrer</button>
+            <div class="d-flex gap-2 mt-4">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-check-lg me-1"></i>Enregistrer</button>
+                <a class="btn btn-outline-secondary" href="<?= e(url('/entreprise/offres')) ?>">Annuler</a>
+            </div>
         </div>
     </form>
 </section>

@@ -1,5 +1,8 @@
 <section class="py-4">
-    <h1 class="mb-4">Mon profil client</h1>
+    <div class="mb-4">
+        <h1 class="h3 mb-1">Mon profil</h1>
+        <p class="text-secondary mb-0">Complétez votre profil pour être visible des entreprises.</p>
+    </div>
     <?php $profile = $profile ?? []; ?>
     <div class="row g-4">
         <div class="col-lg-4">

@@ -1,8 +1,11 @@
 <?php $profile = $profile ?? []; ?>
 <section class="py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">Mon profil entreprise</h1>
-        <a class="btn btn-outline-primary" href="<?= e(url('/entreprise/offres')) ?>">Gérer mes offres</a>
+        <div>
+            <h1 class="h3 mb-1">Mon profil entreprise</h1>
+            <p class="text-secondary mb-0">Présentez votre entreprise aux talents.</p>
+        </div>
+        <a class="btn btn-outline-primary" href="<?= e(url('/entreprise/offres')) ?>"><i class="bi bi-megaphone me-1"></i>Mes offres</a>
     </div>
     <div class="row g-4">
         <div class="col-lg-4">
