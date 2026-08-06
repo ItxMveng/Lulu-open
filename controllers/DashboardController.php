@@ -60,6 +60,17 @@ final class DashboardController extends Controller
 
     public function admin(): void
     {
-        $this->render('admin/dashboard', ['title' => 'Tableau de bord admin'], 'admin');
+        $pdo = db();
+        $count = static fn (string $sql): int => (int) $pdo->query($sql)->fetchColumn();
+
+        $this->render('admin/dashboard', [
+            'title' => 'Tableau de bord admin',
+            'stats' => [
+                'users' => $count("SELECT COUNT(*) FROM users WHERE status != 'deleted'"),
+                'subscriptions' => $count("SELECT COUNT(*) FROM subscriptions WHERE status = 'active'"),
+                'offers' => $count("SELECT COUNT(*) FROM offers WHERE status = 'active'"),
+                'applications' => $count('SELECT COUNT(*) FROM applications'),
+            ],
+        ], 'admin');
     }
 }

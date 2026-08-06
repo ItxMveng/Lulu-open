@@ -252,6 +252,24 @@ a:focus-visible, .btn:focus-visible, .form-control:focus-visible, .nav-link:focu
 }
 .cta-band h2, .cta-band .h2 { color: #fff; }
 
+/* ---------- Back-office admin ---------- */
+.admin-shell { display: flex; min-height: calc(100vh - 0px); }
+.admin-sidebar {
+    width: 250px; flex: 0 0 250px; background: var(--lulu-primary-700);
+    color: rgba(255,255,255,0.85); padding: 1rem 0.75rem; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.admin-sidebar .admin-brand { color: #fff; font-weight: 800; padding: 0.5rem 0.75rem 1rem; display: inline-flex; align-items: center; gap: 0.5rem; }
+.admin-sidebar .nav-link { color: rgba(255,255,255,0.82); border-radius: var(--lulu-radius-sm); padding: 0.6rem 0.75rem; margin-bottom: 0.15rem; font-weight: 500; display: flex; align-items: center; gap: 0.65rem; transition: background var(--lulu-t), color var(--lulu-t); }
+.admin-sidebar .nav-link:hover { background: rgba(255,255,255,0.10); color: #fff; }
+.admin-sidebar .nav-link.active { background: rgba(255,255,255,0.16); color: #fff; }
+.admin-main { flex: 1 1 auto; min-width: 0; background: var(--lulu-bg); }
+.admin-topbar { background: var(--lulu-surface); border-bottom: 1px solid var(--lulu-border); }
+@media (max-width: 767.98px) {
+    .admin-shell { flex-direction: column; }
+    .admin-sidebar { width: 100%; flex-basis: auto; height: auto; position: static; }
+    .admin-sidebar .admin-nav { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+}
+
 /* ---------- Messagerie ---------- */
 .chat-list .list-group-item { border: 0; border-bottom: 1px solid var(--lulu-border); padding: 0.9rem 1rem; }
 .chat-list .list-group-item.active { background: var(--lulu-surface-2); color: var(--lulu-text); border-left: 3px solid var(--lulu-primary); }
