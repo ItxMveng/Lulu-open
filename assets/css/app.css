@@ -252,6 +252,17 @@ a:focus-visible, .btn:focus-visible, .form-control:focus-visible, .nav-link:focu
 }
 .cta-band h2, .cta-band .h2 { color: #fff; }
 
+/* ---------- Messagerie ---------- */
+.chat-list .list-group-item { border: 0; border-bottom: 1px solid var(--lulu-border); padding: 0.9rem 1rem; }
+.chat-list .list-group-item.active { background: var(--lulu-surface-2); color: var(--lulu-text); border-left: 3px solid var(--lulu-primary); }
+.chat-thread { display: flex; flex-direction: column; gap: 0.5rem; }
+.chat-bubble { max-width: 78%; padding: 0.6rem 0.9rem; border-radius: 16px; line-height: 1.4; word-break: break-word; }
+.chat-row { display: flex; }
+.chat-row.me { justify-content: flex-end; }
+.chat-row.me .chat-bubble { background: var(--lulu-primary); color: #fff; border-bottom-right-radius: 4px; }
+.chat-row.them .chat-bubble { background: var(--lulu-surface-2); color: var(--lulu-text); border-bottom-left-radius: 4px; }
+.chat-input { border-radius: var(--lulu-radius-pill) !important; }
+
 /* ---------- Avatar ---------- */
 .avatar-circle {
     flex: 0 0 auto; width: 3rem; height: 3rem; border-radius: 50%;

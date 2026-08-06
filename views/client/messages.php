@@ -1,4 +1,7 @@
 <section class="py-4">
-    <h1 class="mb-4">Messagerie client</h1>
-    <?php View::partial('components/chat-window', compact('conversations', 'messages', 'selectedConversationId')); ?>
+    <div class="mb-4">
+        <h1 class="h3 mb-1"><i class="bi bi-chat-dots me-2"></i>Messagerie</h1>
+        <p class="text-secondary mb-0">Échangez avec les entreprises et recruteurs.</p>
+    </div>
+    <?php View::partial('components/chat-window', compact('conversations', 'messages', 'selectedConversationId', 'selectedConversation')); ?>
 </section>
