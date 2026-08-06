@@ -14,7 +14,7 @@ final class PageController extends Controller
 
     public function about(): void
     {
-        $this->render('pages/about', ['title' => 'À propos']);
+        $this->render('pages/about', ['title' => 'À propos', 'fullWidth' => true]);
     }
 
     public function contact(): void
@@ -66,12 +66,12 @@ final class PageController extends Controller
 
     public function services(): void
     {
-        $this->render('pages/services', ['title' => 'Prestations']);
+        $this->render('pages/services', ['title' => 'Prestations', 'fullWidth' => true]);
     }
 
     public function emplois(): void
     {
-        $this->render('pages/emplois', ['title' => 'Offres et recrutement']);
+        $this->render('pages/emplois', ['title' => 'Offres et recrutement', 'fullWidth' => true]);
     }
 
     public function pricing(): void
