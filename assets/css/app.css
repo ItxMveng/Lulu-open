@@ -259,6 +259,17 @@ a:focus-visible, .btn:focus-visible, .form-control:focus-visible, .nav-link:focu
     color: #fff; background: linear-gradient(135deg, var(--lulu-primary), var(--lulu-secondary));
 }
 .min-w-0 { min-width: 0; }
+.avatar-sm {
+    flex: 0 0 auto; width: 2rem; height: 2rem; border-radius: 50%;
+    display: grid; place-items: center; font-weight: 700; font-size: 0.8rem;
+    color: #fff; background: linear-gradient(135deg, var(--lulu-primary), var(--lulu-secondary));
+}
+/* Menu utilisateur navbar */
+.navbar .user-menu-toggle { display: inline-flex; align-items: center; gap: 0.5rem; border: 1px solid var(--lulu-border); background: var(--lulu-surface); border-radius: var(--lulu-radius-pill); padding: 0.25rem 0.75rem 0.25rem 0.35rem; color: var(--lulu-text); font-weight: 600; }
+.navbar .user-menu-toggle:hover { border-color: var(--lulu-primary); color: var(--lulu-primary-700); }
+.navbar .dropdown-menu { border: 1px solid var(--lulu-border); border-radius: var(--lulu-radius); box-shadow: var(--lulu-shadow-lg); padding: 0.4rem; }
+.navbar .dropdown-item { border-radius: var(--lulu-radius-sm); padding: 0.5rem 0.75rem; font-weight: 500; }
+.navbar .dropdown-item:active { background: var(--lulu-primary); }
 
 /* ---------- Dashboard ---------- */
 .dash-header {
