@@ -59,7 +59,8 @@ final class ApplicationController extends Controller
         AuthMiddleware::requireRole(['entreprise']);
         verify_csrf();
         $this->applications->updateStatus((int) $id, (string) ($_POST['status'] ?? 'vue'));
-        json_response(['success' => true]);
+        flash('Statut de la candidature mis à jour.', 'success');
+        redirect('/entreprise/candidatures');
     }
 
     public function destroy(string $id): never

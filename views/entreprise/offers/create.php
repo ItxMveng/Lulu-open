@@ -1,6 +1,8 @@
 <section class="py-4">
-    <h1 class="mb-4">Créer une offre</h1>
-    <form method="post" action="<?= e(url('/entreprise/offres')) ?>" class="card shadow-sm border-0">
+    <a class="text-secondary small d-inline-flex align-items-center mb-3" href="<?= e(url('/entreprise/offres')) ?>"><i class="bi bi-arrow-left me-1"></i>Retour à mes offres</a>
+    <h1 class="h3 mb-1">Publier une offre</h1>
+    <p class="text-secondary mb-4">Décrivez le poste pour attirer les bons profils.</p>
+    <form method="post" action="<?= e(url('/entreprise/offres')) ?>" class="card shadow-sm">
         <div class="card-body p-4">
             <?= csrf_field() ?>
             <div class="row g-3">
@@ -49,7 +51,10 @@
                     <textarea class="form-control" id="description" name="description" rows="8" required></textarea>
                 </div>
             </div>
-            <button class="btn btn-primary mt-4" type="submit">Publier l'offre</button>
+            <div class="d-flex gap-2 mt-4">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-send me-1"></i>Publier l'offre</button>
+                <a class="btn btn-outline-secondary" href="<?= e(url('/entreprise/offres')) ?>">Annuler</a>
+            </div>
         </div>
     </form>
 </section>
