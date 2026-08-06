@@ -28,6 +28,11 @@ final class Subscription extends Model
         return $plan ?: null;
     }
 
+    public function activePlans(): array
+    {
+        return $this->db->query('SELECT * FROM plans WHERE is_active = 1 ORDER BY role_target, price')->fetchAll() ?: [];
+    }
+
     public function activatePlan(int $userId, string $planSlug, string $status = 'active', ?string $stripeCustomerId = null, ?string $stripeSubscriptionId = null, ?string $renewsAt = null): void
     {
         $plan = $this->findPlanBySlug($planSlug);

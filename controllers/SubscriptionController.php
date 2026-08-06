@@ -14,7 +14,19 @@ final class SubscriptionController extends Controller
 
     public function showPlans(): void
     {
-        $this->render('pages/pricing', ['title' => 'Tarifs']);
+        $plans = $this->subscriptions->activePlans();
+        $grouped = ['client' => [], 'entreprise' => []];
+        foreach ($plans as $plan) {
+            $target = (string) ($plan['role_target'] ?? 'client');
+            $grouped[$target][] = $plan;
+        }
+
+        $this->render('pages/pricing', [
+            'title' => 'Tarifs',
+            'fullWidth' => true,
+            'clientPlans' => $grouped['client'],
+            'entreprisePlans' => $grouped['entreprise'],
+        ]);
     }
 
     public function checkout(string $planId): never

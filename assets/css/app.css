@@ -331,6 +331,14 @@ a:focus-visible, .btn:focus-visible, .form-control:focus-visible, .nav-link:focu
 }
 .role-option input:focus-visible + label { outline: 3px solid rgba(14, 165, 233, 0.5); outline-offset: 2px; }
 
+/* ---------- Plans tarifaires ---------- */
+.plan-featured {
+    border: 2px solid var(--lulu-primary);
+    box-shadow: var(--lulu-shadow-lg);
+    position: relative;
+}
+@media (min-width: 992px) { .plan-featured { transform: scale(1.03); } }
+
 /* ---------- Footer ---------- */
 .site-footer { background: #fff; border-top: 1px solid var(--lulu-border); }
 .site-footer a { color: var(--lulu-muted); }
