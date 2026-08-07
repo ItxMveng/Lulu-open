@@ -28,8 +28,13 @@ final class ProfileController extends Controller
     public function showEditClient(): void
     {
         AuthMiddleware::requireRole(['client']);
-        $profile = $this->profiles->getByUserId((int) current_user_id());
-        $this->render('client/profile-edit', ['title' => 'Mon profil client', 'profile' => $profile]);
+        $userId = (int) current_user_id();
+        $profile = $this->profiles->getByUserId($userId);
+        $this->render('client/profile-edit', [
+            'title' => 'Mon profil',
+            'profile' => $profile,
+            'cvDocuments' => (new CvDocument())->allForUser($userId),
+        ]);
     }
 
     public function showEditEntreprise(): void
@@ -115,7 +120,7 @@ final class ProfileController extends Controller
 
     public function uploadCV(): never
     {
-        AuthMiddleware::requireRole(['entreprise']);
+        AuthMiddleware::requireRole(['client']);
         verify_csrf();
 
         $path = UploadHelper::storeUploadedFile(
@@ -125,21 +130,30 @@ final class ProfileController extends Controller
             5 * 1024 * 1024
         );
 
-        $updatePrimary = db()->prepare('UPDATE cv_documents SET is_primary = 0 WHERE user_id = :user_id');
-        $updatePrimary->execute(['user_id' => current_user_id()]);
-
-        $statement = db()->prepare(
-            'INSERT INTO cv_documents (user_id, file_path, file_name, uploaded_at, is_primary)
-             VALUES (:user_id, :file_path, :file_name, NOW(), 1)'
-        );
-        $statement->execute([
-            'user_id' => current_user_id(),
-            'file_path' => $path,
-            'file_name' => $_FILES['cv']['name'] ?? 'cv.pdf',
-        ]);
+        $cvDocuments = new CvDocument();
+        $isFirst = empty($cvDocuments->allForUser((int) current_user_id()));
+        $cvDocuments->add((int) current_user_id(), $path, (string) ($_FILES['cv']['name'] ?? 'cv.pdf'), $isFirst);
 
         flash('CV importé avec succès.', 'success');
-        redirect('/entreprise/profile/edit');
+        redirect('/client/profile/edit');
+    }
+
+    public function setPrimaryCV(string $id): never
+    {
+        AuthMiddleware::requireRole(['client']);
+        verify_csrf();
+        (new CvDocument())->setPrimary((int) $id, (int) current_user_id());
+        flash('CV principal mis à jour.', 'success');
+        redirect('/client/profile/edit');
+    }
+
+    public function deleteCV(string $id): never
+    {
+        AuthMiddleware::requireRole(['client']);
+        verify_csrf();
+        (new CvDocument())->delete((int) $id, (int) current_user_id());
+        flash('CV supprimé.', 'success');
+        redirect('/client/profile/edit');
     }
 
     private function parseList(string|array $value): array

@@ -50,15 +50,26 @@ final class Profile extends Model
             'location' => $data['location'] ?? null,
             'lat' => $data['lat'] ?? null,
             'lng' => $data['lng'] ?? null,
-            'categories' => isset($data['categories']) ? json_encode($data['categories'], JSON_UNESCAPED_UNICODE) : null,
-            'skills' => isset($data['skills']) ? json_encode($data['skills'], JSON_UNESCAPED_UNICODE) : null,
-            'languages' => isset($data['languages']) ? json_encode($data['languages'], JSON_UNESCAPED_UNICODE) : null,
-            'hourly_rate' => $data['hourly_rate'] ?? null,
+            'categories' => self::encodeJson($data['categories'] ?? null),
+            'skills' => self::encodeJson($data['skills'] ?? null),
+            'languages' => self::encodeJson($data['languages'] ?? null),
+            'hourly_rate' => ($data['hourly_rate'] ?? '') !== '' ? $data['hourly_rate'] : null,
             'availability' => $data['availability'] ?? null,
-            'portfolio' => isset($data['portfolio']) ? json_encode($data['portfolio'], JSON_UNESCAPED_UNICODE) : null,
-            'certifications' => isset($data['certifications']) ? json_encode($data['certifications'], JSON_UNESCAPED_UNICODE) : null,
+            'portfolio' => self::encodeJson($data['portfolio'] ?? null),
+            'certifications' => self::encodeJson($data['certifications'] ?? null),
             'is_visible' => isset($data['is_visible']) ? (int) $data['is_visible'] : 1,
         ]);
+    }
+
+    /** Encode une liste en JSON valide (null si absent, '[]' en secours). Tolère l'UTF-8 invalide. */
+    private static function encodeJson(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        $array = is_array($value) ? array_values($value) : [$value];
+        $json = json_encode($array, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        return $json === false ? '[]' : $json;
     }
 
     public function search(array $filters): array
@@ -67,7 +78,8 @@ final class Profile extends Model
         $perPage = max(1, min(24, (int) ($filters['per_page'] ?? 12)));
         $offset = ($page - 1) * $perPage;
 
-        $conditions = ['profiles.is_visible = 1', "users.role = 'entreprise'", "users.status = 'active'"];
+        // Les profils recherchables dans la marketplace sont les talents (candidats/prestataires = rôle client).
+        $conditions = ['profiles.is_visible = 1', "users.role = 'client'", "users.status = 'active'"];
         $params = [];
 
         if (!empty($filters['q'])) {

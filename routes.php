@@ -32,7 +32,9 @@ Router::get('/client/profile/edit', 'ProfileController@showEditClient', ['auth',
 Router::get('/entreprise/profile/edit', 'ProfileController@showEditEntreprise', ['auth', 'role:entreprise']);
 Router::post('/profile/update', 'ProfileController@handleUpdate', ['auth']);
 Router::post('/profile/photo', 'ProfileController@uploadPhoto', ['auth']);
-Router::post('/profile/cv', 'ProfileController@uploadCV', ['auth', 'role:entreprise']);
+Router::post('/profile/cv', 'ProfileController@uploadCV', ['auth', 'role:client']);
+Router::post('/profile/cv/{id}/primary', 'ProfileController@setPrimaryCV', ['auth', 'role:client']);
+Router::post('/profile/cv/{id}/delete', 'ProfileController@deleteCV', ['auth', 'role:client']);
 
 Router::get('/entreprise/offres', 'OfferController@index', ['auth', 'role:entreprise']);
 Router::get('/entreprise/offres/new', 'OfferController@create', ['auth', 'role:entreprise']);
