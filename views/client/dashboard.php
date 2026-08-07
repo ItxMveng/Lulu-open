@@ -87,6 +87,7 @@ $name = trim((string) ($user['name'] ?? ''));
                     <div class="d-flex flex-column gap-2">
                         <a class="quick-link" href="<?= e(url('/search')) ?>"><span class="qic"><i class="bi bi-search"></i></span> Rechercher une offre</a>
                         <a class="quick-link" href="<?= e(url('/client/candidatures')) ?>"><span class="qic"><i class="bi bi-send"></i></span> Mes candidatures</a>
+                        <a class="quick-link" href="<?= e(url('/client/ia')) ?>"><span class="qic"><i class="bi bi-robot"></i></span> Outils IA (CV, lettre)</a>
                         <a class="quick-link" href="<?= e(url('/messages')) ?>"><span class="qic"><i class="bi bi-chat-dots"></i></span> Messagerie</a>
                         <a class="quick-link" href="<?= e(url('/client/profile/edit')) ?>"><span class="qic"><i class="bi bi-person-gear"></i></span> Modifier mon profil</a>
                         <a class="quick-link" href="<?= e(url('/abonnement')) ?>"><span class="qic"><i class="bi bi-gem"></i></span> Mon abonnement</a>

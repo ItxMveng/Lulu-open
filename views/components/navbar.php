@@ -36,6 +36,7 @@ $profilePath = $role === 'entreprise' ? '/entreprise/profile/edit' : '/client/pr
                     <?php if ($role === 'client'): ?>
                         <li class="nav-item"><a class="nav-link" href="<?= e(url('/search')) ?>">Rechercher</a></li>
                         <li class="nav-item"><a class="nav-link" href="<?= e(url('/client/candidatures')) ?>">Mes candidatures</a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/client/ia')) ?>">Outils IA</a></li>
                         <li class="nav-item"><a class="nav-link" href="<?= e(url('/messages')) ?>">Messages</a></li>
                     <?php elseif ($role === 'entreprise'): ?>
                         <li class="nav-item"><a class="nav-link" href="<?= e(url('/entreprise/offres')) ?>">Mes offres</a></li>
