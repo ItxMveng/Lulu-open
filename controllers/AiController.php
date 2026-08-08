@@ -57,6 +57,56 @@ final class AiController extends Controller
         json_response(['text' => $text]);
     }
 
+    /**
+     * Importe une offre depuis un lien, un fichier (PDF) ou une image (OCR IA).
+     * Multipart : utilise $_POST/$_FILES (pas de JSON body pour l'upload).
+     */
+    public function importOffer(): never
+    {
+        AuthMiddleware::requireRole(['client']);
+        verify_csrf($_POST['_csrf_token'] ?? null);
+
+        $type = (string) ($_POST['source_type'] ?? 'text');
+        $text = null;
+
+        if ($type === 'url') {
+            $text = LinkExtractor::fetch((string) ($_POST['url'] ?? ''));
+        } elseif ($type === 'file' && !empty($_FILES['document']['tmp_name'])) {
+            $text = DocumentExtractor::extractFromUpload($_FILES['document']);
+        } else {
+            $text = trim((string) ($_POST['text'] ?? ''));
+        }
+
+        if ($text === null || trim($text) === '') {
+            json_response(['error' => "Impossible d'extraire le contenu. Vérifiez le lien/fichier ou collez le texte."], 422);
+        }
+
+        json_response(['text' => trim($text)]);
+    }
+
+    /** Génère un CV structuré à partir du profil du candidat (+ poste ciblé). */
+    public function generateCv(): never
+    {
+        AuthMiddleware::requireRole(['client']);
+        verify_csrf($this->input('_csrf_token'));
+
+        $profile = (new Profile())->getByUserId((int) current_user_id()) ?? [];
+        $dec = static fn ($v): array => (is_array($v) ? $v : (json_decode((string) $v, true) ?: []));
+        $profileText = implode("\n", array_filter([
+            'Nom: ' . (string) (auth_user()['name'] ?? ''),
+            'Titre/domaine: ' . implode(', ', $dec($profile['categories'] ?? '[]')),
+            'Compétences: ' . implode(', ', $dec($profile['skills'] ?? '[]')),
+            'Langues: ' . implode(', ', $dec($profile['languages'] ?? '[]')),
+            'Certifications: ' . implode(', ', $dec($profile['certifications'] ?? '[]')),
+            'Bio: ' . (string) ($profile['bio'] ?? ''),
+        ]));
+        $targetRole = trim((string) $this->input('target_role')) ?: 'candidat';
+        $offerText = trim((string) $this->input('offer_text'));
+
+        $result = (new CvOptimizer())->optimize($profileText, $offerText, $targetRole);
+        json_response($result);
+    }
+
     /** Récupère la valeur postée (JSON body ou form). */
     private function input(string $key): mixed
     {

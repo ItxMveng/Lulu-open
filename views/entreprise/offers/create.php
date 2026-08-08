@@ -47,8 +47,12 @@
                     <label class="form-check-label" for="remote_ok">Télétravail accepté</label>
                 </div>
                 <div class="col-12">
-                    <label class="form-label" for="description">Description</label>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label mb-0" for="description">Description</label>
+                        <button class="btn btn-sm btn-accent" type="button" id="aiDraftBtn"><i class="bi bi-stars me-1"></i>Rédiger avec l'IA</button>
+                    </div>
                     <textarea class="form-control" id="description" name="description" rows="8" required></textarea>
+                    <div class="form-text">Renseignez au moins le titre et les compétences, puis laissez l'IA proposer une description.</div>
                 </div>
             </div>
             <div class="d-flex gap-2 mt-4">
@@ -58,3 +62,24 @@
         </div>
     </form>
 </section>
+<script>
+document.getElementById('aiDraftBtn')?.addEventListener('click', async function () {
+    const btn = this, orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Rédaction…';
+    try {
+        const res = await fetch('<?= e(url('/entreprise/offres/ia-draft')) ?>', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                _csrf_token: '<?= e(csrf_token()) ?>',
+                title: document.getElementById('title').value,
+                skills: document.getElementById('skills_required').value,
+                contract_type: document.getElementById('contract_type').value,
+                sector: document.getElementById('location').value
+            })
+        });
+        const d = await res.json();
+        if (d.description) document.getElementById('description').value = d.description;
+    } catch (e) {}
+    finally { btn.disabled = false; btn.innerHTML = orig; }
+});
+</script>

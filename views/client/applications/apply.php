@@ -11,7 +11,32 @@
             <input type="hidden" name="offer_id" value="<?= e((string) ($offer['id'] ?? 0)) ?>">
             <input type="hidden" name="entreprise_id" value="<?= e((string) ($offer['entreprise_id'] ?? 0)) ?>">
             <div class="mb-3"><label class="form-label" for="cv">CV (PDF)</label><input class="form-control" type="file" id="cv" name="cv" accept="application/pdf" required><div class="form-text">Format PDF, 5 Mo maximum.</div></div>
-            <div class="mb-3"><label class="form-label" for="cover_letter">Lettre de motivation</label><textarea class="form-control" id="cover_letter" name="cover_letter" rows="8" placeholder="Présentez votre motivation en quelques lignes…"></textarea></div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0" for="cover_letter">Lettre de motivation</label>
+                    <button class="btn btn-sm btn-accent" type="button" id="genLetter"><i class="bi bi-stars me-1"></i>Générer avec l'IA</button>
+                </div>
+                <textarea class="form-control" id="cover_letter" name="cover_letter" rows="10" placeholder="Rédigez, ou laissez l'IA générer une première version à partir de l'offre et de votre profil…"></textarea>
+            </div>
+            <script>
+            document.getElementById('genLetter')?.addEventListener('click', async function () {
+                const btn = this, orig = btn.innerHTML;
+                btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Génération…';
+                try {
+                    const res = await fetch('<?= e(url('/client/ia/lettre')) ?>', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            _csrf_token: '<?= e(csrf_token()) ?>',
+                            offer_text: <?= json_encode((string) ($offer['description'] ?? ''), JSON_UNESCAPED_UNICODE) ?>,
+                            entreprise: '', tone: 'professionnel'
+                        })
+                    });
+                    const d = await res.json();
+                    if (d.text) document.getElementById('cover_letter').value = d.text;
+                } catch (e) {}
+                finally { btn.disabled = false; btn.innerHTML = orig; }
+            });
+            </script>
             <div class="d-flex gap-2">
                 <button class="btn btn-primary" type="submit"><i class="bi bi-send me-1"></i>Envoyer ma candidature</button>
                 <a class="btn btn-outline-secondary" href="<?= e(url('/offres/' . (int) ($offer['id'] ?? 0))) ?>">Annuler</a>

@@ -23,6 +23,31 @@ final class OfferController extends Controller
         $this->render('entreprise/offers/create', ['title' => 'Nouvelle offre']);
     }
 
+    /** Rédaction assistée par IA d'une offre à partir de quelques éléments. */
+    public function aiDraft(): never
+    {
+        AuthMiddleware::requireRole(['entreprise']);
+        $payload = json_decode((string) file_get_contents('php://input'), true) ?: $_POST;
+        verify_csrf($payload['_csrf_token'] ?? null);
+
+        $profile = (new Profile())->getByUserId((int) current_user_id()) ?? [];
+        $result = (new OfferWriter())->generate(
+            trim((string) ($payload['title'] ?? '')),
+            trim((string) ($payload['sector'] ?? '')),
+            trim((string) ($payload['skills'] ?? '')),
+            trim((string) ($payload['contract_type'] ?? '')),
+            (string) ($profile['bio'] ?? '')
+        );
+
+        $parts = array_filter([
+            (string) ($result['description'] ?? ''),
+            !empty($result['profile_required']) ? "\n\nProfil recherché :\n" . (string) $result['profile_required'] : '',
+            !empty($result['benefits']) ? "\n\nCe que nous offrons :\n" . (string) $result['benefits'] : '',
+        ]);
+
+        json_response(['description' => trim(implode('', $parts))]);
+    }
+
     public function store(): never
     {
         AuthMiddleware::requireRole(['entreprise']);
