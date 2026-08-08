@@ -71,7 +71,11 @@ final class PageController extends Controller
 
     public function emplois(): void
     {
-        $this->render('pages/emplois', ['title' => 'Offres et recrutement', 'fullWidth' => true]);
+        $this->render('pages/emplois', [
+            'title' => 'Offres et recrutement',
+            'fullWidth' => true,
+            'offers' => array_slice((new Offer())->publicSearch([]), 0, 6),
+        ]);
     }
 
     public function pricing(): void

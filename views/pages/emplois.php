@@ -9,6 +9,26 @@
         </div>
     </div>
 </section>
+<?php $offers = $offers ?? []; ?>
+<?php if (!empty($offers)): ?>
+<section class="section pb-0">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <h2 class="h3 mb-1">Offres récentes</h2>
+                <p class="text-secondary mb-0">Les dernières opportunités publiées.</p>
+            </div>
+            <a class="btn btn-outline-secondary" href="<?= e(url('/search?tab=offres')) ?>">Toutes les offres <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+        <div class="row g-4">
+            <?php foreach ($offers as $offer): ?>
+                <div class="col-md-6 col-lg-4"><?php View::partial('components/offer-card', ['offer' => $offer]); ?></div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
 <section class="section">
     <div class="container text-center">
         <div class="row g-4">

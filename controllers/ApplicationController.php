@@ -63,6 +63,29 @@ final class ApplicationController extends Controller
         redirect('/entreprise/candidatures');
     }
 
+    public function analyze(string $id): never
+    {
+        AuthMiddleware::requireRole(['entreprise']);
+        verify_csrf($_POST['_csrf_token'] ?? (json_decode((string) file_get_contents('php://input'), true)['_csrf_token'] ?? null));
+
+        $application = $this->applications->findForEntreprise((int) $id, (int) current_user_id());
+        if (!$application) {
+            json_response(['error' => 'Candidature introuvable.'], 404);
+        }
+
+        $analyzer = new CvAnalyzer();
+        $cvText = '';
+        if (!empty($application['cv_path'])) {
+            $absolute = base_path((string) $application['cv_path']);
+            if (is_file($absolute)) {
+                $cvText = $analyzer->extractTextFromPdf($absolute);
+            }
+        }
+        $cvText = trim($cvText . "\n" . (string) ($application['cover_letter'] ?? ''));
+
+        json_response($analyzer->analyze($cvText, (string) ($application['offer_description'] ?? '')));
+    }
+
     public function destroy(string $id): never
     {
         AuthMiddleware::requireRole(['client']);

@@ -63,6 +63,7 @@ Router::post('/applications/{id}/delete', 'ApplicationController@destroy', ['aut
 // Côté entreprise (recruteur) : consulter les candidatures reçues et les traiter.
 Router::get('/entreprise/candidatures', 'ApplicationController@received', ['auth', 'role:entreprise']);
 Router::post('/entreprise/candidatures/{id}/status', 'ApplicationController@updateStatus', ['auth', 'role:entreprise']);
+Router::post('/entreprise/candidatures/{id}/analyser', 'ApplicationController@analyze', ['auth', 'role:entreprise']);
 
 Router::get('/favoris', 'FavoriteController@index', ['auth']);
 Router::post('/favorites/{id}/toggle', 'FavoriteController@toggle', ['auth']);

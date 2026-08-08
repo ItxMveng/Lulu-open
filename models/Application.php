@@ -35,6 +35,20 @@ final class Application extends Model
         return $statement->fetchAll() ?: [];
     }
 
+    public function findForEntreprise(int $id, int $entrepriseId): ?array
+    {
+        $statement = $this->db->prepare(
+            'SELECT applications.*, offers.title, offers.description AS offer_description
+             FROM applications
+             INNER JOIN offers ON offers.id = applications.offer_id
+             WHERE applications.id = :id AND applications.entreprise_id = :entreprise_id
+             LIMIT 1'
+        );
+        $statement->execute(['id' => $id, 'entreprise_id' => $entrepriseId]);
+        $row = $statement->fetch();
+        return $row ?: null;
+    }
+
     public function updateStatus(int $id, string $status): bool
     {
         $statement = $this->db->prepare('UPDATE applications SET status = :status, updated_at = NOW() WHERE id = :id');
