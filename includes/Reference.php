@@ -9,13 +9,29 @@ final class Reference
         return ['Français', 'Anglais', 'Espagnol', 'Allemand', 'Italien', 'Portugais', 'Arabe', 'Néerlandais', 'Chinois', 'Russe'];
     }
 
+    /** Compétences transversales, tous secteurs (le catalogue reste ouvert via un champ libre). */
     public static function commonSkills(): array
     {
         return [
-            'PHP', 'JavaScript', 'TypeScript', 'Python', 'Java', 'Dart', 'Flutter', 'React', 'Vue.js', 'Node.js',
-            'Laravel', 'Symfony', 'SQL', 'MySQL', 'PostgreSQL', 'MongoDB', 'Docker', 'Git', 'AWS', 'DevOps',
-            'UI/UX', 'Figma', 'Photoshop', 'Illustrator', 'SEO', 'Google Ads', 'Marketing digital', 'Community management',
-            'Rédaction', 'Traduction', 'Comptabilité', 'Gestion de projet', 'Data analyse', 'Machine learning', 'Cybersécurité', 'Support client',
+            // Transversal
+            'Communication', 'Travail en équipe', 'Gestion de projet', 'Organisation', 'Relation client',
+            'Autonomie', 'Vente', 'Négociation', 'Management', 'Résolution de problèmes',
+            // Commerce / Marketing
+            'Marketing digital', 'Community management', 'SEO', 'Publicité', 'Merchandising',
+            // Bureautique / Admin / Gestion
+            'Bureautique (Word, Excel)', 'Comptabilité', 'Gestion administrative', 'Facturation', 'Ressources humaines',
+            // Métiers / Artisanat / BTP
+            'Cuisine', 'Service en salle', 'Pâtisserie', 'Menuiserie', 'Électricité', 'Plomberie', 'Maçonnerie', 'Peinture en bâtiment', 'Mécanique',
+            // Santé / Social / Éducation
+            'Aide à la personne', 'Soins infirmiers', 'Petite enfance', 'Enseignement', 'Formation',
+            // Créatif / Design
+            'Design graphique', 'Photographie', 'Montage vidéo', 'Rédaction', 'Traduction',
+            // Beauté / Bien-être
+            'Coiffure', 'Esthétique', 'Massage',
+            // Logistique
+            'Conduite / Livraison', 'Manutention', 'Gestion de stock',
+            // Tech
+            'Développement web', 'Bureautique avancée', 'Analyse de données', 'Support informatique',
         ];
     }
 

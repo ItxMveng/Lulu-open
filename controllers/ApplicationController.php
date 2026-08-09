@@ -56,7 +56,13 @@ final class ApplicationController extends Controller
     private function resolveApplicationCv(int $userId): ?string
     {
         if (!empty($_FILES['cv']['name'])) {
-            return UploadHelper::storeUploadedFile($_FILES['cv'], 'cv', ['application/pdf'], 5 * 1024 * 1024);
+            return UploadHelper::storeUploadedFile($_FILES['cv'], 'cv', [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'image/jpeg',
+                'image/png',
+            ], 8 * 1024 * 1024);
         }
 
         $cvId = (int) ($_POST['cv_id'] ?? 0);

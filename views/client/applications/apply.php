@@ -51,8 +51,8 @@ $offerId = (int) ($offer['id'] ?? 0);
                         </div>
                     <?php endif; ?>
                     <div class="cv-pane <?= empty($cvDocuments) ? '' : 'd-none' ?>" data-mode="upload">
-                        <input class="form-control" type="file" name="cv" id="cvFile" accept="application/pdf" <?= empty($cvDocuments) ? '' : 'disabled' ?>>
-                        <div class="form-text">Format PDF, 5 Mo maximum.</div>
+                        <input class="form-control" type="file" name="cv" id="cvFile" accept=".pdf,.doc,.docx,image/jpeg,image/png" <?= empty($cvDocuments) ? '' : 'disabled' ?>>
+                        <div class="form-text">PDF, Word ou image — 8 Mo max.</div>
                     </div>
                     <div class="cv-pane d-none" data-mode="gen">
                         <button class="btn btn-accent" type="button" id="btnGenCv"><i class="bi bi-magic me-1"></i>Générer mon CV pour cette offre</button>

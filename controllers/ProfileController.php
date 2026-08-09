@@ -101,13 +101,18 @@ final class ProfileController extends Controller
         verify_csrf();
 
         $profile = $this->profiles->getByUserId((int) current_user_id()) ?? [];
-        $path = UploadHelper::storeUploadedFile(
-            $_FILES['photo'] ?? [],
-            'photos',
-            ['image/jpeg', 'image/png'],
-            2 * 1024 * 1024,
-            $profile['photo_path'] ?? null
-        );
+        try {
+            $path = UploadHelper::storeUploadedFile(
+                $_FILES['photo'] ?? [],
+                'photos',
+                ['image/jpeg', 'image/png', 'image/webp'],
+                3 * 1024 * 1024,
+                $profile['photo_path'] ?? null
+            );
+        } catch (Throwable $e) {
+            flash('Photo non mise à jour : ' . $this->uploadErrorMessage($e), 'danger');
+            redirect(current_role() === 'entreprise' ? '/entreprise/profile/edit' : '/client/profile/edit');
+        }
 
         $this->profiles->save((int) current_user_id(), [
             'display_name' => $profile['display_name'] ?? ($_SESSION['user']['name'] ?? 'Profil'),
@@ -134,19 +139,42 @@ final class ProfileController extends Controller
         AuthMiddleware::requireRole(['client']);
         verify_csrf();
 
-        $path = UploadHelper::storeUploadedFile(
-            $_FILES['cv'] ?? [],
-            'cv',
-            ['application/pdf'],
-            5 * 1024 * 1024
-        );
+        try {
+            $path = UploadHelper::storeUploadedFile(
+                $_FILES['cv'] ?? [],
+                'cv',
+                [
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    'image/jpeg',
+                    'image/png',
+                ],
+                8 * 1024 * 1024
+            );
+        } catch (Throwable $e) {
+            flash('CV non importé : ' . $this->uploadErrorMessage($e), 'danger');
+            redirect('/client/profile/edit');
+        }
 
         $cvDocuments = new CvDocument();
         $isFirst = empty($cvDocuments->allForUser((int) current_user_id()));
-        $cvDocuments->add((int) current_user_id(), $path, (string) ($_FILES['cv']['name'] ?? 'cv.pdf'), $isFirst);
+        $cvDocuments->add((int) current_user_id(), $path, (string) ($_FILES['cv']['name'] ?? 'cv'), $isFirst);
 
         flash('CV importé avec succès.', 'success');
         redirect('/client/profile/edit');
+    }
+
+    private function uploadErrorMessage(Throwable $e): string
+    {
+        $msg = $e->getMessage();
+        if (str_contains($msg, 'MIME')) {
+            return 'format non accepté. Utilisez un PDF, un document Word (.doc/.docx) ou une image (JPG/PNG).';
+        }
+        if (str_contains($msg, 'taille')) {
+            return 'fichier trop volumineux (8 Mo maximum).';
+        }
+        return 'vérifiez le fichier et réessayez.';
     }
 
     public function setPrimaryCV(string $id): never

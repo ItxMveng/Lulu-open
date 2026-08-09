@@ -28,7 +28,10 @@ final class UploadHelper
         $extensionMap = [
             'image/jpeg' => 'jpg',
             'image/png' => 'png',
+            'image/webp' => 'webp',
             'application/pdf' => 'pdf',
+            'application/msword' => 'doc',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
         ];
         $extension = $extensionMap[$mime] ?? pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION);
         $fileName = bin2hex(random_bytes(16)) . ($extension !== '' ? '.' . $extension : '');

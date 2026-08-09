@@ -57,8 +57,9 @@ $multiVal = static function ($json): string {
                     <?php endif; ?>
                     <form method="post" action="<?= e(url('/profile/cv')) ?>" enctype="multipart/form-data">
                         <?= csrf_field() ?>
-                        <input class="form-control form-control-sm mb-2" type="file" name="cv" accept="application/pdf" required>
-                        <button class="btn btn-outline-secondary btn-sm w-100" type="submit"><i class="bi bi-upload me-1"></i>Importer un CV (PDF)</button>
+                        <input class="form-control form-control-sm mb-2" type="file" name="cv" accept=".pdf,.doc,.docx,image/jpeg,image/png" required>
+                        <button class="btn btn-outline-secondary btn-sm w-100" type="submit"><i class="bi bi-upload me-1"></i>Importer un CV</button>
+                        <div class="form-text">PDF, Word ou image — 8 Mo max.</div>
                     </form>
                 </div>
             </div>
