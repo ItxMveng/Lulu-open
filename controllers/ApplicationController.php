@@ -20,24 +20,63 @@ final class ApplicationController extends Controller
             abort(404, 'Offre introuvable.');
         }
 
-        $this->render('client/applications/apply', ['title' => 'Postuler à une offre', 'offer' => $offer]);
+        $this->render('client/applications/apply', [
+            'title' => 'Postuler à une offre',
+            'offer' => $offer,
+            'cvDocuments' => (new CvDocument())->allForUser((int) current_user_id()),
+        ]);
     }
 
     public function store(): never
     {
         AuthMiddleware::requireRole(['client']);
         verify_csrf();
-        $cvPath = !empty($_FILES['cv']['name']) ? UploadHelper::storeUploadedFile($_FILES['cv'], 'cv', ['application/pdf'], 5 * 1024 * 1024) : null;
+        $userId = (int) current_user_id();
+
+        $cvPath = $this->resolveApplicationCv($userId);
+        if ($cvPath === null) {
+            flash('Ajoutez un CV (enregistré, importé ou généré par l\'IA) pour postuler.', 'danger');
+            redirect('/offres/' . (int) ($_POST['offer_id'] ?? 0) . '/postuler');
+        }
+
         $id = $this->applications->create([
-            'applicant_id' => (int) current_user_id(),
+            'applicant_id' => $userId,
             'entreprise_id' => (int) ($_POST['entreprise_id'] ?? 0),
             'offer_id' => (int) ($_POST['offer_id'] ?? 0),
             'cv_path' => $cvPath,
             'cover_letter' => trim((string) ($_POST['cover_letter'] ?? '')),
         ]);
-        (new Activity())->log((int) current_user_id(), 'application_sent', ['application_id' => $id]);
-        flash('Candidature envoyée.', 'success');
+        (new Activity())->log($userId, 'application_sent', ['application_id' => $id]);
+        (new Notification())->create((int) ($_POST['entreprise_id'] ?? 0), 'application_received', ['offer_id' => (int) ($_POST['offer_id'] ?? 0)]);
+        flash('Candidature envoyée au recruteur. Bonne chance !', 'success');
         redirect('/client/candidatures');
+    }
+
+    /** Détermine le CV de la candidature : fichier importé, CV enregistré, ou CV généré par l'IA. */
+    private function resolveApplicationCv(int $userId): ?string
+    {
+        if (!empty($_FILES['cv']['name'])) {
+            return UploadHelper::storeUploadedFile($_FILES['cv'], 'cv', ['application/pdf'], 5 * 1024 * 1024);
+        }
+
+        $cvId = (int) ($_POST['cv_id'] ?? 0);
+        if ($cvId > 0) {
+            $cv = (new CvDocument())->find($cvId, $userId);
+            if ($cv && !empty($cv['file_path'])) {
+                return (string) $cv['file_path'];
+            }
+        }
+
+        $generated = trim((string) ($_POST['generated_cv'] ?? ''));
+        if ($generated !== '') {
+            $dir = UPLOADS_PATH . DIRECTORY_SEPARATOR . 'cv';
+            if (!is_dir($dir)) { mkdir($dir, 0775, true); }
+            $relative = 'uploads/cv/cvia_' . bin2hex(random_bytes(8)) . '.docx';
+            file_put_contents(base_path($relative), DocumentRenderer::toDocx($generated, 'CV'));
+            return $relative;
+        }
+
+        return null;
     }
 
     public function index(): void
