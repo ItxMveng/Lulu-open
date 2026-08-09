@@ -335,7 +335,14 @@ a:focus-visible, .btn:focus-visible, .form-control:focus-visible, .nav-link:focu
 .score-ring.score-success { --ring-c: var(--lulu-accent); }
 .score-ring.score-warning { --ring-c: #D97706; }
 .score-ring.score-danger  { --ring-c: var(--lulu-danger); }
-.cv-render h3:first-child { margin-top: 0; }
+/* Rendu document (CV / lettre) façon papier */
+.doc-render { background: #fff; border: 1px solid var(--lulu-border); border-radius: var(--lulu-radius); padding: 1.75rem 2rem; box-shadow: var(--lulu-shadow-sm); max-height: 520px; overflow-y: auto; }
+.doc-render h3 { font-size: 1.4rem; color: var(--lulu-primary-700); margin: 0 0 .25rem; }
+.doc-render h3:first-child { margin-top: 0; }
+.doc-render h4 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--lulu-primary); border-bottom: 2px solid var(--lulu-border); padding-bottom: 3px; margin: 1.1rem 0 .5rem; }
+.doc-render p { margin: 0 0 .5rem; }
+.doc-render ul { margin: 0 0 .6rem; padding-left: 1.2rem; }
+.doc-render strong { color: var(--lulu-primary-700); }
 
 /* ---------- Avatar ---------- */
 .avatar-circle {

@@ -86,6 +86,38 @@ final class AiController extends Controller
         json_response(['text' => $clean, 'refined' => $clean !== trim($text)]);
     }
 
+    /** Génère un document téléchargeable (.docx) ou imprimable (PDF) à partir d'un contenu. */
+    public function document(): never
+    {
+        AuthMiddleware::requireRole(['client']);
+        verify_csrf($_POST['_csrf_token'] ?? null);
+
+        $type = (string) ($_POST['type'] ?? 'document');
+        $format = (string) ($_POST['format'] ?? 'pdf');
+        $content = trim((string) ($_POST['content'] ?? ''));
+        $titles = ['cv' => 'CV', 'lettre' => 'Lettre de motivation'];
+        $title = $titles[$type] ?? 'Document';
+        $filename = ($type === 'lettre' ? 'lettre-motivation' : 'cv') . '-lulu';
+
+        if ($content === '') {
+            abort(422, 'Contenu vide.');
+        }
+
+        if ($format === 'docx') {
+            $bytes = DocumentRenderer::toDocx($content, $title);
+            header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+            header('Content-Disposition: attachment; filename="' . $filename . '.docx"');
+            header('Content-Length: ' . strlen($bytes));
+            echo $bytes;
+            exit;
+        }
+
+        // PDF : page HTML soignée qui déclenche l'impression (enregistrer en PDF).
+        header('Content-Type: text/html; charset=UTF-8');
+        echo DocumentRenderer::toHtml($content, $title);
+        exit;
+    }
+
     private function refineOffer(string $raw, string $type): string
     {
         $ai = new IAProvider();

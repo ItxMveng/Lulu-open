@@ -139,9 +139,28 @@ $aiConfigured = $aiConfigured ?? false;
             <h3 class="h6 mt-3"><i class="bi bi-hand-thumbs-up text-success me-1"></i>Points forts</h3>${chips(d.strengths,'badge-soft-success')}
             <h3 class="h6 mt-3"><i class="bi bi-exclamation-triangle text-warning me-1"></i>Points à renforcer</h3>${chips(d.gaps,'status-en_attente')}
             <h3 class="h6 mt-3"><i class="bi bi-lightbulb text-primary me-1"></i>Recommandation</h3><p class="mb-0">${esc(d.recommendation)||'—'}</p>`; },
-        cv: (d) => `<div class="d-flex justify-content-end gap-2 mb-2"><button class="btn btn-sm btn-outline-secondary" data-copy="cv"><i class="bi bi-clipboard me-1"></i>Copier</button><button class="btn btn-sm btn-outline-secondary" data-dl="cv" data-name="mon-cv.md"><i class="bi bi-download me-1"></i>Télécharger</button></div><div class="cv-render border rounded-3 p-3 bg-white" data-raw="${esc(d.cv)}">${md(d.cv)}</div>${badgeAi(d.ai)?'<div class="mt-2">'+badgeAi(d.ai)+'</div>':''}`,
-        lettre: (d) => `<div class="d-flex justify-content-end gap-2 mb-2"><button class="btn btn-sm btn-outline-secondary" data-copy="lettre"><i class="bi bi-clipboard me-1"></i>Copier</button><button class="btn btn-sm btn-outline-secondary" data-dl="lettre" data-name="lettre-motivation.txt"><i class="bi bi-download me-1"></i>Télécharger</button></div><div class="letter-render border rounded-3 p-3 bg-white" data-raw="${esc(d.text)}" style="white-space:pre-wrap;">${esc(d.text)}</div>`,
+        cv: (d) => docToolbar('cv') + `<div class="doc-render doc-cv" data-raw="${esc(d.cv)}">${md(d.cv)}</div>${badgeAi(d.ai)?'<div class="mt-2">'+badgeAi(d.ai)+'</div>':''}`,
+        lettre: (d) => docToolbar('lettre') + `<div class="doc-render doc-letter" data-raw="${esc(d.text)}" style="white-space:pre-wrap;">${esc(d.text)}</div>`,
     };
+    const docToolbar = (kind) => `<div class="d-flex justify-content-end flex-wrap gap-2 mb-2">
+        <button class="btn btn-sm btn-outline-secondary" data-copy="${kind}"><i class="bi bi-clipboard me-1"></i>Copier</button>
+        <button class="btn btn-sm btn-outline-primary" data-doc="${kind}" data-fmt="docx"><i class="bi bi-file-earmark-word me-1"></i>Word</button>
+        <button class="btn btn-sm btn-outline-danger" data-doc="${kind}" data-fmt="pdf"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</button></div>`;
+    const DOC_URL = '<?= e(url('/client/ia/document')) ?>';
+    function docContent(kind) { const el = box.querySelector(kind === 'cv' ? '.doc-cv' : '.doc-letter'); return el ? el.getAttribute('data-raw') : ''; }
+    async function downloadDoc(kind, fmt) {
+        const content = docContent(kind);
+        if (fmt === 'pdf') {
+            const f = document.createElement('form'); f.method = 'POST'; f.action = DOC_URL; f.target = '_blank';
+            f.innerHTML = `<input name="_csrf_token" value="${CSRF}"><input name="type" value="${kind}"><input name="format" value="pdf">`;
+            const ta = document.createElement('textarea'); ta.name = 'content'; ta.value = content; f.appendChild(ta);
+            document.body.appendChild(f); f.submit(); f.remove(); return;
+        }
+        const fd = new FormData(); fd.append('_csrf_token', CSRF); fd.append('type', kind); fd.append('format', 'docx'); fd.append('content', content);
+        const r = await fetch(DOC_URL, { method: 'POST', body: fd });
+        const blob = await r.blob(); const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = (kind === 'lettre' ? 'lettre-motivation' : 'cv') + '-lulu.docx'; a.click();
+    }
     const titles = { analyse: 'Analyse d\'adéquation', cv: 'Votre CV généré', lettre: 'Votre lettre de motivation' };
 
     document.querySelectorAll('[data-ai]').forEach(btn => btn.addEventListener('click', async () => {
@@ -156,8 +175,8 @@ $aiConfigured = $aiConfigured ?? false;
             const d = await r.json();
             if (!r.ok) { box.innerHTML = `<div class="lulu-alert lulu-alert-danger"><i class="bi bi-x-circle-fill"></i><div>${esc(d.error||'Erreur.')}</div></div>`; return; }
             box.innerHTML = render[tool](d);
-            box.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => { const el = box.querySelector(b.getAttribute('data-copy')==='cv'?'.cv-render':'.letter-render'); navigator.clipboard?.writeText(el.getAttribute('data-raw')); b.innerHTML='<i class="bi bi-check2 me-1"></i>Copié'; }));
-            box.querySelectorAll('[data-dl]').forEach(b => b.addEventListener('click', () => { const el = box.querySelector(b.getAttribute('data-dl')==='cv'?'.cv-render':'.letter-render'); download(b.getAttribute('data-name'), el.getAttribute('data-raw')); }));
+            box.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => { navigator.clipboard?.writeText(docContent(b.getAttribute('data-copy'))); b.innerHTML='<i class="bi bi-check2 me-1"></i>Copié'; }));
+            box.querySelectorAll('[data-doc]').forEach(b => b.addEventListener('click', () => downloadDoc(b.getAttribute('data-doc'), b.getAttribute('data-fmt'))));
         } catch (e) { box.innerHTML = '<div class="lulu-alert lulu-alert-danger"><i class="bi bi-x-circle-fill"></i><div>Une erreur est survenue.</div></div>'; }
         finally { btn.disabled = false; btn.innerHTML = orig; }
     }));

@@ -22,7 +22,8 @@ Structure :
 - Corps : 1 à 2 paragraphes reliant CONCRÈTEMENT les compétences/expériences du candidat aux besoins de l'offre (cite des éléments réels du CV et de l'offre).
 - Projection : ce que le candidat apportera.
 - Formule de politesse et signature avec le nom du candidat.
-Règles : 250 à 350 mots, spécifique (jamais de phrases creuses interchangeables), n'invente pas d'informations fausses. Pour les infos manquantes, utilise des crochets [comme ceci]. Réponds uniquement avec le texte de la lettre.
+Règles : 250 à 350 mots, spécifique (jamais de phrases creuses interchangeables), n'invente pas d'informations fausses. Pour les infos manquantes, utilise des crochets [comme ceci].
+IMPORTANT : réponds en TEXTE BRUT uniquement, SANS AUCUN symbole de mise en forme Markdown (pas de **, pas de #, pas de *, pas de tirets de liste). Une lettre de motivation classique, paragraphes séparés par des sauts de ligne.
 PROMPT;
         $user = "Candidat : {$userName}\nEntreprise : {$entreprise}\n\n=== OFFRE ===\n"
             . $this->clip($offerText, 3500) . "\n\n=== CV / PROFIL DU CANDIDAT ===\n" . $this->clip($cvText, 3500);
