@@ -82,17 +82,25 @@ $multiVal = static function ($json): string {
                             <label class="form-label" for="bio">Présentation</label>
                             <textarea class="form-control" id="bio" name="bio" rows="5" placeholder="Décrivez votre parcours, vos atouts…"><?= e((string) ($profile['bio'] ?? '')) ?></textarea>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="skills">Compétences</label>
-                            <textarea class="form-control" id="skills" name="skills" rows="3" placeholder="PHP, Flutter, UX… (séparées par des virgules)"><?= e($listVal($profile['skills'] ?? null)) ?></textarea>
+<?php
+$decArr = static fn ($v): array => (is_array($v) ? $v : (json_decode((string) $v, true) ?: []));
+$selCats = $decArr($profile['categories'] ?? null);
+$selSkills = $decArr($profile['skills'] ?? null);
+$selLangs = $decArr($profile['languages'] ?? null);
+$extraSkills = array_values(array_diff($selSkills, $skillsList ?? []));
+?>
+                        <div class="col-12">
+                            <label class="form-label">Domaines</label>
+                            <?php View::partial('components/chip-select', ['name' => 'categories', 'options' => $categoriesList ?? [], 'selected' => $selCats]); ?>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="categories">Domaines</label>
-                            <textarea class="form-control" id="categories" name="categories" rows="3" placeholder="Développement, Design… (virgules)"><?= e($listVal($profile['categories'] ?? null)) ?></textarea>
+                        <div class="col-12">
+                            <label class="form-label">Compétences</label>
+                            <?php View::partial('components/chip-select', ['name' => 'skills', 'options' => $skillsList ?? [], 'selected' => $selSkills]); ?>
+                            <input class="form-control form-control-sm mt-2" name="skills_extra" placeholder="Autres compétences (séparées par des virgules)" value="<?= e(implode(', ', $extraSkills)) ?>">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="languages">Langues</label>
-                            <textarea class="form-control" id="languages" name="languages" rows="2" placeholder="Français, Anglais… (virgules)"><?= e($listVal($profile['languages'] ?? null)) ?></textarea>
+                        <div class="col-12">
+                            <label class="form-label">Langues</label>
+                            <?php View::partial('components/chip-select', ['name' => 'languages', 'options' => $languagesList ?? [], 'selected' => $selLangs]); ?>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label" for="hourly_rate">Tarif horaire (€)</label>

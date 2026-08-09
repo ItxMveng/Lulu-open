@@ -32,6 +32,9 @@ final class LinkExtractor
             CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
             CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
         ]);
+        if (defined('CA_BUNDLE') && CA_BUNDLE) {
+            curl_setopt($curl, CURLOPT_CAINFO, CA_BUNDLE);
+        }
         $html = curl_exec($curl);
         $httpCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);

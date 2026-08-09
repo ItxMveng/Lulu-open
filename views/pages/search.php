@@ -33,7 +33,12 @@ $savedSearches = $savedSearches ?? [];
             </div>
 
             <div class="d-flex flex-wrap align-items-center gap-3 mt-3 pt-3 border-top">
-                <input class="form-control form-control-sm" style="max-width: 180px;" type="text" name="category" placeholder="Catégorie" value="<?= e((string) ($filters['category'] ?? '')) ?>">
+                <select class="form-select form-select-sm" style="max-width: 200px;" name="category">
+                    <option value="">Toutes les catégories</option>
+                    <?php foreach (($categoriesList ?? []) as $cat): ?>
+                        <option value="<?= e((string) $cat['name']) ?>" <?= ($filters['category'] ?? '') === $cat['name'] ? 'selected' : '' ?>><?= e((string) $cat['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
                 <input class="form-control form-control-sm" style="max-width: 130px;" type="number" step="0.01" name="rate_min" placeholder="Tarif min €" value="<?= e((string) ($filters['rate_min'] ?? '')) ?>">
                 <input class="form-control form-control-sm" style="max-width: 130px;" type="number" step="0.01" name="rate_max" placeholder="Tarif max €" value="<?= e((string) ($filters['rate_max'] ?? '')) ?>">
                 <div class="form-check">

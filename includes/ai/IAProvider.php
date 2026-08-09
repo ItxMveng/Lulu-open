@@ -126,8 +126,11 @@ final class IAProvider
                 'Content-Type: application/json',
             ],
             CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            CURLOPT_TIMEOUT => 30,
+            CURLOPT_TIMEOUT => 45,
         ]);
+        if (defined('CA_BUNDLE') && CA_BUNDLE) {
+            curl_setopt($curl, CURLOPT_CAINFO, CA_BUNDLE);
+        }
 
         $rawResponse = curl_exec($curl);
         $httpCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
@@ -158,8 +161,11 @@ final class IAProvider
                 'Content-Type: application/json',
             ],
             CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-            CURLOPT_TIMEOUT => 45,
+            CURLOPT_TIMEOUT => 60,
         ]);
+        if (defined('CA_BUNDLE') && CA_BUNDLE) {
+            curl_setopt($curl, CURLOPT_CAINFO, CA_BUNDLE);
+        }
         $raw = curl_exec($curl);
         $httpCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $curlError = curl_error($curl);

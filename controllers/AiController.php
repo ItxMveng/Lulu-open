@@ -78,10 +78,25 @@ final class AiController extends Controller
         }
 
         if ($text === null || trim($text) === '') {
-            json_response(['error' => "Impossible d'extraire le contenu. Vérifiez le lien/fichier ou collez le texte."], 422);
+            json_response(['error' => "Impossible de récupérer le contenu (le site bloque peut-être l'accès automatique). Copiez-collez le texte de l'offre à la place."], 422);
         }
 
-        json_response(['text' => trim($text)]);
+        // Raffinage IA : extraire l'offre propre à partir du texte brut récupéré.
+        $clean = $this->refineOffer(trim($text), $type);
+        json_response(['text' => $clean, 'refined' => $clean !== trim($text)]);
+    }
+
+    private function refineOffer(string $raw, string $type): string
+    {
+        $ai = new IAProvider();
+        // On ne raffine que le contenu brut issu d'un lien/fichier (le texte collé est déjà propre).
+        if (!$ai->enabled() || $type === 'text' || mb_strlen($raw) < 200) {
+            return $raw;
+        }
+        $system = "Tu extrais le contenu utile d'une offre d'emploi à partir d'un texte brut (souvent issu d'une page web avec du bruit : menus, cookies, pieds de page). "
+            . "Renvoie UNIQUEMENT le contenu de l'offre en texte clair et structuré (intitulé, entreprise, missions, profil recherché, conditions), en français, sans le bruit. Si aucune offre n'est identifiable, renvoie le texte tel quel nettoyé.";
+        $refined = $ai->complete($system, mb_substr($raw, 0, 8000), ['temperature' => 0.2]);
+        return ($refined !== null && trim($refined) !== '') ? trim($refined) : $raw;
     }
 
     /** Génère un CV structuré à partir du profil du candidat (+ poste ciblé). */

@@ -306,6 +306,37 @@ a:focus-visible, .btn:focus-visible, .form-control:focus-visible, .nav-link:focu
 .chat-row.them .chat-bubble { background: var(--lulu-surface-2); color: var(--lulu-text); border-bottom-left-radius: 4px; }
 .chat-input { border-radius: var(--lulu-radius-pill) !important; }
 
+/* ---------- Chips sélectionnables (multi-select) ---------- */
+.chip-group { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.chip-group .chip { position: relative; }
+.chip-group .chip input { position: absolute; opacity: 0; inset: 0; cursor: pointer; margin: 0; }
+.chip-group .chip label {
+    display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer;
+    padding: 0.4rem 0.85rem; border-radius: var(--lulu-radius-pill);
+    border: 1.5px solid var(--lulu-border); background: var(--lulu-surface);
+    color: var(--lulu-text); font-size: 0.9rem; font-weight: 500;
+    transition: border-color var(--lulu-t), background var(--lulu-t), color var(--lulu-t);
+}
+.chip-group .chip label::before { content: '\F4F2'; font-family: 'bootstrap-icons'; font-size: 0.85rem; opacity: 0.5; }
+.chip-group .chip input:checked + label { border-color: var(--lulu-primary); background: #F5FBFF; color: var(--lulu-primary-700); }
+.chip-group .chip input:checked + label::before { content: '\F26E'; opacity: 1; color: var(--lulu-primary); }
+.chip-group .chip input:focus-visible + label { outline: 3px solid rgba(14,165,233,0.5); outline-offset: 2px; }
+
+/* ---------- Jauge de score circulaire ---------- */
+.score-ring {
+    --v: 0; --sz: 84px;
+    width: var(--sz); height: var(--sz); flex: 0 0 auto; border-radius: 50%;
+    display: grid; place-items: center; position: relative;
+    background: conic-gradient(var(--ring-c, var(--lulu-primary)) calc(var(--v) * 1%), var(--lulu-muted-ring, #E2E8F0) 0);
+}
+.score-ring::before { content: ''; position: absolute; inset: 8px; background: var(--lulu-surface); border-radius: 50%; }
+.score-ring > span { position: relative; font-weight: 800; font-size: 1.35rem; color: var(--lulu-fg); line-height: 1; }
+.score-ring > span small { font-size: 0.7rem; font-weight: 600; color: var(--lulu-muted); }
+.score-ring.score-success { --ring-c: var(--lulu-accent); }
+.score-ring.score-warning { --ring-c: #D97706; }
+.score-ring.score-danger  { --ring-c: var(--lulu-danger); }
+.cv-render h3:first-child { margin-top: 0; }
+
 /* ---------- Avatar ---------- */
 .avatar-circle {
     flex: 0 0 auto; width: 3rem; height: 3rem; border-radius: 50%;

@@ -34,6 +34,9 @@ final class ProfileController extends Controller
             'title' => 'Mon profil',
             'profile' => $profile,
             'cvDocuments' => (new CvDocument())->allForUser($userId),
+            'categoriesList' => array_column((new Category())->all(), 'name'),
+            'skillsList' => Reference::commonSkills(),
+            'languagesList' => Reference::languages(),
         ]);
     }
 
@@ -41,7 +44,12 @@ final class ProfileController extends Controller
     {
         AuthMiddleware::requireRole(['entreprise']);
         $profile = $this->profiles->getByUserId((int) current_user_id());
-        $this->render('entreprise/profile-edit', ['title' => 'Mon profil entreprise', 'profile' => $profile]);
+        $this->render('entreprise/profile-edit', [
+            'title' => 'Mon profil entreprise',
+            'profile' => $profile,
+            'categoriesList' => array_column((new Category())->all(), 'name'),
+            'languagesList' => Reference::languages(),
+        ]);
     }
 
     public function handleUpdate(): never
@@ -68,7 +76,10 @@ final class ProfileController extends Controller
             'photo_path' => $profile['photo_path'] ?? null,
             'type' => $role === 'entreprise' ? (string) ($_POST['type'] ?? ($profile['type'] ?? 'mixte')) : 'services',
             'categories' => $this->parseList($_POST['categories'] ?? ''),
-            'skills' => $this->parseList($_POST['skills'] ?? ''),
+            'skills' => array_values(array_unique(array_merge(
+                $this->parseList($_POST['skills'] ?? ''),
+                $this->parseList($_POST['skills_extra'] ?? '')
+            ))),
             'languages' => $this->parseList($_POST['languages'] ?? ''),
             'hourly_rate' => $_POST['hourly_rate'] ?? null,
             'availability' => trim((string) ($_POST['availability'] ?? '')),

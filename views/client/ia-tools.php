@@ -4,156 +4,162 @@ $aiConfigured = $aiConfigured ?? false;
 ?>
 <section class="py-4">
     <div class="mb-4">
-        <h1 class="h3 mb-1"><i class="bi bi-stars me-2"></i>Assistant IA candidat</h1>
-        <p class="text-secondary mb-0">Importez une offre (lien, fichier ou image), l'IA analyse et génère CV et lettre.</p>
+        <h1 class="h3 mb-1"><i class="bi bi-stars me-2 text-primary"></i>Assistant IA candidat</h1>
+        <p class="text-secondary mb-0">Importez une offre, l'IA analyse votre adéquation et génère CV et lettre sur mesure.</p>
     </div>
 
-    <?php if (!$aiConfigured): ?>
-        <div class="lulu-alert lulu-alert-warning mb-4">
-            <i class="bi bi-exclamation-triangle"></i>
-            <div>L'IA n'est pas encore configurée : extraction d'image et résultats avancés indisponibles. Une analyse locale simplifiée est utilisée en attendant.</div>
-        </div>
+    <?php if ($aiConfigured): ?>
+        <div class="lulu-alert lulu-alert-success mb-4"><i class="bi bi-check-circle-fill"></i><div class="small">IA activée — résultats générés par intelligence artificielle.</div></div>
+    <?php else: ?>
+        <div class="lulu-alert lulu-alert-warning mb-4"><i class="bi bi-exclamation-triangle-fill"></i><div class="small">IA non configurée : mode local simplifié. Ajoutez une clé Mistral dans <code>.env</code> pour la pleine puissance.</div></div>
     <?php endif; ?>
 
     <div class="row g-4">
-        <!-- Étape 1 : l'offre -->
-        <div class="col-lg-6">
+        <!-- L'offre -->
+        <div class="col-lg-7">
             <div class="card h-100">
                 <div class="card-body p-4">
-                    <div class="d-flex align-items-center gap-2 mb-3"><span class="step-num">1</span><h2 class="h5 mb-0">L'offre visée</h2></div>
-
-                    <ul class="nav nav-pills gap-2 mb-3" role="tablist">
-                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#src-url" type="button"><i class="bi bi-link-45deg"></i> Lien</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#src-file" type="button"><i class="bi bi-file-earmark-arrow-up"></i> Fichier / Image</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#src-text" type="button"><i class="bi bi-fonts"></i> Texte</button></li>
-                    </ul>
-                    <div class="tab-content mb-3">
-                        <div class="tab-pane fade show active" id="src-url">
-                            <div class="input-group">
-                                <input class="form-control" id="srcUrl" type="url" placeholder="https://…/offre-emploi">
-                                <button class="btn btn-primary" id="importUrl" type="button"><i class="bi bi-download"></i></button>
-                            </div>
-                            <div class="form-text">Collez le lien d'une offre, l'IA récupère le contenu.</div>
-                        </div>
-                        <div class="tab-pane fade" id="src-file">
-                            <div class="input-group">
-                                <input class="form-control" id="srcFile" type="file" accept="application/pdf,image/png,image/jpeg,image/webp">
-                                <button class="btn btn-primary" id="importFile" type="button"><i class="bi bi-magic"></i></button>
-                            </div>
-                            <div class="form-text">PDF ou photo d'une offre — lecture automatique (OCR IA pour les images).</div>
-                        </div>
-                        <div class="tab-pane fade" id="src-text">
-                            <p class="text-secondary small mb-0">Collez directement le texte dans le champ ci-dessous.</p>
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h2 class="h6 mb-0"><span class="badge badge-soft-primary me-2">1</span>L'offre visée</h2>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn btn-outline-secondary active" id="tabLink" type="button"><i class="bi bi-link-45deg"></i> Lien</button>
+                            <button class="btn btn-outline-secondary" id="tabFile" type="button"><i class="bi bi-file-earmark"></i> Fichier</button>
                         </div>
                     </div>
-
-                    <label class="form-label small" for="offerText">Contenu de l'offre</label>
-                    <textarea class="form-control" id="offerText" rows="10" placeholder="Le texte de l'offre apparaîtra ici après import…"></textarea>
-                    <div id="importStatus" class="small mt-2"></div>
+                    <div id="paneLink" class="input-group input-group-sm mb-2">
+                        <input class="form-control" id="srcUrl" type="url" placeholder="https://…/offre">
+                        <button class="btn btn-primary" id="importUrl" type="button"><i class="bi bi-download me-1"></i>Importer</button>
+                    </div>
+                    <div id="paneFile" class="input-group input-group-sm mb-2 d-none">
+                        <input class="form-control" id="srcFile" type="file" accept="application/pdf,image/png,image/jpeg,image/webp">
+                        <button class="btn btn-primary" id="importFile" type="button"><i class="bi bi-magic me-1"></i>Extraire</button>
+                    </div>
+                    <div id="importStatus" class="small mb-2"></div>
+                    <textarea class="form-control" id="offerText" rows="12" placeholder="Collez ici le texte de l'offre, ou importez-le via un lien ou un fichier ci-dessus."></textarea>
                 </div>
             </div>
         </div>
 
-        <!-- Étape 2 : mon CV -->
-        <div class="col-lg-6">
+        <!-- Mon CV -->
+        <div class="col-lg-5">
             <div class="card h-100">
                 <div class="card-body p-4">
-                    <div class="d-flex align-items-center gap-2 mb-3"><span class="step-num">2</span><h2 class="h5 mb-0">Mon profil / CV</h2></div>
-                    <label class="form-label small" for="cvSelect">CV enregistré</label>
-                    <select class="form-select mb-3" id="cvSelect">
-                        <option value="">— Utiliser mon profil / coller ci-dessous —</option>
-                        <?php foreach ($cvDocuments as $cv): ?>
-                            <option value="<?= (int) $cv['id'] ?>"><?= e((string) $cv['file_name']) ?><?= (int) ($cv['is_primary'] ?? 0) === 1 ? ' (principal)' : '' ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <label class="form-label small" for="cvText">…ou contenu du CV</label>
-                    <textarea class="form-control" id="cvText" rows="8" placeholder="Expériences, compétences…"></textarea>
+                    <h2 class="h6 mb-3"><span class="badge badge-soft-primary me-2">2</span>Mon profil / CV</h2>
+                    <?php if (!empty($cvDocuments)): ?>
+                        <label class="form-label small" for="cvSelect">Utiliser un CV enregistré</label>
+                        <select class="form-select form-select-sm mb-3" id="cvSelect">
+                            <option value="">— Coller / utiliser mon profil —</option>
+                            <?php foreach ($cvDocuments as $cv): ?>
+                                <option value="<?= (int) $cv['id'] ?>"><?= e((string) $cv['file_name']) ?><?= (int) ($cv['is_primary'] ?? 0) === 1 ? ' (principal)' : '' ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    <?php endif; ?>
+                    <label class="form-label small" for="cvText">Contenu de votre CV</label>
+                    <textarea class="form-control" id="cvText" rows="<?= empty($cvDocuments) ? 12 : 9 ?>" placeholder="Expériences, compétences, formations… (ou laissez vide pour utiliser votre profil enregistré)"></textarea>
                     <?php if (empty($cvDocuments)): ?>
-                        <div class="form-text mt-2">Astuce : <a href="<?= e(url('/client/profile/edit')) ?>">importez un CV</a> pour ne plus avoir à le coller.</div>
+                        <div class="form-text mt-2"><a href="<?= e(url('/client/profile/edit')) ?>">Importez un CV</a> pour aller plus vite la prochaine fois.</div>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Étape 3 : actions IA -->
-    <div class="card mt-4">
+    <!-- Actions -->
+    <div class="d-flex flex-wrap gap-2 my-4">
+        <button class="btn btn-primary" data-ai="analyse"><i class="bi bi-graph-up-arrow me-1"></i>Analyser mon adéquation</button>
+        <button class="btn btn-accent" data-ai="cv"><i class="bi bi-file-earmark-person me-1"></i>Générer mon CV</button>
+        <button class="btn btn-outline-primary" data-ai="lettre"><i class="bi bi-envelope-paper me-1"></i>Générer ma lettre</button>
+    </div>
+
+    <!-- Résultat (caché tant qu'aucune action) -->
+    <div id="aiResultWrap" class="card d-none">
         <div class="card-body p-4">
-            <div class="d-flex align-items-center gap-2 mb-3"><span class="step-num">3</span><h2 class="h5 mb-0">Générer avec l'IA</h2></div>
-            <div class="d-flex flex-wrap gap-2 mb-2">
-                <button class="btn btn-primary" data-ai="analyse"><i class="bi bi-graph-up me-1"></i>Analyser la compatibilité</button>
-                <button class="btn btn-accent" data-ai="cv"><i class="bi bi-file-earmark-person me-1"></i>Générer mon CV optimisé</button>
-                <button class="btn btn-outline-primary" data-ai="lettre"><i class="bi bi-envelope-paper me-1"></i>Générer ma lettre</button>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="h6 mb-0" id="aiResultTitle">Résultat</h2>
+                <button class="btn btn-sm btn-outline-secondary" id="aiResultClose" type="button"><i class="bi bi-x-lg"></i></button>
             </div>
-            <div id="aiResult" class="ai-result mt-3"></div>
+            <div id="aiResult"></div>
         </div>
     </div>
 </section>
 
 <script>
-const CSRF = '<?= e(csrf_token()) ?>';
-const U = {
-    import: '<?= e(url('/client/ia/importer-offre')) ?>',
-    analyse: '<?= e(url('/client/ia/analyse')) ?>',
-    cv: '<?= e(url('/client/ia/generer-cv')) ?>',
-    lettre: '<?= e(url('/client/ia/lettre')) ?>',
-};
-const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const chips = (a, cls) => (a && a.length) ? '<div class="d-flex flex-wrap gap-2">'+a.map(x=>`<span class="badge ${cls}">${esc(x)}</span>`).join('')+'</div>' : '<span class="text-secondary small">—</span>';
-const src = () => ({ cv_id: $('cvSelect').value || '', cv_text: $('cvText').value || '', offer_text: $('offerText').value || '' });
+(function () {
+    const CSRF = '<?= e(csrf_token()) ?>';
+    const U = { import: '<?= e(url('/client/ia/importer-offre')) ?>', analyse: '<?= e(url('/client/ia/analyse')) ?>', cv: '<?= e(url('/client/ia/generer-cv')) ?>', lettre: '<?= e(url('/client/ia/lettre')) ?>' };
+    const $ = (id) => document.getElementById(id);
+    const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const chips = (a, cls) => (a && a.length) ? '<div class="d-flex flex-wrap gap-2">'+a.map(x=>`<span class="badge ${cls}">${esc(x)}</span>`).join('')+'</div>' : '<span class="text-secondary small">Aucun</span>';
+    // Mini markdown -> HTML (titres, gras, listes)
+    const md = (t) => {
+        const lines = String(t ?? '').split('\n'); let html = '', inList = false;
+        const flush = () => { if (inList) { html += '</ul>'; inList = false; } };
+        for (let l of lines) {
+            if (/^\s*[-*]\s+/.test(l)) { if (!inList) { html += '<ul class="mb-2">'; inList = true; } html += '<li>'+inline(l.replace(/^\s*[-*]\s+/,''))+'</li>'; continue; }
+            flush();
+            if (/^#\s+/.test(l)) html += '<h3 class="h5 mb-1">'+inline(l.replace(/^#\s+/,''))+'</h3>';
+            else if (/^##\s+/.test(l)) html += '<h4 class="h6 text-secondary text-uppercase mt-3 mb-1" style="letter-spacing:.04em;">'+inline(l.replace(/^##\s+/,''))+'</h4>';
+            else if (l.trim()==='') html += '';
+            else html += '<p class="mb-2">'+inline(l)+'</p>';
+        }
+        flush(); return html;
+    };
+    const inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>');
+    const download = (name, text) => { const b = new Blob([text], {type:'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; a.click(); };
 
-async function importOffer(type, btn) {
-    const fd = new FormData();
-    fd.append('_csrf_token', CSRF);
-    fd.append('source_type', type);
-    if (type === 'url') fd.append('url', $('srcUrl').value);
-    if (type === 'file') { if (!$('srcFile').files[0]) return; fd.append('document', $('srcFile').files[0]); }
-    const status = $('importStatus');
-    const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-    status.innerHTML = '<span class="text-secondary"><span class="spinner-border spinner-border-sm me-1"></span>Extraction en cours…</span>';
-    try {
-        const res = await fetch(U.import, { method: 'POST', body: fd });
-        const d = await res.json();
-        if (!res.ok) { status.innerHTML = `<span class="text-danger">${esc(d.error||'Échec.')}</span>`; return; }
-        $('offerText').value = d.text; status.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Offre importée.</span>';
-    } catch(e) { status.innerHTML = '<span class="text-danger">Erreur réseau.</span>'; }
-    finally { btn.disabled = false; btn.innerHTML = orig; }
-}
-$('importUrl').addEventListener('click', (e) => importOffer('url', e.currentTarget));
-$('importFile').addEventListener('click', (e) => importOffer('file', e.currentTarget));
+    const wrap = $('aiResultWrap'), box = $('aiResult'), title = $('aiResultTitle');
+    $('aiResultClose').addEventListener('click', () => wrap.classList.add('d-none'));
 
-const render = {
-    analyse: (d) => { const s = Math.max(0,Math.min(100,d.match_score||0)); return `
-        <div class="d-flex align-items-center gap-3 mb-3"><div class="stat-n" style="font-size:2.2rem;">${s}<span class="fs-6 text-secondary">/100</span></div>
-        <div class="progress flex-grow-1" style="height:10px;"><div class="progress-bar bg-success" style="width:${s}%"></div></div></div>
-        <h3 class="h6 mt-3">Points forts</h3>${chips(d.strengths,'badge-soft-success')}
-        <h3 class="h6 mt-3">Lacunes</h3>${chips(d.gaps,'status-en_attente')}
-        <h3 class="h6 mt-3">Recommandation</h3><p class="mb-0">${esc(d.recommendation)}</p>`; },
-    cv: (d) => `
-        <h3 class="h6">Résumé professionnel</h3><p>${esc(d.summary)}</p>
-        <h3 class="h6 mt-3">Compétences clés</h3>${chips(d.skills,'badge-soft-primary')}
-        <h3 class="h6 mt-3">Expériences reformulées</h3><ul class="small">${(d.experience_rewrite||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
-        <h3 class="h6 mt-3">Mots-clés à intégrer</h3>${chips(d.keywords_to_add,'text-bg-secondary')}`,
-    lettre: (d) => `
-        <div class="d-flex justify-content-between align-items-center mb-2"><h3 class="h6 mb-0">Votre lettre</h3>
-        <button class="btn btn-sm btn-outline-secondary" id="copyLetter"><i class="bi bi-clipboard me-1"></i>Copier</button></div>
-        <textarea class="form-control" rows="12" id="letterText">${esc(d.text)}</textarea>`,
-};
+    // Onglets source
+    const setTab = (link) => { $('tabLink').classList.toggle('active', link); $('tabFile').classList.toggle('active', !link); $('paneLink').classList.toggle('d-none', !link); $('paneFile').classList.toggle('d-none', link); };
+    $('tabLink').addEventListener('click', () => setTab(true));
+    $('tabFile').addEventListener('click', () => setTab(false));
 
-document.querySelectorAll('[data-ai]').forEach(btn => btn.addEventListener('click', async () => {
-    const tool = btn.getAttribute('data-ai');
-    const box = $('aiResult');
-    const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Génération…';
-    box.innerHTML = '';
-    try {
-        const extra = tool === 'lettre' ? { entreprise: '', tone: 'professionnel' } : { target_role: '' };
-        const res = await fetch(U[tool], { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ _csrf_token: CSRF, ...src(), ...extra }) });
-        const d = await res.json();
-        if (!res.ok) { box.innerHTML = `<div class="lulu-alert lulu-alert-danger">${esc(d.error||'Erreur.')}</div>`; return; }
-        box.innerHTML = `<div class="card bg-surface-2 border-0"><div class="card-body">${render[tool](d)}</div></div>`;
-        const copy = $('copyLetter'); if (copy) copy.addEventListener('click', () => { const t = $('letterText'); t.select(); document.execCommand('copy'); });
-    } catch(e) { box.innerHTML = '<div class="lulu-alert lulu-alert-danger">Une erreur est survenue.</div>'; }
-    finally { btn.disabled = false; btn.innerHTML = orig; }
-}));
+    async function importOffer(type, btn) {
+        const fd = new FormData(); fd.append('_csrf_token', CSRF); fd.append('source_type', type);
+        if (type === 'url') { if (!$('srcUrl').value.trim()) return; fd.append('url', $('srcUrl').value); }
+        if (type === 'file') { if (!$('srcFile').files[0]) return; fd.append('document', $('srcFile').files[0]); }
+        const st = $('importStatus'), orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+        st.innerHTML = '<span class="text-secondary"><span class="spinner-border spinner-border-sm me-1"></span>Extraction…</span>';
+        try {
+            const r = await fetch(U.import, { method:'POST', body: fd }); const d = await r.json();
+            if (!r.ok) { st.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>${esc(d.error||'Échec.')}</span>`; return; }
+            $('offerText').value = d.text; st.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Offre importée'+(d.refined?' et nettoyée par l\'IA':'')+'.</span>';
+        } catch (e) { st.innerHTML = '<span class="text-danger">Erreur réseau.</span>'; }
+        finally { btn.disabled = false; btn.innerHTML = orig; }
+    }
+    $('importUrl').addEventListener('click', (e) => importOffer('url', e.currentTarget));
+    $('importFile').addEventListener('click', (e) => importOffer('file', e.currentTarget));
+
+    const badgeAi = (ai) => ai ? '' : '<span class="badge text-bg-secondary ms-2">mode local</span>';
+    const render = {
+        analyse: (d) => { const s = Math.max(0,Math.min(100,d.match_score||0)); const col = s>=70?'success':(s>=40?'warning':'danger');
+            return `<div class="d-flex align-items-center gap-3 mb-3"><div class="score-ring score-${col}" style="--v:${s}"><span>${s}<small>/100</small></span></div>
+            <div><div class="fw-semibold">Adéquation ${s>=70?'forte':(s>=40?'correcte':'faible')}${badgeAi(d.ai)}</div><div class="text-secondary small">Estimation IA de votre correspondance avec l'offre.</div></div></div>
+            <h3 class="h6 mt-3"><i class="bi bi-hand-thumbs-up text-success me-1"></i>Points forts</h3>${chips(d.strengths,'badge-soft-success')}
+            <h3 class="h6 mt-3"><i class="bi bi-exclamation-triangle text-warning me-1"></i>Points à renforcer</h3>${chips(d.gaps,'status-en_attente')}
+            <h3 class="h6 mt-3"><i class="bi bi-lightbulb text-primary me-1"></i>Recommandation</h3><p class="mb-0">${esc(d.recommendation)||'—'}</p>`; },
+        cv: (d) => `<div class="d-flex justify-content-end gap-2 mb-2"><button class="btn btn-sm btn-outline-secondary" data-copy="cv"><i class="bi bi-clipboard me-1"></i>Copier</button><button class="btn btn-sm btn-outline-secondary" data-dl="cv" data-name="mon-cv.md"><i class="bi bi-download me-1"></i>Télécharger</button></div><div class="cv-render border rounded-3 p-3 bg-white" data-raw="${esc(d.cv)}">${md(d.cv)}</div>${badgeAi(d.ai)?'<div class="mt-2">'+badgeAi(d.ai)+'</div>':''}`,
+        lettre: (d) => `<div class="d-flex justify-content-end gap-2 mb-2"><button class="btn btn-sm btn-outline-secondary" data-copy="lettre"><i class="bi bi-clipboard me-1"></i>Copier</button><button class="btn btn-sm btn-outline-secondary" data-dl="lettre" data-name="lettre-motivation.txt"><i class="bi bi-download me-1"></i>Télécharger</button></div><div class="letter-render border rounded-3 p-3 bg-white" data-raw="${esc(d.text)}" style="white-space:pre-wrap;">${esc(d.text)}</div>`,
+    };
+    const titles = { analyse: 'Analyse d\'adéquation', cv: 'Votre CV généré', lettre: 'Votre lettre de motivation' };
+
+    document.querySelectorAll('[data-ai]').forEach(btn => btn.addEventListener('click', async () => {
+        const tool = btn.getAttribute('data-ai');
+        if (!$('offerText').value.trim() && tool !== 'cv') { $('importStatus').innerHTML = '<span class="text-danger">Ajoutez d\'abord le texte de l\'offre.</span>'; $('offerText').focus(); return; }
+        const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Génération…';
+        wrap.classList.remove('d-none'); title.textContent = titles[tool]; box.innerHTML = '<div class="text-center text-secondary py-4"><span class="spinner-border spinner-border-sm me-2"></span>L\'IA travaille…</div>';
+        wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        try {
+            const body = { _csrf_token: CSRF, cv_id: $('cvSelect')?.value || '', cv_text: $('cvText').value || '', offer_text: $('offerText').value || '', target_role: '', entreprise: '', tone: 'professionnel' };
+            const r = await fetch(U[tool], { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+            const d = await r.json();
+            if (!r.ok) { box.innerHTML = `<div class="lulu-alert lulu-alert-danger"><i class="bi bi-x-circle-fill"></i><div>${esc(d.error||'Erreur.')}</div></div>`; return; }
+            box.innerHTML = render[tool](d);
+            box.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => { const el = box.querySelector(b.getAttribute('data-copy')==='cv'?'.cv-render':'.letter-render'); navigator.clipboard?.writeText(el.getAttribute('data-raw')); b.innerHTML='<i class="bi bi-check2 me-1"></i>Copié'; }));
+            box.querySelectorAll('[data-dl]').forEach(b => b.addEventListener('click', () => { const el = box.querySelector(b.getAttribute('data-dl')==='cv'?'.cv-render':'.letter-render'); download(b.getAttribute('data-name'), el.getAttribute('data-raw')); }));
+        } catch (e) { box.innerHTML = '<div class="lulu-alert lulu-alert-danger"><i class="bi bi-x-circle-fill"></i><div>Une erreur est survenue.</div></div>'; }
+        finally { btn.disabled = false; btn.innerHTML = orig; }
+    }));
+})();
 </script>

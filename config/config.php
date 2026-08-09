@@ -111,6 +111,8 @@ define('APP_BASE_URI', normalize_base_uri((string) parse_url(APP_URL, PHP_URL_PA
 define('CONFIG_PATH', base_path('config'));
 define('LOG_PATH', base_path('logs'));
 define('UPLOADS_PATH', base_path('uploads'));
+// Bundle de certificats CA pour cURL/HTTPS (indispensable sous Windows/WAMP).
+define('CA_BUNDLE', is_file(base_path('config/cacert.pem')) ? base_path('config/cacert.pem') : null);
 
 ini_set('default_charset', 'UTF-8');
 ini_set('output_buffering', '4096');

@@ -33,6 +33,7 @@ final class SearchController extends Controller
             'profiles' => $profiles,
             'offers' => $offers,
             'activeTab' => $activeTab,
+            'categoriesList' => (new Category())->all(),
             'savedSearches' => is_auth() ? $this->savedSearches->allForUser((int) current_user_id()) : [],
         ]);
     }

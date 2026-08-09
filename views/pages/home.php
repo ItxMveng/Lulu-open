@@ -47,7 +47,7 @@
         <div class="row g-3 g-lg-4">
             <?php foreach (array_slice($categories, 0, 6) as $category): ?>
                 <div class="col-6 col-md-4 col-lg-2">
-                    <a class="category-card" href="<?= e(url('/search?category=' . urlencode((string) ($category['slug'] ?? '')))) ?>">
+                    <a class="category-card" href="<?= e(url('/search?category=' . urlencode((string) ($category['name'] ?? '')) . '&tab=profils')) ?>">
                         <span class="category-icon"><i class="bi <?= e((string) ($category['icon'] ?? 'bi-grid')) ?>"></i></span>
                         <span class="fw-semibold"><?= e((string) ($category['name'] ?? '')) ?></span>
                     </a>
