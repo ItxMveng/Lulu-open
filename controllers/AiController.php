@@ -86,6 +86,32 @@ final class AiController extends Controller
         json_response(['text' => $clean, 'refined' => $clean !== trim($text)]);
     }
 
+    /** Extrait les informations clés d'une offre (dont où/comment postuler). */
+    public function offerInfo(): never
+    {
+        AuthMiddleware::requireRole(['client']);
+        verify_csrf($this->input('_csrf_token'));
+        $offer = trim((string) $this->input('offer_text'));
+        if ($offer === '') {
+            json_response(['error' => 'Aucune offre fournie.'], 422);
+        }
+
+        $ai = new IAProvider();
+        if ($ai->enabled()) {
+            $system = "Tu extrais les informations clés d'une offre d'emploi. Réponds UNIQUEMENT avec un JSON valide avec ces clés (chaîne vide si absent) : "
+                . '"intitule", "entreprise", "lieu", "contrat", "email_candidature", "url_candidature", "date_limite", "resume" (1-2 phrases). '
+                . "N'invente rien : si une info n'est pas présente dans le texte, mets une chaîne vide.";
+            $r = $ai->completeJson($system, $this->input('offer_text'), ['temperature' => 0.1]);
+            if (is_array($r)) {
+                json_response(['info' => $r, 'ai' => true]);
+            }
+        }
+
+        // Fallback : extraction d'email par regex.
+        preg_match('/[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}/i', $offer, $m);
+        json_response(['info' => ['email_candidature' => $m[0] ?? '', 'resume' => mb_substr($offer, 0, 160)], 'ai' => false]);
+    }
+
     /** Génère un document téléchargeable (.docx) ou imprimable (PDF) à partir d'un contenu. */
     public function document(): never
     {

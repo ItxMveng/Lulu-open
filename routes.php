@@ -44,6 +44,7 @@ Router::post('/client/ia/lettre', 'AiController@coverLetter', ['auth', 'role:cli
 Router::post('/client/ia/importer-offre', 'AiController@importOffer', ['auth', 'role:client']);
 Router::post('/client/ia/generer-cv', 'AiController@generateCv', ['auth', 'role:client']);
 Router::post('/client/ia/document', 'AiController@document', ['auth', 'role:client']);
+Router::post('/client/ia/infos-offre', 'AiController@offerInfo', ['auth', 'role:client']);
 
 Router::get('/entreprise/offres', 'OfferController@index', ['auth', 'role:entreprise']);
 Router::get('/entreprise/offres/new', 'OfferController@create', ['auth', 'role:entreprise']);

@@ -69,6 +69,7 @@ $aiConfigured = $aiConfigured ?? false;
         <button class="btn btn-primary" data-ai="analyse"><i class="bi bi-graph-up-arrow me-1"></i>Analyser mon adéquation</button>
         <button class="btn btn-accent" data-ai="cv"><i class="bi bi-file-earmark-person me-1"></i>Générer mon CV</button>
         <button class="btn btn-outline-primary" data-ai="lettre"><i class="bi bi-envelope-paper me-1"></i>Générer ma lettre</button>
+        <button class="btn btn-outline-secondary" data-ai="infos"><i class="bi bi-info-circle me-1"></i>Infos clés / où postuler</button>
     </div>
 
     <!-- Résultat (caché tant qu'aucune action) -->
@@ -86,7 +87,7 @@ $aiConfigured = $aiConfigured ?? false;
 <script>
 (function () {
     const CSRF = '<?= e(csrf_token()) ?>';
-    const U = { import: '<?= e(url('/client/ia/importer-offre')) ?>', analyse: '<?= e(url('/client/ia/analyse')) ?>', cv: '<?= e(url('/client/ia/generer-cv')) ?>', lettre: '<?= e(url('/client/ia/lettre')) ?>' };
+    const U = { import: '<?= e(url('/client/ia/importer-offre')) ?>', analyse: '<?= e(url('/client/ia/analyse')) ?>', cv: '<?= e(url('/client/ia/generer-cv')) ?>', lettre: '<?= e(url('/client/ia/lettre')) ?>', infos: '<?= e(url('/client/ia/infos-offre')) ?>' };
     const $ = (id) => document.getElementById(id);
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const chips = (a, cls) => (a && a.length) ? '<div class="d-flex flex-wrap gap-2">'+a.map(x=>`<span class="badge ${cls}">${esc(x)}</span>`).join('')+'</div>' : '<span class="text-secondary small">Aucun</span>';
@@ -161,7 +162,18 @@ $aiConfigured = $aiConfigured ?? false;
         const blob = await r.blob(); const a = document.createElement('a');
         a.href = URL.createObjectURL(blob); a.download = (kind === 'lettre' ? 'lettre-motivation' : 'cv') + '-lulu.docx'; a.click();
     }
-    const titles = { analyse: 'Analyse d\'adéquation', cv: 'Votre CV généré', lettre: 'Votre lettre de motivation' };
+    render.infos = (d) => {
+        const i = d.info || {};
+        const row = (label, val, ic) => val ? `<div class="d-flex gap-2 mb-2"><i class="bi ${ic} text-primary"></i><div><span class="text-secondary small d-block">${label}</span><span class="fw-semibold">${esc(val)}</span></div></div>` : '';
+        let apply = '';
+        if (i.email_candidature) apply += `<a class="btn btn-sm btn-primary me-2 mb-2" href="mailto:${esc(i.email_candidature)}"><i class="bi bi-envelope me-1"></i>${esc(i.email_candidature)}</a>`;
+        if (i.url_candidature) apply += `<a class="btn btn-sm btn-outline-primary mb-2" href="${esc(i.url_candidature)}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-1"></i>Postuler en ligne</a>`;
+        return `<div class="row"><div class="col-md-6">${row('Intitulé', i.intitule, 'bi-briefcase')}${row('Entreprise', i.entreprise, 'bi-building')}${row('Lieu', i.lieu, 'bi-geo-alt')}</div>
+            <div class="col-md-6">${row('Contrat', i.contrat, 'bi-file-text')}${row('Date limite', i.date_limite, 'bi-calendar-event')}</div></div>
+            ${i.resume?'<p class="text-secondary small mt-2">'+esc(i.resume)+'</p>':''}
+            ${apply?'<hr><h3 class="h6"><i class="bi bi-send me-1"></i>Pour postuler</h3>'+apply:'<div class="lulu-alert lulu-alert-info mt-2"><i class="bi bi-info-circle-fill"></i><div class="small">Aucun contact de candidature détecté dans l\'offre. S\'il s\'agit d\'une offre de la plateforme, utilisez le bouton « Postuler » sur l\'offre.</div></div>'}`;
+    };
+    const titles = { analyse: 'Analyse d\'adéquation', cv: 'Votre CV généré', lettre: 'Votre lettre de motivation', infos: 'Infos clés de l\'offre' };
 
     document.querySelectorAll('[data-ai]').forEach(btn => btn.addEventListener('click', async () => {
         const tool = btn.getAttribute('data-ai');
