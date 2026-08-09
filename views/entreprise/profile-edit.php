@@ -54,13 +54,16 @@ $listVal = static function ($json): string {
                             <label class="form-label" for="bio">Description de l'entreprise</label>
                             <textarea class="form-control" id="bio" name="bio" rows="6" placeholder="Votre activité, votre culture, ce que vous recherchez…"><?= e((string) ($profile['bio'] ?? '')) ?></textarea>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="categories">Secteurs d'activité</label>
-                            <textarea class="form-control" id="categories" name="categories" rows="2" placeholder="Tech, Marketing… (virgules)"><?= e($listVal($profile['categories'] ?? null)) ?></textarea>
+<?php
+$decArr = static fn ($v): array => (is_array($v) ? $v : (json_decode((string) $v, true) ?: []));
+?>
+                        <div class="col-12">
+                            <label class="form-label">Secteurs d'activité</label>
+                            <?php View::partial('components/chip-select', ['name' => 'categories', 'options' => $categoriesList ?? [], 'selected' => $decArr($profile['categories'] ?? null)]); ?>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="languages">Langues de travail</label>
-                            <textarea class="form-control" id="languages" name="languages" rows="2" placeholder="Français, Anglais… (virgules)"><?= e($listVal($profile['languages'] ?? null)) ?></textarea>
+                        <div class="col-12">
+                            <label class="form-label">Langues de travail</label>
+                            <?php View::partial('components/chip-select', ['name' => 'languages', 'options' => $languagesList ?? [], 'selected' => $decArr($profile['languages'] ?? null)]); ?>
                         </div>
                         <div class="col-12">
                             <div class="form-check">
