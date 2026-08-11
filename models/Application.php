@@ -30,7 +30,19 @@ final class Application extends Model
 
     public function receivedByEntreprise(int $entrepriseId): array
     {
-        $statement = $this->db->prepare('SELECT applications.*, offers.title FROM applications INNER JOIN offers ON offers.id = applications.offer_id WHERE applications.entreprise_id = :entreprise_id ORDER BY applications.created_at DESC');
+        $statement = $this->db->prepare(
+            'SELECT applications.*, offers.title,
+                    users.name AS candidate_name, users.email AS candidate_email,
+                    profiles.location AS candidate_location, profiles.skills AS candidate_skills,
+                    profiles.categories AS candidate_categories, profiles.bio AS candidate_bio,
+                    profiles.hourly_rate AS candidate_rate, profiles.photo_path AS candidate_photo
+             FROM applications
+             INNER JOIN offers ON offers.id = applications.offer_id
+             INNER JOIN users ON users.id = applications.applicant_id
+             LEFT JOIN profiles ON profiles.user_id = applications.applicant_id
+             WHERE applications.entreprise_id = :entreprise_id
+             ORDER BY applications.created_at DESC'
+        );
         $statement->execute(['entreprise_id' => $entrepriseId]);
         return $statement->fetchAll() ?: [];
     }
@@ -38,9 +50,15 @@ final class Application extends Model
     public function findForEntreprise(int $id, int $entrepriseId): ?array
     {
         $statement = $this->db->prepare(
-            'SELECT applications.*, offers.title, offers.description AS offer_description
+            'SELECT applications.*, offers.title, offers.description AS offer_description,
+                    users.name AS candidate_name,
+                    profiles.skills AS candidate_skills, profiles.categories AS candidate_categories,
+                    profiles.languages AS candidate_languages, profiles.bio AS candidate_bio,
+                    profiles.location AS candidate_location
              FROM applications
              INNER JOIN offers ON offers.id = applications.offer_id
+             INNER JOIN users ON users.id = applications.applicant_id
+             LEFT JOIN profiles ON profiles.user_id = applications.applicant_id
              WHERE applications.id = :id AND applications.entreprise_id = :entreprise_id
              LIMIT 1'
         );

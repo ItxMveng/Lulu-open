@@ -97,6 +97,11 @@ final class Message extends Model
         $statement->execute(['conversation_id' => $id, 'user_id' => $userId]);
     }
 
+    public function openConversation(int $firstUserId, int $secondUserId): int
+    {
+        return $this->findOrCreateConversation($firstUserId, $secondUserId);
+    }
+
     private function findOrCreateConversation(int $firstUserId, int $secondUserId): int
     {
         $userA = min($firstUserId, $secondUserId);

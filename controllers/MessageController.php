@@ -29,6 +29,18 @@ final class MessageController extends Controller
         ]);
     }
 
+    /** Ouvre (ou crée) une conversation avec un utilisateur et redirige dessus. */
+    public function start(string $userId): never
+    {
+        AuthMiddleware::requireAuth();
+        $other = (int) $userId;
+        if ($other <= 0 || $other === (int) current_user_id()) {
+            redirect('/messages');
+        }
+        $conversationId = $this->messages->openConversation((int) current_user_id(), $other);
+        redirect('/messages/' . $conversationId);
+    }
+
     public function conversation(string $id): void
     {
         AuthMiddleware::requireAuth();

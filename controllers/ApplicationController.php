@@ -119,16 +119,31 @@ final class ApplicationController extends Controller
         }
 
         $analyzer = new CvAnalyzer();
+
+        // Profil du candidat comme base fiable (indépendant de l'extraction PDF).
+        $dec = static fn ($v): array => (is_array($v) ? $v : (json_decode((string) $v, true) ?: []));
+        $profileText = implode("\n", array_filter([
+            'Candidat : ' . (string) ($application['candidate_name'] ?? ''),
+            'Localisation : ' . (string) ($application['candidate_location'] ?? ''),
+            'Domaines : ' . implode(', ', $dec($application['candidate_categories'] ?? '[]')),
+            'Compétences : ' . implode(', ', $dec($application['candidate_skills'] ?? '[]')),
+            'Langues : ' . implode(', ', $dec($application['candidate_languages'] ?? '[]')),
+            'Présentation : ' . (string) ($application['candidate_bio'] ?? ''),
+        ]));
+
+        // Complément : texte du CV PDF si extractible.
         $cvText = '';
         if (!empty($application['cv_path'])) {
             $absolute = base_path((string) $application['cv_path']);
-            if (is_file($absolute)) {
-                $cvText = $analyzer->extractTextFromPdf($absolute);
+            if (is_file($absolute) && str_ends_with(strtolower($absolute), '.pdf')) {
+                $cvText = (string) $analyzer->extractTextFromPdf($absolute);
+                if (str_contains($cvText, 'indisponible')) { $cvText = ''; }
             }
         }
-        $cvText = trim($cvText . "\n" . (string) ($application['cover_letter'] ?? ''));
 
-        json_response($analyzer->analyze($cvText, (string) ($application['offer_description'] ?? '')));
+        $fullCv = trim($profileText . "\n\n" . $cvText . "\n\nLettre de motivation :\n" . (string) ($application['cover_letter'] ?? ''));
+
+        json_response($analyzer->analyze($fullCv, (string) ($application['offer_description'] ?? '')));
     }
 
     public function destroy(string $id): never

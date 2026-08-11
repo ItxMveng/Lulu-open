@@ -58,6 +58,7 @@ Router::get('/offres/{id}', 'OfferController@showPublic');
 Router::get('/offres/{id}/postuler', 'ApplicationController@apply', ['auth', 'role:client']);
 
 Router::get('/messages', 'MessageController@index', ['auth']);
+Router::get('/messages/nouveau/{userId}', 'MessageController@start', ['auth']);
 Router::get('/messages/{id}', 'MessageController@conversation', ['auth']);
 
 // Côté candidat (client) : envoyer et gérer ses candidatures.
