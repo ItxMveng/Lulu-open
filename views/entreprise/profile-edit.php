@@ -51,8 +51,12 @@ $listVal = static function ($json): string {
                             <input class="form-control" type="text" id="location" name="location" value="<?= e((string) ($profile['location'] ?? '')) ?>">
                         </div>
                         <div class="col-12">
-                            <label class="form-label" for="bio">Description de l'entreprise</label>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label mb-0" for="bio">Description de l'entreprise</label>
+                                <button class="btn btn-sm btn-accent" type="button" id="enhanceBio"><i class="bi bi-stars me-1"></i>Améliorer avec l'IA</button>
+                            </div>
                             <textarea class="form-control" id="bio" name="bio" rows="6" placeholder="Votre activité, votre culture, ce que vous recherchez…"><?= e((string) ($profile['bio'] ?? '')) ?></textarea>
+                            <div id="enhanceStatus" class="form-text"></div>
                         </div>
 <?php
 $decArr = static fn ($v): array => (is_array($v) ? $v : (json_decode((string) $v, true) ?: []));
@@ -78,3 +82,20 @@ $decArr = static fn ($v): array => (is_array($v) ? $v : (json_decode((string) $v
         </div>
     </div>
 </section>
+<script>
+document.getElementById('enhanceBio')?.addEventListener('click', async function () {
+    const btn = this, orig = btn.innerHTML, bio = document.getElementById('bio'), status = document.getElementById('enhanceStatus');
+    const skills = Array.from(document.querySelectorAll('input[name="categories[]"]:checked')).map(i => i.value).join(', ');
+    const previous = bio.value;
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Amélioration…';
+    status.innerHTML = '';
+    try {
+        const res = await fetch('<?= e(url('/profile/enhance')) ?>', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ _csrf_token: '<?= e(csrf_token()) ?>', bio: previous, skills }) });
+        const d = await res.json();
+        if (d.bio) { bio.value = d.bio; status.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Description améliorée. <a href="#" id="undoBio">Annuler</a></span>';
+            document.getElementById('undoBio').addEventListener('click', (e) => { e.preventDefault(); bio.value = previous; status.innerHTML = ''; }); }
+        else status.innerHTML = '<span class="text-danger">'+(d.error||'Échec.')+'</span>';
+    } catch (e) { status.innerHTML = '<span class="text-danger">Erreur réseau.</span>'; }
+    finally { btn.disabled = false; btn.innerHTML = orig; }
+});
+</script>

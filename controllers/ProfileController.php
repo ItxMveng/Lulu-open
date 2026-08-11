@@ -52,6 +52,38 @@ final class ProfileController extends Controller
         ]);
     }
 
+    /** Optimise le contenu du profil (présentation/bio) via IA. */
+    public function enhance(): never
+    {
+        AuthMiddleware::requireAuth();
+        $payload = json_decode((string) file_get_contents('php://input'), true) ?: $_POST;
+        verify_csrf($payload['_csrf_token'] ?? null);
+
+        $role = (string) current_role();
+        $isCompany = $role === 'entreprise';
+        $bio = trim((string) ($payload['bio'] ?? ''));
+        $skills = trim((string) ($payload['skills'] ?? ''));
+        $name = (string) (auth_user()['name'] ?? '');
+
+        $ai = new IAProvider();
+        if (!$ai->enabled()) {
+            json_response(['error' => "L'IA n'est pas configurée."], 422);
+        }
+
+        $who = $isCompany ? "la présentation d'une entreprise auprès de candidats" : "la présentation professionnelle d'un candidat auprès de recruteurs";
+        $system = "Tu es un expert en personal branding. Réécris et améliore {$who} EN FRANÇAIS : "
+            . "texte fluide, professionnel, engageant, orienté valeur ajoutée, 3 à 5 phrases, sans exagération ni fausse information. "
+            . "Réponds UNIQUEMENT avec le texte amélioré, sans guillemets ni commentaire.";
+        $user = "Nom : {$name}\nCompétences / secteurs : {$skills}\nPrésentation actuelle : " . ($bio !== '' ? $bio : '(vide — rédige une présentation à partir des compétences)');
+
+        $result = $ai->complete($system, $user, ['temperature' => 0.6]);
+        if ($result === null || trim($result) === '') {
+            json_response(['error' => "L'IA n'a pas pu générer de proposition."], 502);
+        }
+
+        json_response(['bio' => trim($result)]);
+    }
+
     public function handleUpdate(): never
     {
         AuthMiddleware::requireAuth();

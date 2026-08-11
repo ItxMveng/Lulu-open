@@ -205,6 +205,28 @@ final class AiController extends Controller
                 }
             }
         }
-        return trim((string) ($this->input('cv_text') ?? ''));
+        $pasted = trim((string) ($this->input('cv_text') ?? ''));
+        if ($pasted !== '') {
+            return $pasted;
+        }
+
+        // Fallback : le profil du candidat comme représentation du CV.
+        return $this->profileAsText();
+    }
+
+    /** Construit un texte à partir du profil du candidat (secours quand aucun CV n'est fourni). */
+    private function profileAsText(): string
+    {
+        $profile = (new Profile())->getByUserId((int) current_user_id()) ?? [];
+        $dec = static fn ($v): array => (is_array($v) ? $v : (json_decode((string) $v, true) ?: []));
+        return trim(implode("\n", array_filter([
+            'Nom : ' . (string) (auth_user()['name'] ?? ''),
+            'Localisation : ' . (string) ($profile['location'] ?? ''),
+            'Domaines : ' . implode(', ', $dec($profile['categories'] ?? '[]')),
+            'Compétences : ' . implode(', ', $dec($profile['skills'] ?? '[]')),
+            'Langues : ' . implode(', ', $dec($profile['languages'] ?? '[]')),
+            'Certifications : ' . implode(', ', $dec($profile['certifications'] ?? '[]')),
+            'Présentation : ' . (string) ($profile['bio'] ?? ''),
+        ])));
     }
 }

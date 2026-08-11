@@ -87,12 +87,26 @@ seed_user($pdo, 'Administrateur', 'admin@lulu-open.local', 'Admin1234!', 'admin'
 
 echo '== Catégories ==' . PHP_EOL;
 $cats = [
+    // Originales (ne pas renommer : référencées par les profils existants)
     ['Développement Web', 'developpement-web', 'bi-code-slash'],
     ['Design & Créa', 'design-crea', 'bi-palette'],
     ['Marketing', 'marketing', 'bi-megaphone'],
     ['Rédaction', 'redaction', 'bi-pencil'],
     ['Data & IA', 'data-ia', 'bi-cpu'],
     ['Support & Admin', 'support-admin', 'bi-headset'],
+    // Nouveaux secteurs (tous métiers)
+    ['Commerce & Vente', 'commerce-vente', 'bi-bag'],
+    ['Comptabilité & Finance', 'comptabilite-finance', 'bi-calculator'],
+    ['Ressources Humaines', 'ressources-humaines', 'bi-people'],
+    ['Santé & Social', 'sante-social', 'bi-heart-pulse'],
+    ['Enseignement & Formation', 'enseignement-formation', 'bi-mortarboard'],
+    ['Bâtiment & Travaux', 'batiment-travaux', 'bi-hammer'],
+    ['Artisanat & Métiers manuels', 'artisanat', 'bi-tools'],
+    ['Restauration & Hôtellerie', 'restauration-hotellerie', 'bi-cup-hot'],
+    ['Beauté & Bien-être', 'beaute-bien-etre', 'bi-scissors'],
+    ['Transport & Logistique', 'transport-logistique', 'bi-truck'],
+    ['Juridique', 'juridique', 'bi-bank'],
+    ['Agriculture & Environnement', 'agriculture-environnement', 'bi-tree'],
 ];
 foreach ($cats as $c) { seed_category($pdo, $c[0], $c[1], $c[2]); }
 

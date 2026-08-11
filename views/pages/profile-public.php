@@ -84,7 +84,7 @@ $isEntreprise = (string) ($profile['role'] ?? '') === 'entreprise';
 
                     <div class="text-center">
                         <?php if (is_auth() && (int) ($profile['user_id'] ?? 0) !== (int) current_user_id()): ?>
-                            <a class="btn btn-primary w-100 mb-2" href="<?= e(url('/messages')) ?>"><i class="bi bi-chat-dots me-1"></i>Contacter</a>
+                            <a class="btn btn-primary w-100 mb-2" href="<?= e(url('/messages/nouveau/' . (int) ($profile['user_id'] ?? 0))) ?>"><i class="bi bi-chat-dots me-1"></i>Contacter</a>
                             <form method="post" action="<?= e(url('/favorites/' . (int) ($profile['user_id'] ?? 0) . '/toggle')) ?>">
                                 <?= csrf_field() ?>
                                 <button class="btn btn-outline-secondary w-100" type="submit"><i class="bi bi-bookmark-plus me-1"></i>Ajouter aux favoris</button>
