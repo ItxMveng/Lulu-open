@@ -179,6 +179,17 @@ a { text-decoration: none; transition: color var(--lulu-t); }
 .badge-soft-primary { background: #E0F2FE; color: var(--lulu-primary-700); }
 .badge-soft-success { background: #DCFCE7; color: var(--lulu-accent-600); }
 
+/* ---------- Bandeau cookies ---------- */
+.cookie-consent { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1090; padding: 0.75rem; }
+.cookie-consent-inner {
+    max-width: 1040px; margin: 0 auto; background: var(--lulu-surface);
+    border: 1px solid var(--lulu-border); border-radius: var(--lulu-radius);
+    box-shadow: var(--lulu-shadow-lg); padding: 1rem 1.25rem;
+    display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap;
+    animation: lulu-slide-up 300ms cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes lulu-slide-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
 /* ---------- Alertes personnalisées ---------- */
 .lulu-alert {
     display: flex; align-items: flex-start; gap: 0.75rem;
