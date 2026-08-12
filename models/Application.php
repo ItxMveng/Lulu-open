@@ -28,8 +28,11 @@ final class Application extends Model
         return $statement->fetchAll() ?: [];
     }
 
-    public function receivedByEntreprise(int $entrepriseId): array
+    public function receivedByEntreprise(int $entrepriseId, string $sort = 'score'): array
     {
+        $order = $sort === 'recent'
+            ? 'applications.created_at DESC'
+            : 'applications.match_score IS NULL, applications.match_score DESC, applications.created_at DESC';
         $statement = $this->db->prepare(
             'SELECT applications.*, offers.title,
                     users.name AS candidate_name, users.email AS candidate_email,
@@ -41,7 +44,7 @@ final class Application extends Model
              INNER JOIN users ON users.id = applications.applicant_id
              LEFT JOIN profiles ON profiles.user_id = applications.applicant_id
              WHERE applications.entreprise_id = :entreprise_id
-             ORDER BY applications.created_at DESC'
+             ORDER BY ' . $order
         );
         $statement->execute(['entreprise_id' => $entrepriseId]);
         return $statement->fetchAll() ?: [];
@@ -51,7 +54,7 @@ final class Application extends Model
     {
         $statement = $this->db->prepare(
             'SELECT applications.*, offers.title, offers.description AS offer_description,
-                    users.name AS candidate_name,
+                    users.name AS candidate_name, users.email AS candidate_email,
                     profiles.skills AS candidate_skills, profiles.categories AS candidate_categories,
                     profiles.languages AS candidate_languages, profiles.bio AS candidate_bio,
                     profiles.location AS candidate_location
@@ -71,6 +74,25 @@ final class Application extends Model
     {
         $statement = $this->db->prepare('UPDATE applications SET status = :status, updated_at = NOW() WHERE id = :id');
         return $statement->execute(['id' => $id, 'status' => $status]);
+    }
+
+    public function saveAnalysis(int $id, int $score, array $analysis): void
+    {
+        $statement = $this->db->prepare('UPDATE applications SET match_score = :score, analysis = :analysis, updated_at = NOW() WHERE id = :id');
+        $statement->execute(['id' => $id, 'score' => max(0, min(100, $score)), 'analysis' => json_encode($analysis, JSON_UNESCAPED_UNICODE) ?: null]);
+    }
+
+    public function saveInterview(int $id, ?string $at, ?string $location, ?string $note): void
+    {
+        $statement = $this->db->prepare('UPDATE applications SET interview_at = :at, interview_location = :loc, interview_note = :note WHERE id = :id');
+        $statement->execute(['id' => $id, 'at' => $at ?: null, 'loc' => $location ?: null, 'note' => $note ?: null]);
+    }
+
+    public function needingAnalysis(int $limit = 50): array
+    {
+        $statement = $this->db->prepare('SELECT id, applicant_id, offer_id FROM applications WHERE match_score IS NULL ORDER BY created_at DESC LIMIT ' . (int) $limit);
+        $statement->execute();
+        return $statement->fetchAll() ?: [];
     }
 
     public function delete(int $id, int $applicantId): bool
