@@ -14,6 +14,7 @@ final class CurrencyService
 {
     /** code => [symbole, nom, taux (unités par 1 EUR)] */
     private const CURRENCIES = [
+        // Afrique
         'XOF' => ['FCFA', 'Franc CFA (BCEAO)', 655.957],
         'XAF' => ['FCFA', 'Franc CFA (BEAC)', 655.957],
         'NGN' => ['₦', 'Naira nigérian', 1750.0],
@@ -22,21 +23,45 @@ final class CurrencyService
         'MAD' => ['DH', 'Dirham marocain', 10.8],
         'DZD' => ['DA', 'Dinar algérien', 145.0],
         'TND' => ['DT', 'Dinar tunisien', 3.4],
+        'EGP' => ['E£', 'Livre égyptienne', 53.0],
         'ZAR' => ['R', 'Rand sud-africain', 20.0],
         'RWF' => ['FRw', 'Franc rwandais', 1450.0],
         'CDF' => ['FC', 'Franc congolais', 3000.0],
+        'UGX' => ['USh', 'Shilling ougandais', 4000.0],
+        'TZS' => ['TSh', 'Shilling tanzanien', 2800.0],
+        'ETB' => ['Br', 'Birr éthiopien', 130.0],
+        'GNF' => ['FG', 'Franc guinéen', 9300.0],
+        'MUR' => ['₨', 'Roupie mauricienne', 50.0],
+        // International
         'EUR' => ['€', 'Euro', 1.0],
         'USD' => ['$', 'Dollar américain', 1.08],
+        'GBP' => ['£', 'Livre sterling', 0.85],
         'CAD' => ['$CA', 'Dollar canadien', 1.47],
+        'CHF' => ['CHF', 'Franc suisse', 0.95],
+        'CNY' => ['¥', 'Yuan chinois', 7.8],
+        'JPY' => ['¥', 'Yen japonais', 165.0],
+        'INR' => ['₹', 'Roupie indienne', 90.0],
+        'AED' => ['د.إ', 'Dirham émirati', 3.97],
+        'SAR' => ['﷼', 'Riyal saoudien', 4.05],
+        'BRL' => ['R$', 'Réal brésilien', 5.9],
+        'AUD' => ['$AU', 'Dollar australien', 1.64],
     ];
 
-    /** ISO pays => devise */
+    /** ISO pays => devise (large couverture, monde entier) */
     private const COUNTRY_CURRENCY = [
+        // Zone CFA
         'SN' => 'XOF', 'CI' => 'XOF', 'BJ' => 'XOF', 'BF' => 'XOF', 'ML' => 'XOF', 'NE' => 'XOF', 'TG' => 'XOF', 'GW' => 'XOF',
         'CM' => 'XAF', 'GA' => 'XAF', 'CG' => 'XAF', 'TD' => 'XAF', 'CF' => 'XAF', 'GQ' => 'XAF',
-        'NG' => 'NGN', 'GH' => 'GHS', 'KE' => 'KES', 'MA' => 'MAD', 'DZ' => 'DZD', 'TN' => 'TND',
-        'ZA' => 'ZAR', 'RW' => 'RWF', 'CD' => 'CDF',
-        'FR' => 'EUR', 'BE' => 'EUR', 'CH' => 'EUR', 'US' => 'USD', 'CA' => 'CAD',
+        // Afrique
+        'NG' => 'NGN', 'GH' => 'GHS', 'KE' => 'KES', 'MA' => 'MAD', 'DZ' => 'DZD', 'TN' => 'TND', 'EG' => 'EGP',
+        'ZA' => 'ZAR', 'RW' => 'RWF', 'CD' => 'CDF', 'UG' => 'UGX', 'TZ' => 'TZS', 'ET' => 'ETB', 'GN' => 'GNF', 'MU' => 'MUR',
+        // Europe (zone euro + hors)
+        'FR' => 'EUR', 'BE' => 'EUR', 'DE' => 'EUR', 'ES' => 'EUR', 'IT' => 'EUR', 'PT' => 'EUR', 'NL' => 'EUR', 'IE' => 'EUR', 'LU' => 'EUR',
+        'GB' => 'GBP', 'CH' => 'CHF',
+        // Amériques
+        'US' => 'USD', 'CA' => 'CAD', 'BR' => 'BRL',
+        // Asie / Moyen-Orient / Océanie
+        'CN' => 'CNY', 'JP' => 'JPY', 'IN' => 'INR', 'AE' => 'AED', 'SA' => 'SAR', 'AU' => 'AUD',
     ];
 
     public static function defaultCurrency(): string
@@ -83,7 +108,7 @@ final class CurrencyService
         $info = self::info($code);
         $value = $amountEur * (float) $info['rate'];
         // Pas de décimales pour les devises "sans centimes" usuelles.
-        $noDecimals = in_array($info['code'], ['XOF', 'XAF', 'NGN', 'RWF', 'CDF', 'DZD'], true);
+        $noDecimals = in_array($info['code'], ['XOF', 'XAF', 'NGN', 'RWF', 'CDF', 'DZD', 'UGX', 'TZS', 'GNF', 'JPY', 'ETB'], true);
         $formatted = number_format($value, $noDecimals ? 0 : 2, ',', ' ');
         $symbol = $info['symbol'];
         // Symbole après pour FCFA et devises texte, avant pour €/$.

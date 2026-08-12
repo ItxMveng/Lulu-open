@@ -35,21 +35,21 @@ $profilePath = $role === 'entreprise' ? '/entreprise/profile/edit' : '/client/pr
                 <!-- Connecté : liens de rôle uniquement (pas de liens publics) -->
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <?php if ($role === 'client'): ?>
-                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/search')) ?>">Rechercher</a></li>
-                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/client/candidatures')) ?>">Mes candidatures</a></li>
-                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/client/ia')) ?>">Outils IA</a></li>
-                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/messages')) ?>">Messages</a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/search')) ?>"><?= t('Rechercher') ?></a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/client/candidatures')) ?>"><?= t('Mes candidatures') ?></a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/client/ia')) ?>"><?= t('Outils IA') ?></a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/messages')) ?>"><?= t('Messages') ?></a></li>
                     <?php elseif ($role === 'entreprise'): ?>
-                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/entreprise/offres')) ?>">Mes offres</a></li>
-                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/entreprise/candidatures')) ?>">Candidatures</a></li>
-                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/messages')) ?>">Messages</a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/entreprise/offres')) ?>"><?= t('Mes offres') ?></a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/entreprise/candidatures')) ?>"><?= t('Candidatures') ?></a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/messages')) ?>"><?= t('Messages') ?></a></li>
                         <?php if (current_verification_status() !== 'verified'): ?>
-                            <li class="nav-item"><a class="nav-link text-warning fw-semibold" href="<?= e(url('/entreprise/verification')) ?>"><i class="bi bi-shield-exclamation"></i> Vérification</a></li>
+                            <li class="nav-item"><a class="nav-link text-warning fw-semibold" href="<?= e(url('/entreprise/verification')) ?>"><i class="bi bi-shield-exclamation"></i> <?= t('Vérification') ?></a></li>
                         <?php endif; ?>
                     <?php elseif ($role === 'admin'): ?>
-                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/admin/users')) ?>">Utilisateurs</a></li>
-                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/admin/subscriptions')) ?>">Abonnements</a></li>
-                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/admin/categories')) ?>">Catégories</a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/admin/users')) ?>"><?= t('Utilisateurs') ?></a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/admin/subscriptions')) ?>"><?= t('Abonnements') ?></a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/admin/categories')) ?>"><?= t('Catégories') ?></a></li>
                     <?php endif; ?>
                 </ul>
 

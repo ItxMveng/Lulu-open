@@ -12,40 +12,40 @@ $savedSearches = $savedSearches ?? [];
         <div class="card-body p-3 p-lg-4">
             <div class="row g-2 align-items-end">
                 <div class="col-lg-3">
-                    <label class="form-label small">Mots-clés</label>
-                    <input class="form-control" type="text" name="q" placeholder="Métier, compétence…" value="<?= e((string) ($filters['q'] ?? '')) ?>">
+                    <label class="form-label small"><?= t('Mots-clés') ?></label>
+                    <input class="form-control" type="text" name="q" placeholder="<?= e(t('Métier, compétence…')) ?>" value="<?= e((string) ($filters['q'] ?? '')) ?>">
                 </div>
                 <div class="col-lg-3">
-                    <label class="form-label small"><i class="bi bi-flag me-1"></i>Pays</label>
+                    <label class="form-label small"><i class="bi bi-flag me-1"></i><?= t('Pays') ?></label>
                     <select class="form-select" name="country">
-                        <option value="">Tous les pays</option>
+                        <option value=""><?= t('Tous les pays') ?></option>
                         <?php foreach (($countriesList ?? []) as $pays): ?>
                             <option value="<?= e($pays) ?>" <?= ($filters['country'] ?? '') === $pays ? 'selected' : '' ?>><?= e($pays) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-lg-2">
-                    <label class="form-label small">Ville</label>
-                    <input class="form-control" type="text" name="location" placeholder="Ville…" value="<?= e((string) ($filters['location'] ?? '')) ?>">
+                    <label class="form-label small"><?= t('Ville') ?></label>
+                    <input class="form-control" type="text" name="location" placeholder="<?= e(t('Ville…')) ?>" value="<?= e((string) ($filters['location'] ?? '')) ?>">
                 </div>
                 <div class="col-lg-2">
-                    <label class="form-label small">Trier par</label>
+                    <label class="form-label small"><?= t('Trier par') ?></label>
                     <select class="form-select" name="sort">
-                        <option value="pertinence">Pertinence</option>
-                        <option value="recent" <?= ($filters['sort'] ?? '') === 'recent' ? 'selected' : '' ?>>Plus récents</option>
-                        <option value="vues" <?= ($filters['sort'] ?? '') === 'vues' ? 'selected' : '' ?>>Plus vus</option>
+                        <option value="pertinence"><?= t('Pertinence') ?></option>
+                        <option value="recent" <?= ($filters['sort'] ?? '') === 'recent' ? 'selected' : '' ?>><?= t('Plus récents') ?></option>
+                        <option value="vues" <?= ($filters['sort'] ?? '') === 'vues' ? 'selected' : '' ?>><?= t('Plus vus') ?></option>
                     </select>
                 </div>
                 <div class="col-lg-2">
-                    <button class="btn btn-primary w-100" type="submit"><i class="bi bi-search me-1"></i>Rechercher</button>
+                    <button class="btn btn-primary w-100" type="submit"><i class="bi bi-search me-1"></i><?= t('Rechercher') ?></button>
                 </div>
             </div>
 
             <div class="d-flex flex-wrap align-items-center gap-3 mt-3 pt-3 border-top">
                 <select class="form-select form-select-sm" style="max-width: 200px;" name="category">
-                    <option value="">Toutes les catégories</option>
+                    <option value=""><?= t('Toutes les catégories') ?></option>
                     <?php foreach (($categoriesList ?? []) as $cat): ?>
-                        <option value="<?= e((string) $cat['name']) ?>" <?= ($filters['category'] ?? '') === $cat['name'] ? 'selected' : '' ?>><?= e((string) $cat['name']) ?></option>
+                        <option value="<?= e((string) $cat['name']) ?>" <?= ($filters['category'] ?? '') === $cat['name'] ? 'selected' : '' ?>><?= e(t((string) $cat['name'])) ?></option>
                     <?php endforeach; ?>
                 </select>
                 <input class="form-control form-control-sm" style="max-width: 130px;" type="number" step="0.01" name="rate_min" placeholder="Tarif min €" value="<?= e((string) ($filters['rate_min'] ?? '')) ?>">
@@ -71,8 +71,8 @@ $savedSearches = $savedSearches ?? [];
     <?php endif; ?>
 
     <ul class="nav nav-pills mb-4 gap-2">
-        <li class="nav-item"><a class="nav-link <?= $activeTab === 'profils' ? 'active' : '' ?>" href="<?= e(url('/search/profils?' . http_build_query(array_merge($filters, ['tab' => 'profils'])))) ?>"><i class="bi bi-person me-1"></i>Talents & prestations</a></li>
-        <li class="nav-item"><a class="nav-link <?= $activeTab === 'offres' ? 'active' : '' ?>" href="<?= e(url('/search/offres?' . http_build_query(array_merge($filters, ['tab' => 'offres'])))) ?>"><i class="bi bi-briefcase me-1"></i>Offres d'emploi</a></li>
+        <li class="nav-item"><a class="nav-link <?= $activeTab === 'profils' ? 'active' : '' ?>" href="<?= e(url('/search/profils?' . http_build_query(array_merge($filters, ['tab' => 'profils'])))) ?>"><i class="bi bi-person me-1"></i><?= t('Talents & prestations') ?></a></li>
+        <li class="nav-item"><a class="nav-link <?= $activeTab === 'offres' ? 'active' : '' ?>" href="<?= e(url('/search/offres?' . http_build_query(array_merge($filters, ['tab' => 'offres'])))) ?>"><i class="bi bi-briefcase me-1"></i><?= t('Offres d\'emploi') ?></a></li>
     </ul>
 
     <?php if ($activeTab === 'offres'): ?>

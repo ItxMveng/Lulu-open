@@ -97,5 +97,25 @@ final class Lang
         // Divers CTA
         'Rechercher un talent ou une offre' => 'Search a talent or an offer', 'Trouver une offre' => 'Find an offer',
         'Publier une offre' => 'Post an offer', 'Postuler maintenant' => 'Apply now', 'Contacter' => 'Contact',
+        // Navbar connecté
+        'Utilisateurs' => 'Users', 'Abonnements' => 'Subscriptions', 'Catégories' => 'Categories',
+        // Catégories
+        'Développement Web' => 'Web Development', 'Design & Créa' => 'Design & Creative', 'Rédaction' => 'Writing',
+        'Data & IA' => 'Data & AI', 'Support & Admin' => 'Support & Admin', 'Commerce & Vente' => 'Sales',
+        'Comptabilité & Finance' => 'Accounting & Finance', 'Ressources Humaines' => 'Human Resources',
+        'Santé & Social' => 'Health & Social', 'Enseignement & Formation' => 'Teaching & Training',
+        'Bâtiment & Travaux' => 'Construction', 'Artisanat & Métiers manuels' => 'Crafts & Trades',
+        'Restauration & Hôtellerie' => 'Food & Hospitality', 'Beauté & Bien-être' => 'Beauty & Wellness',
+        'Transport & Logistique' => 'Transport & Logistics', 'Juridique' => 'Legal',
+        'Agriculture & Environnement' => 'Agriculture & Environment',
+        // Formulaires recherche
+        'Mots-clés' => 'Keywords', 'Pays' => 'Country', 'Tous les pays' => 'All countries', 'Ville' => 'City',
+        'Trier par' => 'Sort by', 'Pertinence' => 'Relevance', 'Plus récents' => 'Most recent', 'Plus vus' => 'Most viewed',
+        'Toutes les catégories' => 'All categories', 'Talents & prestations' => 'Talents & services', 'Offres d\'emploi' => 'Job offers',
+        'Métier, compétence…' => 'Job, skill…', 'Ville…' => 'City…',
+        // Sections landing enrichies
+        'Pourquoi LULU-OPEN ?' => 'Why LULU-OPEN?', 'Questions fréquentes' => 'Frequently asked questions',
+        'Ils nous font confiance' => 'They trust us', 'Commencer gratuitement' => 'Get started for free',
+        'Comment ça marche' => 'How it works', 'Nos chiffres' => 'Our numbers',
     ];
 }

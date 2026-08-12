@@ -49,7 +49,7 @@
                 <div class="col-6 col-md-4 col-lg-2">
                     <a class="category-card" href="<?= e(url('/search?category=' . urlencode((string) ($category['name'] ?? '')) . '&tab=profils')) ?>">
                         <span class="category-icon"><i class="bi <?= e((string) ($category['icon'] ?? 'bi-grid')) ?>"></i></span>
-                        <span class="fw-semibold"><?= e((string) ($category['name'] ?? '')) ?></span>
+                        <span class="fw-semibold"><?= e(t((string) ($category['name'] ?? ''))) ?></span>
                     </a>
                 </div>
             <?php endforeach; ?>
