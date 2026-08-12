@@ -67,10 +67,17 @@ final class DashboardController extends Controller
             'title' => 'Tableau de bord admin',
             'stats' => [
                 'users' => $count("SELECT COUNT(*) FROM users WHERE status != 'deleted'"),
-                'subscriptions' => $count("SELECT COUNT(*) FROM subscriptions WHERE status = 'active'"),
+                'talents' => $count("SELECT COUNT(*) FROM users WHERE role = 'client' AND status != 'deleted'"),
+                'companies' => $count("SELECT COUNT(*) FROM users WHERE role = 'entreprise' AND status != 'deleted'"),
+                'verified' => $count("SELECT COUNT(*) FROM users WHERE role = 'entreprise' AND verification_status = 'verified'"),
+                'pending' => $count("SELECT COUNT(*) FROM users WHERE verification_status = 'pending'"),
                 'offers' => $count("SELECT COUNT(*) FROM offers WHERE status = 'active'"),
                 'applications' => $count('SELECT COUNT(*) FROM applications'),
+                'subscriptions' => $count("SELECT COUNT(*) FROM subscriptions WHERE status = 'active'"),
+                'categories' => $count('SELECT COUNT(*) FROM categories'),
+                'messages' => $count('SELECT COUNT(*) FROM messages'),
             ],
+            'recentUsers' => $pdo->query("SELECT id, name, email, role, status, verification_status, created_at FROM users WHERE role != 'admin' ORDER BY created_at DESC LIMIT 6")->fetchAll(),
         ], 'admin');
     }
 }
