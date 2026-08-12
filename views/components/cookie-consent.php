@@ -1,13 +1,13 @@
 <div id="cookieConsent" class="cookie-consent" role="dialog" aria-label="Consentement aux cookies" hidden>
     <div class="cookie-consent-inner">
         <div class="flex-grow-1">
-            <strong class="d-block mb-1"><i class="bi bi-shield-lock me-1"></i>Respect de votre vie privée</strong>
-            <p class="mb-0 small text-secondary">Nous utilisons des cookies pour assurer le bon fonctionnement du site et améliorer votre expérience. Vous pouvez accepter ou refuser les cookies non essentiels.
-                <a href="<?= e(url('/privacy')) ?>">En savoir plus</a>.</p>
+            <strong class="d-block mb-1"><i class="bi bi-shield-lock me-1"></i><?= t('Respect de votre vie privée') ?></strong>
+            <p class="mb-0 small text-secondary">Nous utilisons des cookies pour assurer le bon fonctionnement du site et améliorer votre expérience.
+                <a href="<?= e(url('/privacy')) ?>"><?= t('En savoir plus') ?></a>.</p>
         </div>
         <div class="d-flex gap-2 flex-shrink-0">
-            <button class="btn btn-outline-secondary btn-sm" data-cookie="refuse">Refuser</button>
-            <button class="btn btn-primary btn-sm" data-cookie="accept">Accepter</button>
+            <button class="btn btn-outline-secondary btn-sm" data-cookie="refuse"><?= t('Refuser') ?></button>
+            <button class="btn btn-primary btn-sm" data-cookie="accept"><?= t('Accepter') ?></button>
         </div>
     </div>
 </div>

@@ -21,14 +21,14 @@ $profilePath = $role === 'entreprise' ? '/entreprise/profile/edit' : '/client/pr
             <?php if (!$authed): ?>
                 <!-- Visiteur : liens publics -->
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="<?= e(url('/services')) ?>">Prestations</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?= e(url('/emplois')) ?>">Recrutement</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?= e(url('/pricing')) ?>">Tarifs</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?= e(url('/contact')) ?>">Contact</a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= e(url('/services')) ?>"><?= t('Prestations') ?></a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= e(url('/emplois')) ?>"><?= t('Recrutement') ?></a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= e(url('/pricing')) ?>"><?= t('Tarifs') ?></a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= e(url('/contact')) ?>"><?= t('Contact') ?></a></li>
                 </ul>
                 <div class="d-flex flex-column flex-lg-row gap-2 mt-3 mt-lg-0">
-                    <a class="btn btn-outline-primary" href="<?= e(url('/login')) ?>">Connexion</a>
-                    <a class="btn btn-primary" href="<?= e(url('/register')) ?>">Créer un compte</a>
+                    <a class="btn btn-outline-primary" href="<?= e(url('/login')) ?>"><?= t('Connexion') ?></a>
+                    <a class="btn btn-primary" href="<?= e(url('/register')) ?>"><?= t('Créer un compte') ?></a>
                 </div>
             <?php else: ?>
                 <!-- Connecté : liens de rôle uniquement (pas de liens publics) -->

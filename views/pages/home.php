@@ -5,24 +5,24 @@
     <div class="container py-5 py-lg-6">
         <div class="row justify-content-center text-center">
             <div class="col-lg-9">
-                <span class="hero-eyebrow mb-4"><i class="bi bi-stars"></i> La marketplace des talents et des entreprises</span>
-                <h1 class="fw-bold mb-3">Trouvez le bon <span class="text-gradient">talent</span>,<br class="d-none d-md-block"> décrochez la bonne <span class="text-gradient">mission</span>.</h1>
-                <p class="lead mx-auto mb-4" style="max-width: 46ch;">Candidats et prestataires d'un côté, entreprises et recruteurs de l'autre. Offres, candidatures, messagerie et outils IA — au même endroit.</p>
+                <span class="hero-eyebrow mb-4"><i class="bi bi-stars"></i> <?= t('La marketplace des talents et des entreprises') ?></span>
+                <h1 class="fw-bold mb-3"><?= t('Trouvez le bon') ?> <span class="text-gradient"><?= t('talent') ?></span>,<br class="d-none d-md-block"> <?= t('décrochez la bonne') ?> <span class="text-gradient"><?= t('mission') ?></span>.</h1>
+                <p class="lead mx-auto mb-4" style="max-width: 46ch;"><?= t('Candidats et prestataires d\'un côté, entreprises et recruteurs de l\'autre. Offres, candidatures, messagerie et outils IA — au même endroit.') ?></p>
 
                 <form action="<?= e(url('/search')) ?>" method="get" class="search-bar mx-auto d-flex flex-column flex-md-row align-items-stretch gap-2" style="max-width: 720px;">
                     <div class="d-flex align-items-center flex-grow-1 px-2">
                         <i class="bi bi-search text-secondary me-2"></i>
-                        <input type="text" name="q" class="form-control" placeholder="Métier, compétence, poste…" aria-label="Recherche">
+                        <input type="text" name="q" class="form-control" placeholder="<?= e(t('Métier, compétence, poste…')) ?>" aria-label="<?= e(t('Rechercher')) ?>">
                     </div>
                     <div class="d-flex align-items-center flex-grow-1 px-2 border-start-md">
                         <i class="bi bi-geo-alt text-secondary me-2"></i>
-                        <input type="text" name="location" class="form-control" placeholder="Ville ou télétravail" aria-label="Localisation">
+                        <input type="text" name="location" class="form-control" placeholder="<?= e(t('Ville ou télétravail')) ?>" aria-label="Localisation">
                     </div>
-                    <button type="submit" class="btn btn-primary btn-lg px-4">Rechercher</button>
+                    <button type="submit" class="btn btn-primary btn-lg px-4"><?= t('Rechercher') ?></button>
                 </form>
 
                 <div class="d-flex flex-wrap justify-content-center gap-2 mt-3 small text-secondary">
-                    <span class="me-1">Populaire :</span>
+                    <span class="me-1"><?= t('Populaire :') ?></span>
                     <a class="badge badge-soft-primary" href="<?= e(url('/search?q=développeur')) ?>">Développeur</a>
                     <a class="badge badge-soft-primary" href="<?= e(url('/search?q=designer')) ?>">Designer</a>
                     <a class="badge badge-soft-primary" href="<?= e(url('/search?q=marketing')) ?>">Marketing</a>
@@ -39,10 +39,10 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-end mb-4">
             <div>
-                <h2 class="h3 mb-1">Explorez par catégorie</h2>
-                <p class="text-secondary mb-0">Des profils et des offres dans tous les domaines.</p>
+                <h2 class="h3 mb-1"><?= t('Explorez par catégorie') ?></h2>
+                <p class="text-secondary mb-0"><?= t('Des profils et des offres dans tous les domaines.') ?></p>
             </div>
-            <a class="btn btn-outline-secondary d-none d-sm-inline-flex" href="<?= e(url('/search')) ?>">Tout voir <i class="bi bi-arrow-right ms-1"></i></a>
+            <a class="btn btn-outline-secondary d-none d-sm-inline-flex" href="<?= e(url('/search')) ?>"><?= t('Tout voir') ?> <i class="bi bi-arrow-right ms-1"></i></a>
         </div>
         <div class="row g-3 g-lg-4">
             <?php foreach (array_slice($categories, 0, 6) as $category): ?>
@@ -62,8 +62,8 @@
 <section class="section bg-surface-2">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="h3 mb-2">Deux parcours, une plateforme</h2>
-            <p class="text-secondary mb-0">Que vous cherchiez une opportunité ou un talent, tout est fluide.</p>
+            <h2 class="h3 mb-2"><?= t('Deux parcours, une plateforme') ?></h2>
+            <p class="text-secondary mb-0"><?= t('Que vous cherchiez une opportunité ou un talent, tout est fluide.') ?></p>
         </div>
         <div class="row g-4">
             <div class="col-lg-6">
@@ -110,11 +110,11 @@
 <section class="section pt-0">
     <div class="container">
         <div class="cta-band text-center p-5 p-lg-6">
-            <h2 class="mb-3">Prêt à passer à la vitesse supérieure ?</h2>
-            <p class="mb-4 mx-auto opacity-75" style="max-width: 48ch;">Rejoignez LULU-OPEN gratuitement et connectez-vous aux bonnes opportunités.</p>
+            <h2 class="mb-3"><?= t('Prêt à passer à la vitesse supérieure ?') ?></h2>
+            <p class="mb-4 mx-auto opacity-75" style="max-width: 48ch;"><?= t('Rejoignez LULU-OPEN gratuitement et connectez-vous aux bonnes opportunités.') ?></p>
             <div class="d-flex flex-wrap justify-content-center gap-3">
-                <a class="btn btn-light btn-lg px-4 fw-semibold" href="<?= e(url('/register')) ?>">Créer un compte</a>
-                <a class="btn btn-outline-light btn-lg px-4" href="<?= e(url('/pricing')) ?>">Voir les tarifs</a>
+                <a class="btn btn-light btn-lg px-4 fw-semibold" href="<?= e(url('/register')) ?>"><?= t('Créer un compte') ?></a>
+                <a class="btn btn-outline-light btn-lg px-4" href="<?= e(url('/pricing')) ?>"><?= t('Voir les tarifs') ?></a>
             </div>
         </div>
     </div>

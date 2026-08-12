@@ -300,6 +300,12 @@ function dashboard_path_for_role(?string $role): string
     };
 }
 
+/** Traduit une chaîne (FR par défaut, EN si la langue active est l'anglais). */
+function t(string $fr): string
+{
+    return Lang::t($fr);
+}
+
 /** Formate un montant (stocké en EUR) dans la devise du visiteur. */
 function money(float $amountEur): string
 {

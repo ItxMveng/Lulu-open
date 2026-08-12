@@ -17,6 +17,11 @@ Router::get('/devise/{code}', static function (string $code): never {
     $ref = $_SERVER['HTTP_REFERER'] ?? '/pricing';
     redirect(str_starts_with($ref, APP_URL) ? $ref : '/pricing');
 });
+Router::get('/langue/{code}', static function (string $code): never {
+    Lang::set($code);
+    $ref = $_SERVER['HTTP_REFERER'] ?? '/';
+    redirect(str_starts_with((string) $ref, APP_URL) ? $ref : '/');
+});
 
 Router::get('/search', 'SearchController@searchAll');
 Router::get('/search/profils', 'SearchController@searchProfiles');
