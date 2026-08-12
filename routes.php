@@ -1,6 +1,28 @@
 <?php
 declare(strict_types=1);
 
+Router::get('/robots.txt', static function (): never {
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /client\nDisallow: /entreprise\nDisallow: /messages\n\nSitemap: " . APP_URL . "/sitemap.xml\n";
+    exit;
+});
+Router::get('/sitemap.xml', static function (): never {
+    header('Content-Type: application/xml; charset=UTF-8');
+    $urls = ['/', '/services', '/emplois', '/pricing', '/contact', '/about', '/cgu', '/privacy', '/legal', '/search'];
+    $out = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+    foreach ($urls as $u) {
+        $out .= '<url><loc>' . e(APP_URL . $u) . '</loc><changefreq>weekly</changefreq></url>';
+    }
+    foreach (db()->query("SELECT id FROM offers WHERE status='active' ORDER BY created_at DESC LIMIT 500")->fetchAll(PDO::FETCH_COLUMN) as $id) {
+        $out .= '<url><loc>' . e(APP_URL . '/offres/' . (int) $id) . '</loc></url>';
+    }
+    foreach (db()->query("SELECT user_id FROM profiles WHERE is_visible=1 LIMIT 1000")->fetchAll(PDO::FETCH_COLUMN) as $id) {
+        $out .= '<url><loc>' . e(APP_URL . '/profile/' . (int) $id) . '</loc></url>';
+    }
+    echo $out . '</urlset>';
+    exit;
+});
+
 Router::get('/', 'PageController@home');
 Router::get('/about', 'PageController@about');
 Router::get('/a-propos', 'PageController@about');

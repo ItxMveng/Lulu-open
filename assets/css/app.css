@@ -179,6 +179,11 @@ a { text-decoration: none; transition: color var(--lulu-t); }
 .badge-soft-primary { background: #E0F2FE; color: var(--lulu-primary-700); }
 .badge-soft-success { background: #DCFCE7; color: var(--lulu-accent-600); }
 
+/* ---------- Animations d'apparition au défilement ---------- */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.4,0,0.2,1); }
+.reveal.is-visible { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+
 /* ---------- Bandeau cookies ---------- */
 .cookie-consent { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1090; padding: 0.75rem; }
 .cookie-consent-inner {

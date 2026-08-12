@@ -35,7 +35,7 @@
 
 <!-- ============ CATÉGORIES ============ -->
 <?php if (!empty($categories)): ?>
-<section class="section">
+<section class="section reveal">
     <div class="container">
         <div class="d-flex justify-content-between align-items-end mb-4">
             <div>
@@ -59,7 +59,7 @@
 <?php endif; ?>
 
 <!-- ============ COMMENT ÇA MARCHE ============ -->
-<section class="section bg-surface-2">
+<section class="section bg-surface-2 reveal">
     <div class="container">
         <div class="text-center mb-5">
             <h2 class="h3 mb-2"><?= t('Deux parcours, une plateforme') ?></h2>
@@ -95,7 +95,7 @@
 </section>
 
 <!-- ============ CONFIANCE / STATS ============ -->
-<section class="section">
+<section class="section reveal">
     <div class="container">
         <div class="row text-center g-4">
             <div class="col-6 col-lg-3"><div class="stat-value">2</div><div class="text-secondary small">parcours dédiés</div></div>
@@ -107,7 +107,7 @@
 </section>
 
 <!-- ============ CTA FINALE ============ -->
-<section class="section pt-0">
+<section class="section pt-0 reveal">
     <div class="container">
         <div class="cta-band text-center p-5 p-lg-6">
             <h2 class="mb-3"><?= t('Prêt à passer à la vitesse supérieure ?') ?></h2>
