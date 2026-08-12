@@ -1,6 +1,7 @@
 .env
 vendor/
 logs/*.log
+logs/mail_previews/
 uploads/
 _archive_v1/
 
