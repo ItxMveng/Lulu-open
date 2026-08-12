@@ -97,7 +97,7 @@ foreach ($applications as $a) { $offersFilter[(int) $a['offer_id']] = (string) $
 </div>
 
 <script>
-(function () {
+document.addEventListener('DOMContentLoaded', function () {
     const CSRF = '<?= e(csrf_token()) ?>';
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const chips = (a, cls) => (a && a.length) ? '<div class="d-flex flex-wrap gap-2">'+a.map(x=>`<span class="badge ${cls}">${esc(x)}</span>`).join('')+'</div>' : '<span class="text-secondary small">—</span>';
@@ -123,5 +123,5 @@ foreach ($applications as $a) { $offersFilter[(int) $a['offer_id']] = (string) $
                 <h6 class="mt-3">Recommandation</h6><p class="mb-0 small">${esc(d.recommendation)||'—'}</p>`;
         } catch (e) { body.innerHTML = '<div class="lulu-alert lulu-alert-danger"><i class="bi bi-x-circle-fill"></i><div>Une erreur est survenue.</div></div>'; }
     }));
-})();
+});
 </script>

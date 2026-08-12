@@ -395,12 +395,18 @@ a:focus-visible, .btn:focus-visible, .form-control:focus-visible, .nav-link:focu
 .quick-link .qic { width: 2.25rem; height: 2.25rem; border-radius: 10px; display: grid; place-items: center; background: var(--lulu-surface-2); color: var(--lulu-primary); }
 
 /* Badges de statut candidature */
-.status-badge { font-weight: 600; padding: 0.35em 0.7em; border-radius: var(--lulu-radius-pill); font-size: 0.78rem; }
-.status-en_attente { background: #FEF3C7; color: #92400E; }
-.status-vue { background: #E0F2FE; color: #075985; }
-.status-entretien { background: #DBEAFE; color: #1E40AF; }
-.status-acceptee { background: #DCFCE7; color: #15803D; }
-.status-rejetee { background: #FEE2E2; color: #991B1B; }
+.status-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-weight: 600; padding: 0.35em 0.75em 0.35em 0.65em;
+    border-radius: var(--lulu-radius-pill); font-size: 0.78rem; line-height: 1.2;
+    border: 1px solid transparent; white-space: nowrap;
+}
+.status-badge::before { content: ''; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
+.status-en_attente { background: #FEF6E7; color: #B45309; border-color: #FCE3B5; }
+.status-vue        { background: #EAF5FC; color: #0369A1; border-color: #CDE7F6; }
+.status-entretien  { background: #EAF0FE; color: #1E40AF; border-color: #CedbFB; }
+.status-acceptee   { background: #E7F8EE; color: #15803D; border-color: #C4EED4; }
+.status-rejetee    { background: #FDECEC; color: #B91C1C; border-color: #F7CFCF; }
 
 /* ---------- Sélecteur de rôle (inscription) ---------- */
 .role-option { position: relative; }
