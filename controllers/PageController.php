@@ -74,7 +74,13 @@ final class PageController extends Controller
 
     public function services(): void
     {
-        $this->render('pages/services', ['title' => 'Prestations', 'fullWidth' => true]);
+        $this->render('pages/services', [
+            'title' => 'Prestations',
+            'fullWidth' => true,
+            'categories' => (new Category())->all(),
+            'metaDescription' => 'Trouvez le prestataire ou le freelance idéal en Afrique : développeurs, designers, artisans, comptables et plus. Profils vérifiés, contact direct.',
+            'metaKeywords' => 'freelance Afrique, prestataire, services, développeur, designer, artisan, mission freelance, talents',
+        ]);
     }
 
     public function emplois(): void
@@ -83,6 +89,9 @@ final class PageController extends Controller
             'title' => 'Offres et recrutement',
             'fullWidth' => true,
             'offers' => array_slice((new Offer())->publicSearch([]), 0, 6),
+            'categories' => (new Category())->all(),
+            'metaDescription' => 'Offres d\'emploi, missions et stages en Afrique. Postulez en un clic avec un CV et une lettre optimisés par l\'IA. Entreprises vérifiées.',
+            'metaKeywords' => 'offres emploi Afrique, recrutement, jobs, stage, mission, candidature, CV IA, emploi Sénégal Côte d\'Ivoire Cameroun',
         ]);
     }
 

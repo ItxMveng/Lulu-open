@@ -92,3 +92,31 @@ $renderPlan = static function (array $plan): string {
         </div>
     </div>
 </section>
+
+<section class="section reveal">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center mb-4">
+                    <h2 class="h3 mb-2"><?= t('Questions fréquentes') ?></h2>
+                    <p class="text-secondary mb-0"><?= t('Tout ce que vous devez savoir avant de commencer.') ?></p>
+                </div>
+                <div class="accordion" id="pricingFaq">
+                    <?php
+                    $pfaq = [
+                        ['Puis-je changer de plan à tout moment ?', 'Oui, vous pouvez passer à un plan supérieur ou revenir au plan gratuit quand vous le souhaitez.'],
+                        ['Comment sont affichés les prix ?', 'Les prix sont convertis automatiquement dans la devise de votre pays (FCFA, Naira, etc.) à titre indicatif.'],
+                        ['Y a-t-il un engagement ?', 'Non, aucun engagement. Les abonnements sont mensuels et sans engagement de durée.'],
+                        ['Le plan gratuit est-il vraiment gratuit ?', 'Oui. Vous pouvez créer un profil, postuler et échanger sans payer. Les plans payants ajoutent des fonctionnalités avancées.'],
+                    ];
+                    foreach ($pfaq as $i => [$q, $a]): ?>
+                        <div class="accordion-item border-0 mb-2 rounded-3 overflow-hidden">
+                            <h3 class="accordion-header"><button class="accordion-button <?= $i === 0 ? '' : 'collapsed' ?>" type="button" data-bs-toggle="collapse" data-bs-target="#pf<?= $i ?>"><?= e($q) ?></button></h3>
+                            <div id="pf<?= $i ?>" class="accordion-collapse collapse <?= $i === 0 ? 'show' : '' ?>" data-bs-parent="#pricingFaq"><div class="accordion-body text-secondary"><?= e($a) ?></div></div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

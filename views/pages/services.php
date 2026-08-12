@@ -18,3 +18,30 @@
         </div>
     </div>
 </section>
+
+<?php $categories = $categories ?? []; ?>
+<?php if (!empty($categories)): ?>
+<section class="section bg-surface-2 reveal">
+    <div class="container">
+        <div class="text-center mb-4">
+            <h2 class="h3 mb-2">Des talents dans tous les domaines</h2>
+            <p class="text-secondary mb-0">Parcourez les prestataires par secteur d'activité.</p>
+        </div>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            <?php foreach ($categories as $cat): ?>
+                <a class="badge badge-soft-primary py-2 px-3" href="<?= e(url('/search?tab=profils&category=' . urlencode((string) $cat['name']))) ?>"><i class="bi <?= e((string) ($cat['icon'] ?? 'bi-tag')) ?> me-1"></i><?= e(t((string) $cat['name'])) ?></a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
+<section class="section reveal">
+    <div class="container">
+        <div class="cta-band text-center p-5">
+            <h2 class="mb-3">Vous êtes un talent ? Mettez-vous en avant.</h2>
+            <p class="mb-4 opacity-75 mx-auto" style="max-width:46ch;">Créez un profil pro, ajoutez votre portfolio et votre CV, et recevez des opportunités.</p>
+            <a class="btn btn-light btn-lg fw-semibold" href="<?= e(url('/register')) ?>">Créer mon profil gratuitement</a>
+        </div>
+    </div>
+</section>
