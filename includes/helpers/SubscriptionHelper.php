@@ -25,6 +25,15 @@ final class SubscriptionHelper
         ];
     }
 
+    /** Nombre de domaines (catégories) qu'un talent peut sélectionner selon son plan. */
+    public static function maxCategories(int $userId): int
+    {
+        $plan = self::getActivePlan($userId);
+        $slug = (string) ($plan['plan_slug'] ?? '');
+        $isPaid = (float) ($plan['price'] ?? 0) > 0 && (string) ($plan['status'] ?? 'active') === 'active';
+        return ($slug === 'client_pro' || $isPaid) ? 5 : 1;
+    }
+
     public static function canSendMessage(int $userId): bool
     {
         $plan = self::getActivePlan($userId);

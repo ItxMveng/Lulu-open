@@ -37,6 +37,7 @@ final class ProfileController extends Controller
             'categoriesList' => array_column((new Category())->all(), 'name'),
             'skillsList' => Reference::commonSkills(),
             'languagesList' => Reference::languages(),
+            'maxCategories' => SubscriptionHelper::maxCategories($userId),
         ]);
     }
 
@@ -119,6 +120,20 @@ final class ProfileController extends Controller
             'certifications' => $this->parseList($_POST['certifications'] ?? ''),
             'is_visible' => isset($_POST['is_visible']) ? 1 : 0,
         ];
+
+        // Talent : au moins un domaine obligatoire, nombre limité selon l'abonnement.
+        if ($role === 'client') {
+            if (empty($profileData['categories'])) {
+                store_old_input($_POST);
+                flash('Choisissez au moins un domaine pour être visible dans les recherches.', 'danger');
+                redirect('/client/profile/edit');
+            }
+            $max = SubscriptionHelper::maxCategories($userId);
+            if (count($profileData['categories']) > $max) {
+                $profileData['categories'] = array_slice($profileData['categories'], 0, $max);
+                flash("Votre plan permet {$max} domaine(s). Passez à un plan supérieur pour en sélectionner davantage.", 'warning');
+            }
+        }
 
         $this->profiles->save($userId, $profileData);
         $_SESSION['user']['name'] = $name;

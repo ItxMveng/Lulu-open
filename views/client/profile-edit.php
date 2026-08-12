@@ -94,9 +94,16 @@ $selSkills = $decArr($profile['skills'] ?? null);
 $selLangs = $decArr($profile['languages'] ?? null);
 $extraSkills = array_values(array_diff($selSkills, $skillsList ?? []));
 ?>
-                        <div class="col-12">
-                            <label class="form-label">Domaines</label>
+                        <div class="col-12" id="categoriesWrap" data-max="<?= (int) ($maxCategories ?? 1) ?>">
+                            <label class="form-label">Domaines <span class="text-danger">*</span> <span class="text-secondary fw-normal small">(au moins 1)</span></label>
                             <?php View::partial('components/chip-select', ['name' => 'categories', 'options' => $categoriesList ?? [], 'selected' => $selCats]); ?>
+                            <div class="form-text" id="categoriesHint">
+                                <?php if ((int) ($maxCategories ?? 1) <= 1): ?>
+                                    Votre plan gratuit permet <strong>1 domaine</strong>. <a href="<?= e(url('/pricing')) ?>">Passez à un plan supérieur</a> pour en choisir plusieurs.
+                                <?php else: ?>
+                                    Vous pouvez sélectionner jusqu'à <strong><?= (int) $maxCategories ?> domaines</strong>.
+                                <?php endif; ?>
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label">Compétences</label>
@@ -153,4 +160,17 @@ document.getElementById('enhanceBio')?.addEventListener('click', async function 
     } catch (e) { status.innerHTML = '<span class="text-danger">Erreur réseau.</span>'; }
     finally { btn.disabled = false; btn.innerHTML = orig; }
 });
+
+// Limite du nombre de domaines selon le plan
+(function () {
+    const wrap = document.getElementById('categoriesWrap'); if (!wrap) return;
+    const max = parseInt(wrap.getAttribute('data-max') || '1');
+    const boxes = wrap.querySelectorAll('input[name="categories[]"]');
+    const apply = () => {
+        const checked = wrap.querySelectorAll('input[name="categories[]"]:checked').length;
+        boxes.forEach(b => { if (!b.checked) b.disabled = checked >= max; });
+    };
+    boxes.forEach(b => b.addEventListener('change', apply));
+    apply();
+})();
 </script>
