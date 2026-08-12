@@ -48,6 +48,32 @@ final class AppMailer
         return true;
     }
 
+    public static function verificationSubmitted(string $to, string $name): void
+    {
+        $body = '<p>Bonjour ' . e($name) . ',</p>'
+            . '<p>Nous avons bien reçu votre dossier de vérification d\'entreprise. Notre équipe l\'examine et vous répondra sous <strong>24 à 48h ouvrées</strong>.</p>'
+            . '<p>Une fois votre entreprise vérifiée, vous pourrez publier des offres et recevoir des candidatures.</p>';
+        self::send($to, 'Dossier de vérification bien reçu', $body);
+    }
+
+    public static function verificationApproved(string $to, string $name): void
+    {
+        $body = '<p>Bonjour ' . e($name) . ',</p>'
+            . '<p>Bonne nouvelle : votre entreprise a été <strong>vérifiée</strong> ✅. Vous pouvez désormais publier des offres et gérer vos candidatures.</p>'
+            . self::button(url('/entreprise/offres/new'), 'Publier une offre');
+        self::send($to, 'Votre entreprise est vérifiée 🎉', $body);
+    }
+
+    public static function verificationRejected(string $to, string $name, string $reason): void
+    {
+        $body = '<p>Bonjour ' . e($name) . ',</p>'
+            . '<p>Après examen, votre dossier de vérification n\'a pas pu être validé en l\'état.</p>'
+            . ($reason !== '' ? '<div style="background:#FDECEC;border:1px solid #F7CFCF;border-radius:12px;padding:14px;margin:12px 0;"><strong>Motif :</strong> ' . nl2br(e($reason)) . '</div>' : '')
+            . '<p>Vous pouvez corriger et soumettre à nouveau votre dossier depuis votre espace.</p>'
+            . self::button(url('/entreprise/verification'), 'Compléter mon dossier');
+        self::send($to, 'Votre dossier de vérification', $body);
+    }
+
     private static function interviewBlock(?array $interview): string
     {
         if (!$interview || empty($interview['at'])) {

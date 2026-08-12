@@ -54,6 +54,12 @@ final class User extends Model
         ]);
     }
 
+    public function setVerificationStatus(int $userId, ?string $status): void
+    {
+        $statement = $this->db->prepare('UPDATE users SET verification_status = :s, updated_at = NOW() WHERE id = :id');
+        $statement->execute(['s' => $status, 'id' => $userId]);
+    }
+
     public function assignDefaultSubscription(int $userId, string $role): void
     {
         $planSlug = $role === 'entreprise' ? 'entreprise_starter' : 'client_free';

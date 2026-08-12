@@ -42,6 +42,9 @@ $profilePath = $role === 'entreprise' ? '/entreprise/profile/edit' : '/client/pr
                         <li class="nav-item"><a class="nav-link" href="<?= e(url('/entreprise/offres')) ?>">Mes offres</a></li>
                         <li class="nav-item"><a class="nav-link" href="<?= e(url('/entreprise/candidatures')) ?>">Candidatures</a></li>
                         <li class="nav-item"><a class="nav-link" href="<?= e(url('/messages')) ?>">Messages</a></li>
+                        <?php if (current_verification_status() !== 'verified'): ?>
+                            <li class="nav-item"><a class="nav-link text-warning fw-semibold" href="<?= e(url('/entreprise/verification')) ?>"><i class="bi bi-shield-exclamation"></i> Vérification</a></li>
+                        <?php endif; ?>
                     <?php elseif ($role === 'admin'): ?>
                         <li class="nav-item"><a class="nav-link" href="<?= e(url('/admin/users')) ?>">Utilisateurs</a></li>
                         <li class="nav-item"><a class="nav-link" href="<?= e(url('/admin/subscriptions')) ?>">Abonnements</a></li>

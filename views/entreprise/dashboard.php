@@ -6,6 +6,23 @@ $user = $user ?? [];
 $name = trim((string) ($user['name'] ?? ''));
 ?>
 <section class="py-4">
+    <?php $vstatus = current_verification_status(); ?>
+    <?php if ($vstatus !== 'verified'): ?>
+        <div class="lulu-alert <?= $vstatus === 'pending' ? 'lulu-alert-info' : ($vstatus === 'rejected' ? 'lulu-alert-danger' : 'lulu-alert-warning') ?> mb-4">
+            <i class="bi <?= $vstatus === 'pending' ? 'bi-hourglass-split' : 'bi-shield-exclamation' ?>"></i>
+            <div class="flex-grow-1">
+                <?php if ($vstatus === 'pending'): ?>
+                    <strong>Vérification en cours.</strong> Vous pourrez publier des offres une fois votre entreprise validée.
+                <?php elseif ($vstatus === 'rejected'): ?>
+                    <strong>Dossier non validé.</strong> Corrigez et soumettez à nouveau votre dossier de vérification.
+                <?php else: ?>
+                    <strong>Compte non vérifié.</strong> Faites vérifier votre entreprise pour publier des offres.
+                <?php endif; ?>
+                <a class="fw-semibold ms-1" href="<?= e(url('/entreprise/verification')) ?>">Gérer ma vérification →</a>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <!-- En-tête -->
     <div class="dash-header p-4 p-lg-5 mb-4" style="background: linear-gradient(120deg, var(--lulu-primary-700), var(--lulu-accent-600) 120%);">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">

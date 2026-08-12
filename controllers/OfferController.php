@@ -20,7 +20,17 @@ final class OfferController extends Controller
     public function create(): void
     {
         AuthMiddleware::requireRole(['entreprise']);
+        $this->requireVerified();
         $this->render('entreprise/offers/create', ['title' => 'Nouvelle offre']);
+    }
+
+    /** Bloque la publication tant que l'entreprise n'est pas vérifiée. */
+    private function requireVerified(): void
+    {
+        if (!is_verified_company()) {
+            flash('Votre entreprise doit être vérifiée avant de publier des offres.', 'warning');
+            redirect('/entreprise/verification');
+        }
     }
 
     /** Rédaction assistée par IA d'une offre à partir de quelques éléments. */
@@ -51,6 +61,7 @@ final class OfferController extends Controller
     public function store(): never
     {
         AuthMiddleware::requireRole(['entreprise']);
+        $this->requireVerified();
         verify_csrf();
 
         $title = trim((string) ($_POST['title'] ?? ''));

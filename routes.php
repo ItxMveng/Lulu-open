@@ -47,6 +47,9 @@ Router::post('/client/ia/generer-cv', 'AiController@generateCv', ['auth', 'role:
 Router::post('/client/ia/document', 'AiController@document', ['auth', 'role:client']);
 Router::post('/client/ia/infos-offre', 'AiController@offerInfo', ['auth', 'role:client']);
 
+Router::get('/entreprise/verification', 'VerificationController@show', ['auth', 'role:entreprise']);
+Router::post('/entreprise/verification', 'VerificationController@submit', ['auth', 'role:entreprise']);
+
 Router::get('/entreprise/offres', 'OfferController@index', ['auth', 'role:entreprise']);
 Router::get('/entreprise/offres/new', 'OfferController@create', ['auth', 'role:entreprise']);
 Router::post('/entreprise/offres/ia-draft', 'OfferController@aiDraft', ['auth', 'role:entreprise']);
@@ -108,6 +111,9 @@ Router::delete('/api/saved-searches/{id}', static function (string $id): void {
 Router::post('/api/stripe/webhook', static function (): void {
     require base_path('api/stripe-webhook.php');
 });
+
+Router::get('/admin/verifications', 'AdminVerificationController@index', ['auth', 'role:admin']);
+Router::post('/admin/verifications/{id}/review', 'AdminVerificationController@review', ['auth', 'role:admin']);
 
 Router::get('/admin/users', 'AdminController@index', ['auth', 'role:admin']);
 Router::get('/admin/users/{id}', 'AdminController@show', ['auth', 'role:admin']);

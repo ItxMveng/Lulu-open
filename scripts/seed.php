@@ -174,6 +174,9 @@ $entrepriseId = seed_user($pdo, 'Entreprise Démo', 'entreprise@lulu-open.local'
 $profiles->save($entrepriseId, ['type' => 'recrutement', 'display_name' => 'Entreprise Démo', 'bio' => 'Entreprise de démonstration.', 'location' => 'Paris', 'categories' => [], 'skills' => [], 'languages' => ['Français'], 'is_visible' => 1]);
 $demoOffer = seed_offer($pdo, $entrepriseId, ['title' => 'Développeur PHP / Flutter (H/F)', 'type' => 'emploi', 'contract_type' => 'CDI', 'location' => 'Remote / Paris', 'remote_ok' => true, 'salary_min' => 40000, 'salary_max' => 55000, 'skills' => ['PHP', 'Flutter'], 'description' => "Poste full-stack pour une petite équipe produit."]);
 
+// Les entreprises de démonstration sont considérées comme vérifiées.
+$pdo->query("UPDATE users SET verification_status = 'verified' WHERE role = 'entreprise'");
+
 echo '== Candidatures ==' . PHP_EOL;
 if (!empty($allOffers) && count($candidateIds) >= 4) {
     seed_application($pdo, $candidateIds[0], $allOffers[0][1], $allOffers[0][0], 'en_attente');

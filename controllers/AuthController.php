@@ -57,6 +57,7 @@ final class AuthController extends Controller
             'name' => (string) $user['name'],
             'email' => (string) $user['email'],
             'role' => (string) $user['role'],
+            'verification_status' => $user['verification_status'] ?? null,
         ];
 
         clear_old_input();
@@ -106,23 +107,27 @@ final class AuthController extends Controller
             'subscription_status' => 'active',
         ]);
 
-        $profileType = $role === 'entreprise' ? 'mixte' : 'services';
+        $profileType = $role === 'entreprise' ? 'recrutement' : 'services';
         $this->users->createProfileForUser($userId, $name, $profileType);
         $this->users->assignDefaultSubscription($userId, $role);
 
-        $html = sprintf(
-            '<p>Bonjour %s,</p><p>Votre compte LULU-OPEN V2 a bien été créé. Vous pouvez maintenant accéder à votre tableau de bord.</p>',
-            e($name)
-        );
-        MailHelper::send($email, 'Bienvenue sur LULU-OPEN', $html, 'Votre compte LULU-OPEN a été créé.');
+        // Les entreprises doivent être vérifiées avant de pouvoir publier des offres.
+        if ($role === 'entreprise') {
+            $this->users->setVerificationStatus($userId, 'pending');
+            $html = '<p>Bonjour ' . e($name) . ',</p><p>Votre compte entreprise a été créé. Avant de pouvoir publier des offres, votre entreprise doit être <strong>vérifiée</strong>.</p><p>Rendez-vous dans votre espace pour soumettre votre dossier de vérification.</p>';
+            MailHelper::send($email, 'Votre compte entreprise — vérification requise', $html, 'Créez votre dossier de vérification.');
+        } else {
+            $html = '<p>Bonjour ' . e($name) . ',</p><p>Bienvenue sur LULU-OPEN ! Votre compte est prêt, complétez votre profil pour être visible des entreprises.</p>';
+            MailHelper::send($email, 'Bienvenue sur LULU-OPEN', $html, 'Votre compte LULU-OPEN a été créé.');
+        }
 
         session_regenerate_id(true);
         $_SESSION['user_id'] = $userId;
         $_SESSION['role'] = $role;
-        $_SESSION['user'] = ['id' => $userId, 'name' => $name, 'email' => $email, 'role' => $role];
+        $_SESSION['user'] = ['id' => $userId, 'name' => $name, 'email' => $email, 'role' => $role, 'verification_status' => $role === 'entreprise' ? 'pending' : null];
 
         clear_old_input();
-        flash('Compte créé avec succès.', 'success');
+        flash($role === 'entreprise' ? 'Compte créé. Soumettez votre dossier de vérification pour publier des offres.' : 'Compte créé avec succès.', 'success');
         redirect(dashboard_path_for_role($role));
     }
 

@@ -1,7 +1,9 @@
 <?php
 $currentPath = request_path();
+$pendingVerifications = (new CompanyVerification())->countPending();
 $navItems = [
     ['/admin/dashboard', 'bi-speedometer2', 'Tableau de bord'],
+    ['/admin/verifications', 'bi-patch-check', 'Vérifications'],
     ['/admin/users', 'bi-people', 'Utilisateurs'],
     ['/admin/subscriptions', 'bi-gem', 'Abonnements'],
     ['/admin/categories', 'bi-tags', 'Catégories'],
@@ -27,7 +29,12 @@ $isActive = static function (string $path) use ($currentPath): bool {
         <a class="admin-brand" href="<?= e(url('/admin/dashboard')) ?>"><span class="brand-dot"></span>Admin</a>
         <nav class="admin-nav">
             <?php foreach ($navItems as [$path, $icon, $label]): ?>
-                <a class="nav-link <?= $isActive($path) ? 'active' : '' ?>" href="<?= e(url($path)) ?>"><i class="bi <?= e($icon) ?>"></i><?= e($label) ?></a>
+                <a class="nav-link <?= $isActive($path) ? 'active' : '' ?>" href="<?= e(url($path)) ?>">
+                    <i class="bi <?= e($icon) ?>"></i><?= e($label) ?>
+                    <?php if ($path === '/admin/verifications' && $pendingVerifications > 0): ?>
+                        <span class="badge text-bg-danger rounded-pill ms-auto"><?= (int) $pendingVerifications ?></span>
+                    <?php endif; ?>
+                </a>
             <?php endforeach; ?>
             <hr class="my-2" style="border-color: rgba(255,255,255,0.2);">
             <a class="nav-link" href="<?= e(url('/')) ?>"><i class="bi bi-box-arrow-up-right"></i>Voir le site</a>

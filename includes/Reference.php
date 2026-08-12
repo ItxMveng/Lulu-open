@@ -39,4 +39,15 @@ final class Reference
     {
         return ['CDI', 'CDD', 'Freelance', 'Alternance', 'Stage', 'Intérim'];
     }
+
+    /** Pays (marché africain prioritaire + international). */
+    public static function countries(): array
+    {
+        return [
+            'Bénin', 'Burkina Faso', 'Cameroun', 'Côte d\'Ivoire', 'Gabon', 'Ghana', 'Guinée', 'Kenya', 'Mali',
+            'Maroc', 'Niger', 'Nigéria', 'République démocratique du Congo', 'Congo-Brazzaville', 'Sénégal',
+            'Tchad', 'Togo', 'Tunisie', 'Afrique du Sud', 'Algérie', 'Rwanda', 'Tanzanie',
+            'France', 'Belgique', 'Canada', 'Suisse', 'Autre',
+        ];
+    }
 }

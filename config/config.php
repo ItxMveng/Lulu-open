@@ -276,6 +276,20 @@ function auth_user(): ?array
     return $_SESSION['user'] ?? null;
 }
 
+function current_verification_status(): ?string
+{
+    return $_SESSION['user']['verification_status'] ?? null;
+}
+
+/** Une entreprise doit être vérifiée pour publier ; les autres rôles ne sont pas concernés. */
+function is_verified_company(): bool
+{
+    if (current_role() !== 'entreprise') {
+        return true;
+    }
+    return current_verification_status() === 'verified';
+}
+
 function dashboard_path_for_role(?string $role): string
 {
     return match ($role) {
