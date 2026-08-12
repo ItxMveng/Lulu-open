@@ -34,6 +34,7 @@ final class SearchController extends Controller
             'offers' => $offers,
             'activeTab' => $activeTab,
             'categoriesList' => (new Category())->all(),
+            'countriesList' => Reference::countries(),
             'savedSearches' => is_auth() ? $this->savedSearches->allForUser((int) current_user_id()) : [],
         ]);
     }
@@ -56,6 +57,7 @@ final class SearchController extends Controller
             'q' => trim((string) ($_GET['q'] ?? '')),
             'type' => trim((string) ($_GET['type'] ?? '')),
             'category' => trim((string) ($_GET['category'] ?? '')),
+            'country' => trim((string) ($_GET['country'] ?? '')),
             'location' => trim((string) ($_GET['location'] ?? '')),
             'radius' => trim((string) ($_GET['radius'] ?? '')),
             'rate_min' => trim((string) ($_GET['rate_min'] ?? '')),

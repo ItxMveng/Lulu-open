@@ -98,6 +98,11 @@ final class Profile extends Model
             $params['location'] = '%' . trim((string) $filters['location']) . '%';
         }
 
+        if (!empty($filters['country'])) {
+            $conditions[] = 'profiles.location LIKE :country';
+            $params['country'] = '%' . trim((string) $filters['country']) . '%';
+        }
+
         if (!empty($filters['rate_min'])) {
             $conditions[] = 'profiles.hourly_rate >= :rate_min';
             $params['rate_min'] = (float) $filters['rate_min'];

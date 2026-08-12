@@ -26,7 +26,8 @@ $profilePath = $role === 'entreprise' ? '/entreprise/profile/edit' : '/client/pr
                     <li class="nav-item"><a class="nav-link" href="<?= e(url('/pricing')) ?>"><?= t('Tarifs') ?></a></li>
                     <li class="nav-item"><a class="nav-link" href="<?= e(url('/contact')) ?>"><?= t('Contact') ?></a></li>
                 </ul>
-                <div class="d-flex flex-column flex-lg-row gap-2 mt-3 mt-lg-0">
+                <div class="d-flex flex-column flex-lg-row gap-2 mt-3 mt-lg-0 align-items-lg-center">
+                    <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/langue/' . (Lang::current() === 'en' ? 'fr' : 'en'))) ?>" title="Changer de langue"><i class="bi bi-translate me-1"></i><?= Lang::current() === 'en' ? 'FR' : 'EN' ?></a>
                     <a class="btn btn-outline-primary" href="<?= e(url('/login')) ?>"><?= t('Connexion') ?></a>
                     <a class="btn btn-primary" href="<?= e(url('/register')) ?>"><?= t('Créer un compte') ?></a>
                 </div>
@@ -53,6 +54,7 @@ $profilePath = $role === 'entreprise' ? '/entreprise/profile/edit' : '/client/pr
                 </ul>
 
                 <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+                    <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/langue/' . (Lang::current() === 'en' ? 'fr' : 'en'))) ?>" title="Changer de langue"><i class="bi bi-translate me-1"></i><?= Lang::current() === 'en' ? 'FR' : 'EN' ?></a>
                     <!-- Notifications -->
                     <div class="dropdown">
                         <button class="btn btn-outline-secondary position-relative" id="notificationsToggle" data-bs-toggle="dropdown" type="button" aria-label="Notifications">

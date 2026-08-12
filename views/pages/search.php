@@ -11,15 +11,24 @@ $savedSearches = $savedSearches ?? [];
     <form method="get" action="<?= e(url('/search')) ?>" class="card shadow-sm mb-4">
         <div class="card-body p-3 p-lg-4">
             <div class="row g-2 align-items-end">
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <label class="form-label small">Mots-clés</label>
                     <input class="form-control" type="text" name="q" placeholder="Métier, compétence…" value="<?= e((string) ($filters['q'] ?? '')) ?>">
                 </div>
                 <div class="col-lg-3">
-                    <label class="form-label small">Localisation</label>
-                    <input class="form-control" type="text" name="location" placeholder="Ville ou télétravail" value="<?= e((string) ($filters['location'] ?? '')) ?>">
+                    <label class="form-label small"><i class="bi bi-flag me-1"></i>Pays</label>
+                    <select class="form-select" name="country">
+                        <option value="">Tous les pays</option>
+                        <?php foreach (($countriesList ?? []) as $pays): ?>
+                            <option value="<?= e($pays) ?>" <?= ($filters['country'] ?? '') === $pays ? 'selected' : '' ?>><?= e($pays) ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
-                <div class="col-lg-3">
+                <div class="col-lg-2">
+                    <label class="form-label small">Ville</label>
+                    <input class="form-control" type="text" name="location" placeholder="Ville…" value="<?= e((string) ($filters['location'] ?? '')) ?>">
+                </div>
+                <div class="col-lg-2">
                     <label class="form-label small">Trier par</label>
                     <select class="form-select" name="sort">
                         <option value="pertinence">Pertinence</option>

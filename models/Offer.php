@@ -102,6 +102,21 @@ final class Offer extends Model
             $params['query'] = '%' . trim((string) $filters['q']) . '%';
         }
 
+        if (!empty($filters['location'])) {
+            $conditions[] = 'location LIKE :location';
+            $params['location'] = '%' . trim((string) $filters['location']) . '%';
+        }
+
+        if (!empty($filters['country'])) {
+            $conditions[] = 'location LIKE :country';
+            $params['country'] = '%' . trim((string) $filters['country']) . '%';
+        }
+
+        if (!empty($filters['type'])) {
+            $conditions[] = 'type = :type';
+            $params['type'] = trim((string) $filters['type']);
+        }
+
         $where = implode(' AND ', $conditions);
         $statement = $this->db->prepare("SELECT * FROM offers WHERE {$where} ORDER BY created_at DESC");
         $statement->execute($params);

@@ -146,11 +146,13 @@ foreach ($companies as $c) {
         'type' => 'recrutement', 'display_name' => $c[0], 'bio' => $c[3], 'location' => $c[2],
         'categories' => $c[4], 'skills' => [], 'languages' => ['Français', 'Anglais'], 'is_visible' => 1,
     ]);
+    $country = trim((string) substr($c[2], (int) strrpos($c[2], ',') + 1));
     foreach ($c[5] as $o) {
+        $loc = (stripos($o['loc'], $country) === false) ? $o['loc'] . ', ' . $country : $o['loc'];
         $st = $pdo->prepare('INSERT INTO offers (entreprise_id, title, description, type, status, contract_type, location, remote_ok, salary_min, salary_max, skills_required, created_at, updated_at) VALUES (:e, :t, :d, :ty, :active, :ct, :loc, :rem, :smin, :smax, :sk, NOW(), NOW())');
         $st->execute([
             'e' => $eid, 't' => $o['title'], 'd' => $o['desc'], 'ty' => $o['type'], 'active' => 'active',
-            'ct' => $o['ct'], 'loc' => $o['loc'], 'rem' => $o['remote'], 'smin' => $o['smin'], 'smax' => $o['smax'],
+            'ct' => $o['ct'], 'loc' => $loc, 'rem' => $o['remote'], 'smin' => $o['smin'], 'smax' => $o['smax'],
             'sk' => json_encode($o['skills'], JSON_UNESCAPED_UNICODE),
         ]);
         $offerIds[] = [(int) $pdo->lastInsertId(), $eid];
