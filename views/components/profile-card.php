@@ -22,7 +22,7 @@ $rate = $profile['hourly_rate'] ?? null;
         <p class="text-secondary small flex-grow-1 mb-3"><?= e(mb_strimwidth((string) ($profile['bio'] ?? 'Aucune bio disponible.'), 0, 140, '…')) ?></p>
         <div class="d-flex justify-content-between align-items-center">
             <?php if ($rate !== null && $rate !== ''): ?>
-                <span class="fw-semibold text-primary"><?= e((string) $rate) ?> €<span class="text-secondary small fw-normal">/h</span></span>
+                <span class="fw-semibold text-primary"><?= e(money((float) $rate)) ?><span class="text-secondary small fw-normal">/h</span></span>
             <?php else: ?><span></span><?php endif; ?>
             <a class="btn btn-outline-primary btn-sm" href="<?= e(url('/profile/' . (int) ($profile['user_id'] ?? 0))) ?>">Voir le profil</a>
         </div>

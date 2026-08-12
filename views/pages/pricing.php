@@ -26,7 +26,7 @@ $renderPlan = static function (array $plan): string {
                 <h3 class="h5 mb-1"><?= e($name) ?></h3>
                 <div class="mb-3">
                     <?php if ($price > 0): ?>
-                        <span class="display-6 fw-bold"><?= e(rtrim(rtrim(number_format($price, 2, ',', ' '), '0'), ',')) ?> €</span>
+                        <span class="display-6 fw-bold"><?= e(money((float) $price)) ?></span>
                         <span class="text-secondary">/mois</span>
                     <?php else: ?>
                         <span class="display-6 fw-bold">Gratuit</span>
@@ -49,7 +49,19 @@ $renderPlan = static function (array $plan): string {
     <div class="container py-5 text-center">
         <span class="hero-eyebrow mb-3"><i class="bi bi-gem"></i> Tarifs simples et transparents</span>
         <h1 class="fw-bold mb-2">Choisissez le plan qui vous ressemble</h1>
-        <p class="lead mx-auto mb-0" style="max-width: 44ch;">Commencez gratuitement, évoluez quand vous en avez besoin.</p>
+        <p class="lead mx-auto mb-3" style="max-width: 44ch;">Commencez gratuitement, évoluez quand vous en avez besoin.</p>
+        <?php $cur = CurrencyService::info(); ?>
+        <div class="dropdown d-inline-block">
+            <button class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" type="button">
+                <i class="bi bi-globe2 me-1"></i>Devise : <?= e($cur['code']) ?> (<?= e($cur['symbol']) ?>)
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" style="max-height:280px;overflow:auto;">
+                <?php foreach (CurrencyService::all() as $code => $c): ?>
+                    <li><a class="dropdown-item <?= $code === $cur['code'] ? 'active' : '' ?>" href="<?= e(url('/devise/' . $code)) ?>"><?= e($code) ?> — <?= e($c[1]) ?></a></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+        <div class="text-secondary small mt-2"><i class="bi bi-info-circle me-1"></i>Devise détectée selon votre position. Les tarifs sont convertis depuis l'euro (à titre indicatif).</div>
     </div>
 </section>
 

@@ -300,6 +300,12 @@ function dashboard_path_for_role(?string $role): string
     };
 }
 
+/** Formate un montant (stocké en EUR) dans la devise du visiteur. */
+function money(float $amountEur): string
+{
+    return CurrencyService::format($amountEur);
+}
+
 function json_response(array $payload, int $status = 200): never
 {
     http_response_code($status);

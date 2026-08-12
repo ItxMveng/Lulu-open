@@ -12,6 +12,11 @@ Router::get('/legal', 'PageController@legal');
 Router::get('/services', 'PageController@services');
 Router::get('/emplois', 'PageController@emplois');
 Router::get('/pricing', 'SubscriptionController@showPlans');
+Router::get('/devise/{code}', static function (string $code): never {
+    CurrencyService::set($code);
+    $ref = $_SERVER['HTTP_REFERER'] ?? '/pricing';
+    redirect(str_starts_with($ref, APP_URL) ? $ref : '/pricing');
+});
 
 Router::get('/search', 'SearchController@searchAll');
 Router::get('/search/profils', 'SearchController@searchProfiles');

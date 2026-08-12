@@ -19,7 +19,7 @@ $typeLabels = ['emploi' => 'Emploi', 'mission' => 'Mission', 'stage' => 'Stage']
                         <span><i class="bi bi-geo-alt me-1"></i><?= e((string) ($offer['location'] ?? 'Non précisé')) ?></span>
                         <?php if (!empty($offer['contract_type'])): ?><span><i class="bi bi-file-text me-1"></i><?= e((string) $offer['contract_type']) ?></span><?php endif; ?>
                         <?php if (!empty($offer['salary_min']) || !empty($offer['salary_max'])): ?>
-                            <span><i class="bi bi-cash-coin me-1"></i><?= e((string) ($offer['salary_min'] ?? '')) ?><?= !empty($offer['salary_max']) ? ' – ' . e((string) $offer['salary_max']) : '' ?> €</span>
+                            <span><i class="bi bi-cash-coin me-1"></i><?= e(money((float) ($offer['salary_min'] ?? 0))) ?><?= !empty($offer['salary_max']) ? ' – ' . e(money((float) $offer['salary_max'])) : '' ?></span>
                         <?php endif; ?>
                     </div>
                     <hr>

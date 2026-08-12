@@ -31,9 +31,17 @@
             </div>
         </div>
         <hr class="my-4" style="border-color: var(--lulu-border);">
-        <div class="d-flex flex-column flex-md-row justify-content-between gap-2 small text-secondary">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 small text-secondary">
             <span>© <?= date('Y') ?> LULU-OPEN. Tous droits réservés.</span>
-            <span>Fait avec soin pour les talents et les entreprises.</span>
+            <?php $cur = CurrencyService::info(); ?>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" type="button"><i class="bi bi-globe2 me-1"></i><?= e($cur['code']) ?></button>
+                <ul class="dropdown-menu dropdown-menu-end" style="max-height:260px;overflow:auto;">
+                    <?php foreach (CurrencyService::all() as $code => $c): ?>
+                        <li><a class="dropdown-item <?= $code === $cur['code'] ? 'active' : '' ?>" href="<?= e(url('/devise/' . $code)) ?>"><?= e($code) ?> — <?= e($c[1]) ?></a></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
         </div>
     </div>
 </footer>

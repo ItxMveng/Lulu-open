@@ -27,7 +27,7 @@ $isEntreprise = (string) ($profile['role'] ?? '') === 'entreprise';
                             <h1 class="h3 mb-1"><?= e($displayName) ?></h1>
                             <p class="text-secondary mb-0">
                                 <i class="bi bi-geo-alt me-1"></i><?= e((string) ($profile['location'] ?? 'Non renseignée')) ?>
-                                <?php if (!$isEntreprise && $rate !== null && $rate !== ''): ?><span class="mx-2">·</span><span class="text-primary fw-semibold"><?= e((string) $rate) ?> €/h</span><?php endif; ?>
+                                <?php if (!$isEntreprise && $rate !== null && $rate !== ''): ?><span class="mx-2">·</span><span class="text-primary fw-semibold"><?= e(money((float) $rate)) ?>/h</span><?php endif; ?>
                                 <?php if (!empty($profile['availability'])): ?><span class="mx-2">·</span><i class="bi bi-clock me-1"></i><?= e((string) $profile['availability']) ?><?php endif; ?>
                             </p>
                         </div>
