@@ -117,5 +117,37 @@ final class Lang
         'Pourquoi LULU-OPEN ?' => 'Why LULU-OPEN?', 'Questions fréquentes' => 'Frequently asked questions',
         'Ils nous font confiance' => 'They trust us', 'Commencer gratuitement' => 'Get started for free',
         'Comment ça marche' => 'How it works', 'Nos chiffres' => 'Our numbers',
+        // Section fonctionnalités
+        'Tout ce qu\'il vous faut, au même endroit' => 'Everything you need, in one place',
+        'Une plateforme complète pensée pour l\'Afrique et ouverte sur le monde.' => 'A complete platform built for Africa and open to the world.',
+        'Candidature en 1 clic' => 'One-click application',
+        'Postulez avec votre CV et une lettre générée par l\'IA, sans friction.' => 'Apply with your resume and an AI-generated cover letter, frictionless.',
+        'Assistant IA' => 'AI assistant',
+        'Analyse de CV, génération de CV et de lettres adaptées à chaque offre.' => 'Resume analysis, resume and cover letter generation tailored to each offer.',
+        'Messagerie sécurisée' => 'Secure messaging',
+        'Échangez directement avec les recruteurs ou les candidats en toute sécurité.' => 'Chat directly with recruiters or candidates, securely.',
+        'Entreprises vérifiées' => 'Verified companies',
+        'Chaque entreprise est vérifiée : fini les arnaques, place à la confiance.' => 'Every company is verified: no more scams, only trust.',
+        'Multi-devises' => 'Multi-currency',
+        'Les tarifs s\'affichent automatiquement dans la devise de votre pays.' => 'Prices are automatically shown in your country\'s currency.',
+        'Bilingue FR / EN' => 'Bilingual FR / EN',
+        'Naviguez en français ou en anglais, selon votre préférence.' => 'Browse in French or English, as you prefer.',
+        // Stats
+        'talents actifs' => 'active talents', 'offres en ligne' => 'live offers',
+        'domaines métiers' => 'job fields', 'entreprises vérifiées' => 'verified companies',
+        // Témoignages
+        'Ils en parlent mieux que nous' => 'They say it better than us',
+        'Des talents et des entreprises qui avancent avec LULU-OPEN.' => 'Talents and companies moving forward with LULU-OPEN.',
+        // FAQ
+        'Questions fréquentes' => 'Frequently asked questions',
+        'Tout ce que vous devez savoir avant de commencer.' => 'Everything you need to know before you start.',
+        'Est-ce gratuit ?' => 'Is it free?',
+        'Oui, la création de compte et la candidature sont gratuites. Des plans payants débloquent des fonctionnalités avancées.' => 'Yes, creating an account and applying are free. Paid plans unlock advanced features.',
+        'Comment fonctionne l\'IA ?' => 'How does the AI work?',
+        'Notre assistant analyse votre profil et l\'offre pour générer un CV et une lettre adaptés, et évaluer votre adéquation.' => 'Our assistant analyzes your profile and the offer to generate a tailored resume and cover letter, and assess your fit.',
+        'Comment être sûr qu\'une entreprise est fiable ?' => 'How do I know a company is trustworthy?',
+        'Toutes les entreprises passent par une vérification manuelle de notre équipe avant de pouvoir publier des offres.' => 'All companies go through a manual verification by our team before they can post offers.',
+        'Dans quels pays êtes-vous présents ?' => 'In which countries are you present?',
+        'La plateforme est pensée pour l\'Afrique et ouverte au monde entier, avec gestion automatique des devises locales.' => 'The platform is designed for Africa and open worldwide, with automatic local currency handling.',
     ];
 }

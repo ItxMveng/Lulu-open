@@ -2,6 +2,14 @@
 
 <!-- ============ HERO ============ -->
 <section class="hero">
+    <div class="hero-floats" aria-hidden="true">
+        <span class="float-chip" style="top:14%;left:6%;animation-delay:0s;"><i class="bi bi-code-slash"></i>Développeur</span>
+        <span class="float-chip" style="top:26%;right:8%;animation-delay:1.2s;"><i class="bi bi-palette"></i>Designer</span>
+        <span class="float-chip" style="top:64%;left:9%;animation-delay:2s;"><i class="bi bi-megaphone"></i>Marketing</span>
+        <span class="float-chip" style="bottom:14%;right:10%;animation-delay:0.6s;"><i class="bi bi-graph-up"></i>Data Analyst</span>
+        <span class="float-chip" style="top:44%;left:3%;animation-delay:2.6s;"><i class="bi bi-building"></i>Entreprise vérifiée</span>
+        <span class="float-chip" style="bottom:24%;right:4%;animation-delay:1.8s;"><i class="bi bi-cup-hot"></i>Cuisinier</span>
+    </div>
     <div class="container py-5 py-lg-6">
         <div class="row justify-content-center text-center">
             <div class="col-lg-9">
@@ -58,6 +66,37 @@
 </section>
 <?php endif; ?>
 
+<!-- ============ FONCTIONNALITÉS ============ -->
+<section class="section reveal">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="hero-eyebrow mb-3"><i class="bi bi-grid-1x2"></i> <?= t('Nos chiffres') ?></span>
+            <h2 class="h3 mb-2"><?= t('Tout ce qu\'il vous faut, au même endroit') ?></h2>
+            <p class="text-secondary mb-0 mx-auto" style="max-width: 52ch;"><?= t('Une plateforme complète pensée pour l\'Afrique et ouverte sur le monde.') ?></p>
+        </div>
+        <div class="row g-4">
+            <?php
+            $features = [
+                ['bi-lightning-charge-fill', 'Candidature en 1 clic', 'Postulez avec votre CV et une lettre générée par l\'IA, sans friction.', 'text-warning'],
+                ['bi-robot', 'Assistant IA', 'Analyse de CV, génération de CV et de lettres adaptées à chaque offre.', 'text-primary'],
+                ['bi-shield-lock-fill', 'Messagerie sécurisée', 'Échangez directement avec les recruteurs ou les candidats en toute sécurité.', 'text-success'],
+                ['bi-patch-check-fill', 'Entreprises vérifiées', 'Chaque entreprise est vérifiée : fini les arnaques, place à la confiance.', 'text-primary'],
+                ['bi-globe2', 'Multi-devises', 'Les tarifs s\'affichent automatiquement dans la devise de votre pays.', 'text-success'],
+                ['bi-translate', 'Bilingue FR / EN', 'Naviguez en français ou en anglais, selon votre préférence.', 'text-warning'],
+            ];
+            foreach ($features as [$icon, $title, $desc, $color]): ?>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card card-hover h-100 p-4">
+                        <span class="category-icon mb-3"><i class="bi <?= e($icon) ?> <?= e($color) ?>"></i></span>
+                        <h3 class="h5 mb-2"><?= t($title) ?></h3>
+                        <p class="text-secondary small mb-0"><?= t($desc) ?></p>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+
 <!-- ============ COMMENT ÇA MARCHE ============ -->
 <section class="section bg-surface-2 reveal">
     <div class="container">
@@ -94,14 +133,80 @@
     </div>
 </section>
 
-<!-- ============ CONFIANCE / STATS ============ -->
+<!-- ============ CHIFFRES RÉELS ============ -->
+<?php $hs = $homeStats ?? []; ?>
 <section class="section reveal">
     <div class="container">
-        <div class="row text-center g-4">
-            <div class="col-6 col-lg-3"><div class="stat-value">2</div><div class="text-secondary small">parcours dédiés</div></div>
-            <div class="col-6 col-lg-3"><div class="stat-value"><i class="bi bi-lightning-charge-fill text-warning"></i></div><div class="text-secondary small">candidature en 1 clic</div></div>
-            <div class="col-6 col-lg-3"><div class="stat-value"><i class="bi bi-robot"></i></div><div class="text-secondary small">analyse IA des CV</div></div>
-            <div class="col-6 col-lg-3"><div class="stat-value"><i class="bi bi-shield-check text-success"></i></div><div class="text-secondary small">messagerie sécurisée</div></div>
+        <div class="cta-band p-4 p-lg-5">
+            <div class="row text-center g-4 text-white">
+                <div class="col-6 col-lg-3"><div class="stat-value text-white"><?= (int) ($hs['talents'] ?? 0) ?>+</div><div class="opacity-75 small"><?= t('talents actifs') ?></div></div>
+                <div class="col-6 col-lg-3"><div class="stat-value text-white"><?= (int) ($hs['offers'] ?? 0) ?>+</div><div class="opacity-75 small"><?= t('offres en ligne') ?></div></div>
+                <div class="col-6 col-lg-3"><div class="stat-value text-white"><?= (int) ($hs['categories'] ?? 0) ?></div><div class="opacity-75 small"><?= t('domaines métiers') ?></div></div>
+                <div class="col-6 col-lg-3"><div class="stat-value text-white"><?= (int) ($hs['companies'] ?? 0) ?></div><div class="opacity-75 small"><?= t('entreprises vérifiées') ?></div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ TÉMOIGNAGES ============ -->
+<section class="section reveal">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="h3 mb-2"><?= t('Ils en parlent mieux que nous') ?></h2>
+            <p class="text-secondary mb-0"><?= t('Des talents et des entreprises qui avancent avec LULU-OPEN.') ?></p>
+        </div>
+        <div class="row g-4">
+            <?php
+            $testimonials = [
+                ['Aminata D.', 'Développeuse — Abidjan', 'Grâce à l\'assistant IA, j\'ai décroché un entretien en une semaine. Le CV généré était bluffant.', 'AD'],
+                ['Sahel Talents', 'Cabinet de recrutement — Dakar', 'Le matching IA nous fait gagner un temps fou pour trier les candidatures reçues.', 'ST'],
+                ['Kwame M.', 'Designer — Douala', 'Enfin une plateforme sérieuse où les entreprises sont vérifiées. Je postule en confiance.', 'KM'],
+            ];
+            foreach ($testimonials as [$name, $role, $quote, $ini]): ?>
+                <div class="col-md-4">
+                    <div class="card h-100 p-4">
+                        <div class="text-warning mb-2"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
+                        <p class="mb-3">« <?= t($quote) ?> »</p>
+                        <div class="d-flex align-items-center gap-2 mt-auto">
+                            <span class="avatar-sm"><?= e($ini) ?></span>
+                            <div><div class="fw-semibold small"><?= e($name) ?></div><div class="text-secondary" style="font-size:.8rem;"><?= e($role) ?></div></div>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="section bg-surface-2 reveal">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center mb-4">
+                    <h2 class="h3 mb-2"><?= t('Questions fréquentes') ?></h2>
+                    <p class="text-secondary mb-0"><?= t('Tout ce que vous devez savoir avant de commencer.') ?></p>
+                </div>
+                <div class="accordion" id="faqAccordion">
+                    <?php
+                    $faq = [
+                        ['Est-ce gratuit ?', 'Oui, la création de compte et la candidature sont gratuites. Des plans payants débloquent des fonctionnalités avancées.'],
+                        ['Comment fonctionne l\'IA ?', 'Notre assistant analyse votre profil et l\'offre pour générer un CV et une lettre adaptés, et évaluer votre adéquation.'],
+                        ['Comment être sûr qu\'une entreprise est fiable ?', 'Toutes les entreprises passent par une vérification manuelle de notre équipe avant de pouvoir publier des offres.'],
+                        ['Dans quels pays êtes-vous présents ?', 'La plateforme est pensée pour l\'Afrique et ouverte au monde entier, avec gestion automatique des devises locales.'],
+                    ];
+                    foreach ($faq as $i => [$q, $a]): ?>
+                        <div class="accordion-item border-0 mb-2 rounded-3 overflow-hidden">
+                            <h3 class="accordion-header">
+                                <button class="accordion-button <?= $i === 0 ? '' : 'collapsed' ?>" type="button" data-bs-toggle="collapse" data-bs-target="#faq<?= $i ?>"><?= t($q) ?></button>
+                            </h3>
+                            <div id="faq<?= $i ?>" class="accordion-collapse collapse <?= $i === 0 ? 'show' : '' ?>" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body text-secondary"><?= t($a) ?></div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
         </div>
     </div>
 </section>

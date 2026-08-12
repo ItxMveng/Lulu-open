@@ -237,6 +237,18 @@ a:focus-visible, .btn:focus-visible, .form-control:focus-visible, .nav-link:focu
         var(--lulu-bg);
     overflow: hidden;
 }
+.hero-floats { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.hero-floats .float-chip {
+    position: absolute; background: var(--lulu-surface); border: 1px solid var(--lulu-border);
+    border-radius: var(--lulu-radius-pill); padding: 0.4rem 0.9rem; font-size: 0.82rem; font-weight: 600;
+    color: var(--lulu-primary-700); box-shadow: var(--lulu-shadow); display: inline-flex; align-items: center; gap: 0.4rem;
+    animation: lulu-float 6s ease-in-out infinite;
+}
+.hero-floats .float-chip i { color: var(--lulu-secondary); }
+@keyframes lulu-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+.hero > .container { position: relative; z-index: 1; }
+@media (max-width: 991.98px) { .hero-floats { display: none; } }
+
 .hero-eyebrow {
     display: inline-flex; align-items: center; gap: 0.5rem;
     background: #E0F2FE; color: var(--lulu-primary-700);

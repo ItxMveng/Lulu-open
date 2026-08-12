@@ -5,10 +5,18 @@ final class PageController extends Controller
 {
     public function home(): void
     {
+        $pdo = db();
+        $count = static fn (string $sql): int => (int) $pdo->query($sql)->fetchColumn();
         $this->render('pages/home', [
             'title' => 'Recrutement & talents',
             'fullWidth' => true,
             'categories' => (new Category())->all(),
+            'homeStats' => [
+                'talents' => $count("SELECT COUNT(*) FROM users WHERE role='client' AND status='active'"),
+                'offers' => $count("SELECT COUNT(*) FROM offers WHERE status='active'"),
+                'categories' => $count('SELECT COUNT(*) FROM categories'),
+                'companies' => $count("SELECT COUNT(*) FROM users WHERE role='entreprise' AND verification_status='verified'"),
+            ],
         ]);
     }
 
