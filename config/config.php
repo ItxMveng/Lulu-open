@@ -95,7 +95,9 @@ function normalize_base_uri(?string $uri): string
 function is_https(): bool
 {
     return (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-        || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
+        || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
+        // Derrière un proxy (Render, Cloudflare…), le TLS est terminé en amont.
+        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https');
 }
 
 load_environment_file(BASE_PATH . DIRECTORY_SEPARATOR . '.env');

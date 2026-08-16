@@ -1,0 +1,5 @@
+# Forcer LF pour les scripts shell et fichiers exécutés sous Linux (Render)
+*.sh text eol=lf
+docker/entrypoint.sh text eol=lf
+Dockerfile text eol=lf
+*.php text

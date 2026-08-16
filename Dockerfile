@@ -1,0 +1,35 @@
+# LULU-OPEN — image de production (PHP 8.2 + Apache)
+FROM php:8.2-apache
+
+# Dépendances système + poppler-utils (pdftotext, pour la lecture des CV PDF)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libzip-dev libpng-dev libjpeg-dev libonig-dev libicu-dev \
+        poppler-utils unzip \
+    && docker-php-ext-configure gd --with-jpeg \
+    && docker-php-ext-install pdo_mysql mbstring zip intl gd \
+    && a2enmod rewrite headers \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Réglages PHP production
+RUN { \
+      echo 'upload_max_filesize=10M'; \
+      echo 'post_max_size=12M'; \
+      echo 'memory_limit=256M'; \
+      echo 'max_execution_time=60'; \
+      echo 'expose_php=Off'; \
+    } > /usr/local/etc/php/conf.d/lulu.ini
+
+# Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www/html
+COPY . /var/www/html
+
+# Dépendances PHP (production)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress || true
+
+# Dossiers inscriptibles (uploads + logs)
+RUN mkdir -p uploads/cv uploads/photos uploads/verifications logs/mail_previews \
+    && chown -R www-data:www-data uploads logs
+
+ENTRYPOINT ["/var/www/html/docker/entrypoint.sh"]

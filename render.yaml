@@ -1,0 +1,60 @@
+services:
+  - type: web
+    name: lulu-open
+    runtime: docker
+    plan: free
+    region: frankfurt
+    healthCheckPath: /robots.txt
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_NAME
+        value: LULU-OPEN
+      - key: APP_LOCALE
+        value: fr_FR
+      # À définir après création : https://<nom>.onrender.com
+      - key: APP_URL
+        sync: false
+      - key: APP_KEY
+        generateValue: true
+      - key: DEFAULT_CURRENCY
+        value: XOF
+      # Base MySQL managée externe (ex: Clever Cloud, Aiven, PlanetScale…)
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASS
+        sync: false
+      - key: DB_CHARSET
+        value: utf8mb4
+      # IA (clé Mistral)
+      - key: AI_PROVIDER
+        value: mistral
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: MISTRAL_MODEL
+        value: mistral-small-latest
+      # Emails (SMTP réel : Brevo, Mailgun, Gmail SMTP…)
+      - key: MAIL_HOST
+        sync: false
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USER
+        sync: false
+      - key: MAIL_PASS
+        sync: false
+      - key: MAIL_ENCRYPTION
+        value: tls
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: LULU-OPEN
