@@ -1,167 +1,123 @@
 <?php
-/**
- * Model Message - Gestion de la messagerie CLIENT
- */
-require_once __DIR__ . '/../config/db.php';
+declare(strict_types=1);
 
-class Message {
-    private $db;
-    protected $table = 'messages';
-    
-    public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+final class Message extends Model
+{
+    public function getConversations(int $userId): array
+    {
+        $statement = $this->db->prepare(
+            'SELECT conversations.*, 
+                    CASE WHEN conversations.participant_1 = :user_id THEN conversations.participant_2 ELSE conversations.participant_1 END AS other_user_id,
+                    users.name AS other_user_name,
+                    (SELECT body FROM messages WHERE messages.conversation_id = conversations.id ORDER BY messages.created_at DESC LIMIT 1) AS last_message,
+                    (SELECT COUNT(*) FROM messages WHERE messages.conversation_id = conversations.id AND messages.receiver_id = :user_id AND messages.read_at IS NULL) AS unread_count
+             FROM conversations
+             INNER JOIN users ON users.id = CASE WHEN conversations.participant_1 = :user_id THEN conversations.participant_2 ELSE conversations.participant_1 END
+             WHERE conversations.participant_1 = :user_id OR conversations.participant_2 = :user_id
+             ORDER BY conversations.last_message_at DESC, conversations.updated_at DESC'
+        );
+        $statement->execute(['user_id' => $userId]);
+        return $statement->fetchAll() ?: [];
     }
-    
-    /**
-     * Envoyer un message
-     */
-    public function send($expediteurId, $destinataireId, $sujet, $contenu, $fichierJoint = null) {
-        // Validation stricte ID numérique
-        if (!is_numeric($destinataireId) || $destinataireId <= 0) return false;
-        
-        // Vérifier destinataire existe
-        $stmt = $this->db->prepare("SELECT id FROM utilisateurs WHERE id = ?");
-        $stmt->execute([$destinataireId]);
-        if (!$stmt->fetch()) return false;
-        
-        if (empty(trim($contenu)) && !$fichierJoint) return false;
-        if (!$this->checkRateLimit($expediteurId, $destinataireId)) return false;
-        
-        $sql = "INSERT INTO messages (expediteur_id, destinataire_id, sujet, contenu, fichier_joint) VALUES (?, ?, ?, ?, ?)";
-        try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([$expediteurId, $destinataireId, $sujet, $contenu, $fichierJoint]);
-            $messageId = $this->db->lastInsertId();
-            $this->createNotification($destinataireId, $expediteurId, $messageId);
-            return $messageId;
-        } catch (PDOException $e) {
-            return false;
+
+    public function getMessages(int $conversationId, int $userId): array
+    {
+        $statement = $this->db->prepare(
+            'SELECT * FROM messages
+             WHERE conversation_id = :conversation_id
+               AND (sender_id = :user_id OR receiver_id = :user_id)
+               AND NOT ((sender_id = :user_id AND deleted_by_sender_at IS NOT NULL) OR (receiver_id = :user_id AND deleted_by_receiver_at IS NOT NULL))
+             ORDER BY created_at ASC'
+        );
+        $statement->execute(['conversation_id' => $conversationId, 'user_id' => $userId]);
+        return $statement->fetchAll() ?: [];
+    }
+
+    public function getMessagesSince(int $conversationId, int $userId, string $since): array
+    {
+        $statement = $this->db->prepare(
+            'SELECT * FROM messages
+             WHERE conversation_id = :conversation_id
+               AND (sender_id = :user_id OR receiver_id = :user_id)
+               AND created_at > :since
+             ORDER BY created_at ASC'
+        );
+        $statement->execute(['conversation_id' => $conversationId, 'user_id' => $userId, 'since' => $since]);
+        return $statement->fetchAll() ?: [];
+    }
+
+    public function send(array $data): array
+    {
+        $conversationId = $this->findOrCreateConversation((int) $data['sender_id'], (int) $data['receiver_id']);
+        $statement = $this->db->prepare(
+            'INSERT INTO messages (conversation_id, sender_id, receiver_id, body, created_at, updated_at)
+             VALUES (:conversation_id, :sender_id, :receiver_id, :body, NOW(), NOW())'
+        );
+        $statement->execute([
+            'conversation_id' => $conversationId,
+            'sender_id' => $data['sender_id'],
+            'receiver_id' => $data['receiver_id'],
+            'body' => $data['body'],
+        ]);
+
+        $this->db->prepare('UPDATE conversations SET last_message_at = NOW(), updated_at = NOW() WHERE id = :id')->execute(['id' => $conversationId]);
+
+        return [
+            'conversation_id' => $conversationId,
+            'message_id' => (int) $this->db->lastInsertId(),
+            'timestamp' => date('Y-m-d H:i:s'),
+        ];
+    }
+
+    public function markRead(int $conversationId, int $userId): void
+    {
+        $statement = $this->db->prepare('UPDATE messages SET read_at = NOW() WHERE conversation_id = :conversation_id AND receiver_id = :user_id AND read_at IS NULL');
+        $statement->execute(['conversation_id' => $conversationId, 'user_id' => $userId]);
+    }
+
+    public function deleteMessage(int $id, int $userId): void
+    {
+        $statement = $this->db->prepare(
+            'UPDATE messages SET
+                deleted_by_sender_at = CASE WHEN sender_id = :user_id THEN NOW() ELSE deleted_by_sender_at END,
+                deleted_by_receiver_at = CASE WHEN receiver_id = :user_id THEN NOW() ELSE deleted_by_receiver_at END
+             WHERE id = :id'
+        );
+        $statement->execute(['id' => $id, 'user_id' => $userId]);
+    }
+
+    public function deleteConversation(int $id, int $userId): void
+    {
+        $statement = $this->db->prepare(
+            'UPDATE messages SET
+                deleted_by_sender_at = CASE WHEN sender_id = :user_id THEN NOW() ELSE deleted_by_sender_at END,
+                deleted_by_receiver_at = CASE WHEN receiver_id = :user_id THEN NOW() ELSE deleted_by_receiver_at END
+             WHERE conversation_id = :conversation_id'
+        );
+        $statement->execute(['conversation_id' => $id, 'user_id' => $userId]);
+    }
+
+    public function openConversation(int $firstUserId, int $secondUserId): int
+    {
+        return $this->findOrCreateConversation($firstUserId, $secondUserId);
+    }
+
+    private function findOrCreateConversation(int $firstUserId, int $secondUserId): int
+    {
+        $userA = min($firstUserId, $secondUserId);
+        $userB = max($firstUserId, $secondUserId);
+
+        $statement = $this->db->prepare('SELECT id FROM conversations WHERE participant_1 = :a AND participant_2 = :b LIMIT 1');
+        $statement->execute(['a' => $userA, 'b' => $userB]);
+        $existing = $statement->fetch();
+
+        if ($existing) {
+            return (int) $existing['id'];
         }
-    }
-    
-    /**
-     * Récupérer liste des conversations
-     */
-    public function getConversations($utilisateurId) {
-        $sql = "SELECT 
-                CASE WHEN m.expediteur_id = ? THEN m.destinataire_id ELSE m.expediteur_id END AS interlocuteur_id,
-                u.prenom, u.nom, u.photo_profil,
-                m.date_envoi AS derniere_date
-                FROM messages m
-                INNER JOIN (
-                    SELECT 
-                        CASE WHEN expediteur_id = ? THEN destinataire_id ELSE expediteur_id END AS contact_id,
-                        MAX(date_envoi) AS max_date
-                    FROM messages
-                    WHERE expediteur_id = ? OR destinataire_id = ?
-                    GROUP BY contact_id
-                ) latest ON (m.expediteur_id = ? AND m.destinataire_id = latest.contact_id OR m.destinataire_id = ? AND m.expediteur_id = latest.contact_id) AND m.date_envoi = latest.max_date
-                JOIN utilisateurs u ON u.id = CASE WHEN m.expediteur_id = ? THEN m.destinataire_id ELSE m.expediteur_id END
-                ORDER BY derniere_date DESC";
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$utilisateurId, $utilisateurId, $utilisateurId, $utilisateurId, $utilisateurId, $utilisateurId, $utilisateurId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    /**
-     * Récupérer historique conversation
-     */
-    public function getConversation($utilisateurId, $interlocuteurId, $page = 1, $perPage = 50) {
-        $offset = ($page - 1) * $perPage;
-        $sql = "SELECT m.*, u.prenom, u.nom, u.photo_profil
-                FROM messages m
-                JOIN utilisateurs u ON u.id = m.expediteur_id
-                WHERE (m.expediteur_id = ? AND m.destinataire_id = ?)
-                   OR (m.expediteur_id = ? AND m.destinataire_id = ?)
-                ORDER BY m.date_envoi ASC LIMIT ? OFFSET ?";
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$utilisateurId, $interlocuteurId, $interlocuteurId, $utilisateurId, $perPage, $offset]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    /**
-     * Marquer messages comme lus
-     */
-    public function markAsRead($utilisateurId, $interlocuteurId) {
-        $sql = "UPDATE messages SET lu = 1 
-                WHERE destinataire_id = ? AND expediteur_id = ? AND lu = 0";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$utilisateurId, $interlocuteurId]);
-    }
-    
-    /**
-     * Compter messages non lus
-     */
-    public function countUnread($utilisateurId) {
-        $sql = "SELECT COUNT(*) FROM messages WHERE destinataire_id = ? AND lu = 0";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$utilisateurId]);
-        return $stmt->fetchColumn();
-    }
-    
-    /**
-     * Vérifier rate limit (anti-spam)
-     */
-    private function checkRateLimit($expediteurId, $destinataireId) {
-        $sql = "SELECT COUNT(*) FROM messages 
-                WHERE expediteur_id = ? AND destinataire_id = ? AND DATE(date_envoi) = CURDATE()";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$expediteurId, $destinataireId]);
-        return $stmt->fetchColumn() < 10;
-    }
-    
-    /**
-     * Supprimer un message
-     */
-    public function deleteMessage($messageId, $userId, $adminOnly = false) {
-        if ($adminOnly) {
-            // L'admin ne peut supprimer que ses propres messages
-            $sql = "DELETE FROM messages WHERE id = ? AND expediteur_id = ?";
-            $stmt = $this->db->prepare($sql);
-            return $stmt->execute([$messageId, $userId]);
-        } else {
-            // Utilisateur normal peut supprimer ses messages reçus ou envoyés
-            $sql = "DELETE FROM messages WHERE id = ? AND (expediteur_id = ? OR destinataire_id = ?)";
-            $stmt = $this->db->prepare($sql);
-            return $stmt->execute([$messageId, $userId, $userId]);
-        }
-    }
-    
-    /**
-     * Supprimer une conversation complète
-     */
-    public function deleteConversation($userId1, $userId2) {
-        $sql = "DELETE FROM messages WHERE 
-                (expediteur_id = ? AND destinataire_id = ?) OR 
-                (expediteur_id = ? AND destinataire_id = ?)";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$userId1, $userId2, $userId2, $userId1]);
-    }
-    
-    /**
-     * Marquer un message spécifique comme lu
-     */
-    public function markMessageAsRead($messageId, $userId) {
-        $sql = "UPDATE messages SET lu = 1 WHERE id = ? AND destinataire_id = ?";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$messageId, $userId]);
-    }
-    
-    /**
-     * Créer notification nouveau message
-     */
-    private function createNotification($destinataireId, $expediteurId, $messageId) {
-        require_once __DIR__ . '/Notification.php';
-        $stmt = $this->db->prepare("SELECT prenom, nom FROM utilisateurs WHERE id = ?");
-        $stmt->execute([$expediteurId]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        $notif = new Notification();
-        $notif->create($destinataireId, 'message', 'Nouveau message', 
-            "Vous avez reçu un message de {$user['prenom']} {$user['nom']}", 
-            "/lulu/messages.php?id={$expediteurId}");
+
+        $insert = $this->db->prepare('INSERT INTO conversations (participant_1, participant_2, last_message_at, created_at, updated_at) VALUES (:a, :b, NOW(), NOW(), NOW())');
+        $insert->execute(['a' => $userA, 'b' => $userB]);
+
+        return (int) $this->db->lastInsertId();
     }
 }
-?>

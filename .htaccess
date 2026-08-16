@@ -1,0 +1,21 @@
+# Front controller : tout ce qui n'est pas un fichier/dossier réel passe par index.php
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]
+
+# Sécurité : seul index.php peut être exécuté directement (le reste passe par le routeur)
+<FilesMatch "\.php$">
+    Require all denied
+</FilesMatch>
+<Files "index.php">
+    Require all granted
+</Files>
+
+# Bloquer l'accès aux fichiers sensibles
+<FilesMatch "^\.env|\.(md|lock|sh|sql|pem)$|composer\.(json|lock)">
+    Require all denied
+</FilesMatch>
+
+# Ne pas lister les répertoires
+Options -Indexes

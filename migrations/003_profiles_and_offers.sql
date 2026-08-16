@@ -1,0 +1,35 @@
+ALTER TABLE profiles
+    ADD COLUMN lat DECIMAL(10, 8) NULL AFTER location,
+    ADD COLUMN lng DECIMAL(11, 8) NULL AFTER lat,
+    ADD COLUMN categories JSON NULL AFTER lng,
+    ADD COLUMN skills JSON NULL AFTER categories,
+    ADD COLUMN languages JSON NULL AFTER skills,
+    ADD COLUMN hourly_rate DECIMAL(10, 2) NULL AFTER languages,
+    ADD COLUMN availability VARCHAR(120) NULL AFTER hourly_rate,
+    ADD COLUMN portfolio JSON NULL AFTER availability,
+    ADD COLUMN certifications JSON NULL AFTER portfolio,
+    ADD COLUMN profile_views INT UNSIGNED NOT NULL DEFAULT 0 AFTER certifications;
+
+CREATE TABLE IF NOT EXISTS cv_documents (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_name VARCHAR(190) NOT NULL,
+    uploaded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_primary TINYINT(1) NOT NULL DEFAULT 0,
+    CONSTRAINT fk_cv_documents_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE offers
+    ADD COLUMN contract_type VARCHAR(120) NULL AFTER type,
+    ADD COLUMN location VARCHAR(190) NULL AFTER contract_type,
+    ADD COLUMN remote_ok TINYINT(1) NOT NULL DEFAULT 0 AFTER location,
+    ADD COLUMN salary_min DECIMAL(10, 2) NULL AFTER remote_ok,
+    ADD COLUMN salary_max DECIMAL(10, 2) NULL AFTER salary_min,
+    ADD COLUMN skills_required JSON NULL AFTER salary_max,
+    ADD COLUMN category_id BIGINT UNSIGNED NULL AFTER skills_required,
+    ADD COLUMN expires_at DATETIME NULL AFTER status,
+    ADD COLUMN views_count INT UNSIGNED NOT NULL DEFAULT 0 AFTER expires_at;
+
+ALTER TABLE offers
+    ADD CONSTRAINT fk_offers_category FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL;

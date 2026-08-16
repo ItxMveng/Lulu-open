@@ -1,0 +1,4 @@
+<section>
+    <h1 class="mb-4">Éditer une page</h1>
+    <form method="post" action="<?= e(url('/admin/pages/' . ($page['slug'] ?? 'page'))) ?>" class="card shadow-sm border-0"><div class="card-body"><?= csrf_field() ?><div class="mb-3"><label class="form-label">Titre</label><input class="form-control" type="text" name="title" value="<?= e((string) ($page['title'] ?? '')) ?>"></div><div class="mb-3"><label class="form-label">Contenu</label><textarea class="form-control" name="body" rows="14"><?= e((string) ($page['body'] ?? '')) ?></textarea></div><button class="btn btn-primary" type="submit">Enregistrer</button></div></form>
+</section>

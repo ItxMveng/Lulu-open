@@ -1,72 +1,41 @@
 <?php
-/**
- * Model Notification - Gestion des notifications
- */
-require_once __DIR__ . '/../config/db.php';
+declare(strict_types=1);
 
-class Notification {
-    private $db;
-    
-    public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+final class Notification extends Model
+{
+    public function getUnread(int $userId): array
+    {
+        $statement = $this->db->prepare('SELECT * FROM notifications WHERE user_id = :user_id AND read_at IS NULL ORDER BY created_at DESC LIMIT 20');
+        $statement->execute(['user_id' => $userId]);
+        return $statement->fetchAll() ?: [];
     }
-    
-    /**
-     * Créer une notification
-     */
-    public function create($utilisateurId, $type, $titre, $contenu, $lien = null) {
-        $sql = "INSERT INTO notifications (utilisateur_id, type_notification, titre, contenu, url_action) 
-                VALUES (?, ?, ?, ?, ?)";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$utilisateurId, $type, $titre, $contenu, $lien]);
+
+    public function markRead(int $id): void
+    {
+        $statement = $this->db->prepare('UPDATE notifications SET read_at = NOW() WHERE id = :id');
+        $statement->execute(['id' => $id]);
     }
-    
-    /**
-     * Récupérer notifications
-     */
-    public function getAll($utilisateurId, $page = 1, $perPage = 20) {
-        $offset = ($page - 1) * $perPage;
-        $sql = "SELECT * FROM notifications WHERE utilisateur_id = ? 
-                ORDER BY created_at DESC LIMIT ? OFFSET ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$utilisateurId, $perPage, $offset]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    public function markAllRead(int $userId): void
+    {
+        $statement = $this->db->prepare('UPDATE notifications SET read_at = NOW() WHERE user_id = :user_id AND read_at IS NULL');
+        $statement->execute(['user_id' => $userId]);
     }
-    
-    /**
-     * Marquer comme lu
-     */
-    public function markAsRead($notificationId, $utilisateurId) {
-        $sql = "UPDATE notifications SET lu = 1 WHERE id = ? AND utilisateur_id = ?";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$notificationId, $utilisateurId]);
+
+    public function create(int $userId, string $type, array $data): void
+    {
+        $statement = $this->db->prepare('INSERT INTO notifications (user_id, type, data, created_at) VALUES (:user_id, :type, :data, NOW())');
+        $statement->execute([
+            'user_id' => $userId,
+            'type' => $type,
+            'data' => json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        ]);
     }
-    
-    /**
-     * Marquer toutes comme lues
-     */
-    public function markAllAsRead($utilisateurId) {
-        $sql = "UPDATE notifications SET lu = 1 WHERE utilisateur_id = ? AND lu = 0";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$utilisateurId]);
-    }
-    
-    /**
-     * Compter non lues
-     */
-    public function countUnread($utilisateurId) {
-        $sql = "SELECT COUNT(*) FROM notifications WHERE utilisateur_id = ? AND lu = 0";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$utilisateurId]);
-        return $stmt->fetchColumn();
-    }
-    
-    /**
-     * Supprimer notification
-     */
-    public function delete($notificationId, $utilisateurId) {
-        $sql = "DELETE FROM notifications WHERE id = ? AND utilisateur_id = ?";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$notificationId, $utilisateurId]);
+
+    public function deleteOld(int $daysOld): void
+    {
+        $statement = $this->db->prepare('DELETE FROM notifications WHERE created_at < DATE_SUB(NOW(), INTERVAL :days DAY)');
+        $statement->bindValue(':days', $daysOld, PDO::PARAM_INT);
+        $statement->execute();
     }
 }

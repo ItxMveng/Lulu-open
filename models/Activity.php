@@ -1,105 +1,49 @@
 <?php
-/**
- * Model Activity - Gestion de l'historique d'activité CLIENT
- */
-require_once __DIR__ . '/../config/db.php';
+declare(strict_types=1);
 
-class Activity {
-    private $db;
-    
-    public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+final class Activity extends Model
+{
+    public function log(?int $userId, string $action, array $metadata = []): void
+    {
+        $statement = $this->db->prepare('INSERT INTO activity_logs (user_id, action, metadata, created_at) VALUES (:user_id, :action, :metadata, NOW())');
+        $statement->execute([
+            'user_id' => $userId,
+            'action' => $action,
+            'metadata' => json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        ]);
     }
-    
-    /**
-     * Enregistrer une consultation de profil
-     */
-    public function logConsultation($utilisateurId, $profilType, $profilId) {
-        $sql = "INSERT INTO historique_consultations (utilisateur_id, cible_type, cible_id) 
-                VALUES (?, ?, ?)";
-        try {
-            $stmt = $this->db->prepare($sql);
-            return $stmt->execute([$utilisateurId, $profilType, $profilId]);
-        } catch (PDOException $e) {
-            return false;
+
+    public function getRecent(?int $userId, int $limit = 10): array
+    {
+        if ($userId === null) {
+            $statement = $this->db->prepare('SELECT * FROM activity_logs ORDER BY created_at DESC LIMIT :limit');
+            $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $statement->execute();
+            return $statement->fetchAll() ?: [];
         }
+
+        $statement = $this->db->prepare('SELECT * FROM activity_logs WHERE user_id = :user_id ORDER BY created_at DESC LIMIT :limit');
+        $statement->bindValue(':user_id', $userId, PDO::PARAM_INT);
+        $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $statement->execute();
+        return $statement->fetchAll() ?: [];
     }
-    
-    /**
-     * Compter consultations 7 derniers jours
-     */
-    public function countLast7Days($utilisateurId) {
-        $sql = "SELECT COUNT(*) FROM historique_consultations 
-                WHERE utilisateur_id = ? AND date_consultation >= DATE_SUB(NOW(), INTERVAL 7 DAY)";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$utilisateurId]);
-        return $stmt->fetchColumn();
+
+    public function getStats(?int $userId = null): array
+    {
+        if ($userId === null) {
+            return [
+                'users_total' => (int) db()->query('SELECT COUNT(*) FROM users')->fetchColumn(),
+                'subscriptions_active' => (int) db()->query('SELECT COUNT(*) FROM subscriptions WHERE status = "active"')->fetchColumn(),
+                'messages_total' => (int) db()->query('SELECT COUNT(*) FROM messages')->fetchColumn(),
+                'offers_active' => (int) db()->query('SELECT COUNT(*) FROM offers WHERE status = "active"')->fetchColumn(),
+            ];
+        }
+
+        return [
+            'activity_total' => (int) $this->db->query('SELECT COUNT(*) FROM activity_logs WHERE user_id = ' . (int) $userId)->fetchColumn(),
+            'offers_total' => (int) $this->db->query('SELECT COUNT(*) FROM offers WHERE entreprise_id = ' . (int) $userId)->fetchColumn(),
+            'messages_total' => (int) $this->db->query('SELECT COUNT(*) FROM messages WHERE sender_id = ' . (int) $userId . ' OR receiver_id = ' . (int) $userId)->fetchColumn(),
+        ];
     }
-    
-    /**
-     * Récupérer historique avec filtres
-     */
-    public function getHistory($utilisateurId, $filters = [], $page = 1, $perPage = 20) {
-        $offset = ($page - 1) * $perPage;
-        
-        $sql = "SELECT h.*, 
-                CASE 
-                    WHEN h.cible_type = 'prestataire' THEN pp.titre_professionnel
-                    ELSE CONCAT(u.prenom, ' ', u.nom)
-                END AS nom,
-                CASE 
-                    WHEN h.cible_type = 'prestataire' THEN u2.photo_profil
-                    ELSE u.photo_profil
-                END AS photo,
-                pp.titre_professionnel AS titre
-                FROM historique_consultations h
-                LEFT JOIN profils_prestataires pp ON h.cible_type = 'prestataire' AND h.cible_id = pp.id
-                LEFT JOIN utilisateurs u2 ON pp.utilisateur_id = u2.id
-                LEFT JOIN cvs cv ON h.cible_type = 'candidat' AND h.cible_id = cv.id
-                LEFT JOIN utilisateurs u ON cv.utilisateur_id = u.id
-                WHERE h.utilisateur_id = ?";
-        
-        $params = [$utilisateurId];
-        
-        if (!empty($filters['type'])) {
-            $sql .= " AND h.cible_type = ?";
-            $params[] = $filters['type'];
-        }
-        
-        if (!empty($filters['period'])) {
-            $sql .= " AND h.date_consultation >= DATE_SUB(NOW(), INTERVAL ? DAY)";
-            $params[] = $filters['period'];
-        }
-        
-        $sql .= " ORDER BY h.date_consultation DESC LIMIT ? OFFSET ?";
-        $params[] = $perPage;
-        $params[] = $offset;
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    /**
-     * Compter historique avec filtres
-     */
-    public function countHistory($utilisateurId, $filters = []) {
-        $sql = "SELECT COUNT(*) FROM historique_consultations WHERE utilisateur_id = ?";
-        $params = [$utilisateurId];
-        
-        if (!empty($filters['type'])) {
-            $sql .= " AND cible_type = ?";
-            $params[] = $filters['type'];
-        }
-        
-        if (!empty($filters['period'])) {
-            $sql .= " AND date_consultation >= DATE_SUB(NOW(), INTERVAL ? DAY)";
-            $params[] = $filters['period'];
-        }
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchColumn();
-    }
-    
 }

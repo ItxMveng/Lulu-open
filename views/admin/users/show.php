@@ -1,0 +1,8 @@
+<section>
+    <h1 class="mb-4">Fiche utilisateur</h1>
+    <div class="row g-4">
+        <div class="col-lg-6"><div class="card shadow-sm"><div class="card-body"><h2 class="h5">Informations</h2><p><strong>Nom:</strong> <?= e((string) ($user['name'] ?? '')) ?></p><p><strong>Email:</strong> <?= e((string) ($user['email'] ?? '')) ?></p><p><strong>Rôle:</strong> <?= e((string) ($user['role'] ?? '')) ?></p><p><strong>Statut:</strong> <?= e((string) ($user['status'] ?? '')) ?></p></div></div></div>
+        <div class="col-lg-6"><div class="card shadow-sm"><div class="card-body"><h2 class="h5">Abonnement</h2><p><?= e((string) ($subscription['plan_name'] ?? 'Aucun')) ?></p><div class="d-flex gap-2"><a class="btn btn-sm btn-outline-warning" href="<?= e(url('/admin/users/' . ($user['id'] ?? 0) . '/suspend')) ?>">Suspendre</a><a class="btn btn-sm btn-outline-success" href="<?= e(url('/admin/users/' . ($user['id'] ?? 0) . '/restore')) ?>">Réactiver</a><a class="btn btn-sm btn-outline-danger" href="<?= e(url('/admin/users/' . ($user['id'] ?? 0) . '/delete')) ?>">Supprimer</a></div></div></div></div>
+        <div class="col-12"><div class="card shadow-sm"><div class="card-body"><h2 class="h5">Activité récente</h2><ul class="mb-0"><?php foreach (($activities ?? []) as $activity): ?><li><?= e((string) $activity['action']) ?> - <?= e((string) $activity['created_at']) ?></li><?php endforeach; ?></ul></div></div></div>
+    </div>
+</section>

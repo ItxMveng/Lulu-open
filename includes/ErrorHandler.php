@@ -1,178 +1,66 @@
 <?php
-/**
- * Gestionnaire d'erreurs centralisé - LULU-OPEN
- * Sépare les erreurs techniques (logs) des messages utilisateur
- */
+declare(strict_types=1);
 
-class ErrorHandler {
-    
-    private static $logFile = null;
-    
-    /**
-     * Initialise le gestionnaire d'erreurs
-     */
-    public static function init() {
-        self::$logFile = BASE_PATH . '/logs/errors.log';
-        
-        // Créer dossier logs si nécessaire
-        $logDir = dirname(self::$logFile);
-        if (!is_dir($logDir)) {
-            mkdir($logDir, 0755, true);
-        }
-        
-        // Configurer selon environnement
-        if (defined('APP_ENV') && APP_ENV === 'production') {
-            ini_set('display_errors', 0);
-            error_reporting(E_ALL);
-        }
+final class ErrorHandler
+{
+    public static function register(): void
+    {
+        set_exception_handler([self::class, 'handleException']);
+        set_error_handler([self::class, 'handleError']);
     }
-    
-    /**
-     * Log une erreur dans le fichier de logs
-     * 
-     * @param string $message Message d'erreur
-     * @param string $level Niveau (ERROR, WARNING, INFO)
-     * @param array $context Contexte additionnel
-     */
-    public static function log($message, $level = 'ERROR', $context = []) {
-        if (!self::$logFile) {
-            self::init();
+
+    public static function handleException(Throwable $throwable): void
+    {
+        self::log($throwable);
+
+        if (APP_ENV === 'production' && !APP_DEBUG) {
+            self::renderHttpError(500, 'Une erreur interne est survenue.');
+            return;
         }
-        
-        $timestamp = date('Y-m-d H:i:s');
-        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $uri = $_SERVER['REQUEST_URI'] ?? 'unknown';
-        $user = $_SESSION['user_id'] ?? 'guest';
-        
-        $logMessage = sprintf(
-            "[%s] [%s] [IP:%s] [User:%s] [URI:%s] %s\n",
-            $timestamp,
-            $level,
-            $ip,
-            $user,
-            $uri,
-            $message
-        );
-        
-        // Ajouter contexte si présent
-        if (!empty($context)) {
-            $logMessage .= "Context: " . json_encode($context, JSON_UNESCAPED_UNICODE) . "\n";
-        }
-        
-        error_log($logMessage, 3, self::$logFile);
+
+        http_response_code(500);
+        header('Content-Type: text/html; charset=UTF-8');
+
+        echo '<h1>Erreur applicative</h1>';
+        echo '<pre>' . e($throwable::class . ': ' . $throwable->getMessage()) . '</pre>';
+        echo '<pre>' . e($throwable->getTraceAsString()) . '</pre>';
     }
-    
-    /**
-     * Affiche une erreur user-friendly
-     * 
-     * @param string $userMessage Message pour l'utilisateur
-     * @param string $technicalMessage Message technique (loggé uniquement)
-     * @param int $httpCode Code HTTP (défaut: 500)
-     */
-    public static function display($userMessage, $technicalMessage = '', $httpCode = 500) {
-        // Logger l'erreur technique
-        if ($technicalMessage) {
-            self::log($technicalMessage, 'ERROR');
+
+    public static function handleError(int $severity, string $message, string $file, int $line): bool
+    {
+        if (!(error_reporting() & $severity)) {
+            return false;
         }
-        
-        // Définir code HTTP
-        http_response_code($httpCode);
-        
-        // En développement, afficher détails
-        if (defined('APP_ENV') && APP_ENV === 'development' && $technicalMessage) {
-            $userMessage .= '<br><small class="text-muted">Détails techniques : ' . htmlspecialchars($technicalMessage) . '</small>';
+
+        throw new ErrorException($message, 0, $severity, $file, $line);
+    }
+
+    public static function renderHttpError(int $status, string $message = ''): never
+    {
+        $layout = request_path() !== '/' && str_starts_with(request_path(), '/admin') ? 'admin' : 'main';
+        $view = $status === 404 ? 'pages/404' : 'pages/error';
+        $title = $status === 404 ? 'Page introuvable' : 'Erreur';
+
+        if (class_exists('View') && is_file(base_path('views/' . $view . '.php'))) {
+            View::render($view, ['title' => $title, 'message' => $message], $layout, $status);
+            exit;
         }
-        
-        // Afficher message utilisateur
-        echo self::renderErrorPage($userMessage, $httpCode);
+
+        echo e($message !== '' ? $message : 'Une erreur est survenue.');
         exit;
     }
-    
-    /**
-     * Génère une page d'erreur HTML
-     */
-    private static function renderErrorPage($message, $code) {
-        $title = match($code) {
-            404 => 'Page non trouvée',
-            403 => 'Accès refusé',
-            500 => 'Erreur serveur',
-            default => 'Erreur'
-        };
-        
-        return <<<HTML
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>$title - LULU-OPEN</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background: linear-gradient(135deg, #000033, #0099FF); min-height: 100vh; display: flex; align-items: center; }
-        .error-container { background: white; border-radius: 15px; padding: 3rem; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
-        .error-code { font-size: 6rem; font-weight: 700; color: #0099FF; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="error-container text-center">
-                    <div class="error-code">$code</div>
-                    <h2 class="mb-3">$title</h2>
-                    <p class="text-muted mb-4">$message</p>
-                    <a href="/lulu/" class="btn btn-primary">
-                        <i class="bi bi-house"></i> Retour à l'accueil
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
-HTML;
-    }
-    
-    /**
-     * Gère les exceptions non capturées
-     */
-    public static function handleException($exception) {
-        self::log(
-            $exception->getMessage(),
-            'EXCEPTION',
-            [
-                'file' => $exception->getFile(),
-                'line' => $exception->getLine(),
-                'trace' => $exception->getTraceAsString()
-            ]
+
+    private static function log(Throwable $throwable): void
+    {
+        $line = sprintf(
+            "[%s] %s in %s:%d\n%s\n\n",
+            date('Y-m-d H:i:s'),
+            $throwable->getMessage(),
+            $throwable->getFile(),
+            $throwable->getLine(),
+            $throwable->getTraceAsString()
         );
-        
-        self::display(
-            'Une erreur inattendue est survenue. Nos équipes ont été notifiées.',
-            $exception->getMessage()
-        );
-    }
-    
-    /**
-     * Gère les erreurs PHP
-     */
-    public static function handleError($errno, $errstr, $errfile, $errline) {
-        $message = "$errstr in $errfile on line $errline";
-        self::log($message, 'PHP_ERROR');
-        
-        // Ne pas afficher les erreurs mineures en production
-        if (defined('APP_ENV') && APP_ENV === 'production') {
-            return true;
-        }
-        
-        return false; // Laisser PHP gérer
+
+        file_put_contents(LOG_PATH . DIRECTORY_SEPARATOR . 'errors.log', $line, FILE_APPEND);
     }
 }
-
-// Initialiser le gestionnaire
-ErrorHandler::init();
-
-// Enregistrer les handlers
-set_exception_handler([ErrorHandler::class, 'handleException']);
-set_error_handler([ErrorHandler::class, 'handleError']);
-?>

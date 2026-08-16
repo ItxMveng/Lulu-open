@@ -1,0 +1,17 @@
+.git
+.gitignore
+.vscode
+.amazonq
+_archive_v1
+vendor
+node_modules
+composer.phar
+logs/*.log
+logs/mail_previews
+uploads/cv/*
+uploads/photos/*
+uploads/verifications/*
+.env
+*.md
+docs
+tests

@@ -1,63 +1,31 @@
 <?php
-/**
- * API Notifications - LULU-OPEN
- */
-header('Content-Type: application/json');
-require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../models/Notification.php';
+declare(strict_types=1);
 
-session_start();
+require_once dirname(__DIR__) . '/config/config.php';
 
-if (!isset($_SESSION['user_id'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Non authentifié']);
-    exit;
+header('Content-Type: application/json; charset=UTF-8');
+
+if (!is_auth()) {
+    json_response(['error' => 'Authentification requise'], 401);
 }
 
-$notifModel = new Notification();
-$action = $_GET['action'] ?? ($_POST['action'] ?? null);
+$model = new Notification();
+$action = (string) ($_GET['action'] ?? $_POST['action'] ?? 'list');
 
-if (!$action) {
-    $data = json_decode(file_get_contents('php://input'), true);
-    $action = $data['action'] ?? null;
+if ($action === 'list') {
+    json_response(['items' => $model->getUnread((int) current_user_id())]);
 }
 
-try {
-    switch ($action) {
-        case 'count':
-            $count = $notifModel->countUnread($_SESSION['user_id']);
-            echo json_encode(['success' => true, 'count' => $count]);
-            break;
-            
-        case 'mark_read':
-            $data = json_decode(file_get_contents('php://input'), true);
-            $notificationId = $data['notification_id'] ?? null;
-            
-            if ($notificationId) {
-                $result = $notifModel->markAsRead($notificationId, $_SESSION['user_id']);
-                echo json_encode(['success' => $result]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'ID manquant']);
-            }
-            break;
-            
-        case 'delete':
-            $data = json_decode(file_get_contents('php://input'), true);
-            $notificationId = $data['notification_id'] ?? null;
-            
-            if ($notificationId) {
-                $result = $notifModel->delete($notificationId, $_SESSION['user_id']);
-                echo json_encode(['success' => $result]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'ID manquant']);
-            }
-            break;
-            
-        default:
-            echo json_encode(['success' => false, 'message' => 'Action inconnue']);
-    }
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+if ($action === 'mark_read' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf($_POST['_csrf_token'] ?? null);
+    $model->markRead((int) ($_POST['id'] ?? 0));
+    json_response(['success' => true]);
 }
-?>
+
+if ($action === 'mark_all_read' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf($_POST['_csrf_token'] ?? null);
+    $model->markAllRead((int) current_user_id());
+    json_response(['success' => true]);
+}
+
+json_response(['error' => 'Action non prise en charge'], 400);
