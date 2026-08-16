@@ -10,6 +10,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && a2enmod rewrite headers \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Autoriser le .htaccess (front controller) sur le DocumentRoot
+RUN printf '<Directory /var/www/html>\n    AllowOverride All\n    Require all granted\n</Directory>\n' \
+      > /etc/apache2/conf-available/lulu-dir.conf \
+    && a2enconf lulu-dir
+
 # Réglages PHP production
 RUN { \
       echo 'upload_max_filesize=10M'; \
