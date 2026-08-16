@@ -1,6 +1,7 @@
 <?php $categories = $categories ?? []; ?>
 
-<!-- ============ HERO ============ -->
+<!-- ============ HERO (épinglé) ============ -->
+<div class="hero-pin" id="heroPin">
 <section class="hero">
     <div class="hero-floats" aria-hidden="true">
         <span class="float-chip" style="top:14%;left:6%;animation-delay:0s;"><i class="bi bi-code-slash"></i>Développeur</span>
@@ -14,7 +15,7 @@
         <div class="row justify-content-center text-center">
             <div class="col-lg-9">
                 <span class="hero-eyebrow mb-4"><i class="bi bi-stars"></i> <?= t('La marketplace des talents et des entreprises') ?></span>
-                <h1 class="fw-bold mb-3"><?= t('Trouvez le bon') ?> <span class="text-gradient"><?= t('talent') ?></span>,<br class="d-none d-md-block"> <?= t('décrochez la bonne') ?> <span class="text-gradient"><?= t('mission') ?></span>.</h1>
+                <h1 class="fw-bold mb-3"><?= t('Trouvez le bon') ?> <span class="text-gradient"><?= t('talent') ?></span>,<br class="d-none d-md-block"> <?= t('décrochez la bonne') ?> <span class="text-gradient doodle-underline"><?= t('mission') ?><svg viewBox="0 0 200 12" fill="none" preserveAspectRatio="none"><path d="M2 8 C 40 2, 70 2, 100 6 S 160 12, 198 4" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>.</h1>
                 <p class="lead mx-auto mb-4" style="max-width: 46ch;"><?= t('Candidats et prestataires d\'un côté, entreprises et recruteurs de l\'autre. Offres, candidatures, messagerie et outils IA — au même endroit.') ?></p>
 
                 <form action="<?= e(url('/search')) ?>" method="get" class="search-bar mx-auto d-flex flex-column flex-md-row align-items-stretch gap-2" style="max-width: 720px;">
@@ -39,7 +40,10 @@
             </div>
         </div>
     </div>
+    <div class="hero-scroll-hint d-none d-lg-flex"><span><?= t('Défilez') ?></span><i class="bi bi-chevron-double-down"></i></div>
 </section>
+</div><!-- /.hero-pin -->
+<div class="wave-divider"><svg viewBox="0 0 1440 48" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path fill="var(--lulu-surface-2)" d="M0,24 C240,48 480,48 720,28 C960,8 1200,8 1440,28 L1440,48 L0,48 Z"/></svg></div>
 
 <!-- ============ CATÉGORIES ============ -->
 <?php if (!empty($categories)): ?>
@@ -105,7 +109,7 @@
             <p class="text-secondary mb-0"><?= t('Que vous cherchiez une opportunité ou un talent, tout est fluide.') ?></p>
         </div>
         <div class="row g-4">
-            <div class="col-lg-6">
+            <div class="col-lg-6 reveal-left">
                 <div class="card h-100 p-4 p-lg-5">
                     <span class="badge badge-soft-primary align-self-start mb-3"><i class="bi bi-person-badge me-1"></i> Candidats & prestataires</span>
                     <h3 class="h4 mb-4">Mettez-vous en avant</h3>
@@ -117,7 +121,7 @@
                     <a class="btn btn-primary mt-4 align-self-start" href="<?= e(url('/register')) ?>">Je suis un talent</a>
                 </div>
             </div>
-            <div class="col-lg-6">
+            <div class="col-lg-6 reveal-right">
                 <div class="card h-100 p-4 p-lg-5">
                     <span class="badge badge-soft-success align-self-start mb-3"><i class="bi bi-building me-1"></i> Entreprises & recruteurs</span>
                     <h3 class="h4 mb-4">Recrutez plus vite</h3>
@@ -224,3 +228,27 @@
         </div>
     </div>
 </section>
+
+<script>
+// Hero épinglé : révélation progressive des badges pendant que la scène reste fixe
+(function () {
+    var pin = document.getElementById('heroPin');
+    if (!pin || window.matchMedia('(max-width: 991px)').matches || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        pin && pin.querySelectorAll('.float-chip').forEach(function (c) { c.classList.add('is-in'); });
+        return;
+    }
+    var chips = Array.prototype.slice.call(pin.querySelectorAll('.float-chip'));
+    function onScroll() {
+        var rect = pin.getBoundingClientRect();
+        var total = pin.offsetHeight - window.innerHeight;
+        var scrolled = Math.min(Math.max(-rect.top, 0), total);
+        var progress = total > 0 ? scrolled / total : 1;
+        chips.forEach(function (c, i) {
+            var threshold = ((i + 1) / (chips.length + 2)) * 0.7;
+            c.classList.toggle('is-in', progress >= threshold);
+        });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+})();
+</script>

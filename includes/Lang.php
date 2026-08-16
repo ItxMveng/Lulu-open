@@ -116,7 +116,7 @@ final class Lang
         // Sections landing enrichies
         'Pourquoi LULU-OPEN ?' => 'Why LULU-OPEN?', 'Questions fréquentes' => 'Frequently asked questions',
         'Ils nous font confiance' => 'They trust us', 'Commencer gratuitement' => 'Get started for free',
-        'Comment ça marche' => 'How it works', 'Nos chiffres' => 'Our numbers',
+        'Comment ça marche' => 'How it works', 'Nos chiffres' => 'Our numbers', 'Défilez' => 'Scroll',
         // Section fonctionnalités
         'Tout ce qu\'il vous faut, au même endroit' => 'Everything you need, in one place',
         'Une plateforme complète pensée pour l\'Afrique et ouverte sur le monde.' => 'A complete platform built for Africa and open to the world.',

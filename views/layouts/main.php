@@ -56,7 +56,7 @@
 <script>
 // Apparition au défilement
 (function () {
-    var els = document.querySelectorAll('.reveal');
+    var els = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
     if (!els.length) return;
     if (!('IntersectionObserver' in window)) { els.forEach(function (e) { e.classList.add('is-visible'); }); return; }
     var obs = new IntersectionObserver(function (entries) {
