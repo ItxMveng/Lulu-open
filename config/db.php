@@ -25,7 +25,10 @@ final class Database
             $password = (string) env('DB_PASS', '');
 
             $dsn = sprintf('%s:host=%s;port=%s;dbname=%s;charset=%s', $driver, $host, $port, $database, $charset);
-            self::$connection = new PDO($dsn, $user, $password);
+            self::$connection = new PDO($dsn, $user, $password, [
+                // Échec rapide si la base est injoignable (évite de bloquer un worker Apache).
+                PDO::ATTR_TIMEOUT => 8,
+            ]);
         }
 
         self::$connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

@@ -15,6 +15,12 @@ RUN printf '<Directory /var/www/html>\n    AllowOverride All\n    Require all gr
       > /etc/apache2/conf-available/lulu-dir.conf \
     && a2enconf lulu-dir
 
+# Plafonner les workers Apache : chaque requête PHP ouvre 1 connexion MySQL.
+# Le plan MySQL gratuit (Clever Cloud DEV) est limité à 5 connexions → on cape à 4
+# (les requêtes en surplus sont mises en file, pas d'erreur "too many connections").
+RUN printf '<IfModule mpm_prefork_module>\n    StartServers 2\n    MinSpareServers 2\n    MaxSpareServers 3\n    MaxRequestWorkers 4\n    MaxConnectionsPerChild 500\n</IfModule>\n' \
+      > /etc/apache2/mods-available/mpm_prefork.conf
+
 # Réglages PHP production
 RUN { \
       echo 'upload_max_filesize=10M'; \
