@@ -39,8 +39,10 @@ COPY . /var/www/html
 # Dépendances PHP (production)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress || true
 
-# Dossiers inscriptibles (uploads + logs)
+# Dossiers inscriptibles (uploads + logs) + entrypoint exécutable
 RUN mkdir -p uploads/cv uploads/photos uploads/verifications logs/mail_previews \
-    && chown -R www-data:www-data uploads logs
+    && chown -R www-data:www-data uploads logs \
+    && chmod +x /var/www/html/docker/entrypoint.sh
 
-ENTRYPOINT ["/var/www/html/docker/entrypoint.sh"]
+# Lancé via `sh` : indépendant du bit exécutable stocké par git (Windows).
+ENTRYPOINT ["sh", "/var/www/html/docker/entrypoint.sh"]
