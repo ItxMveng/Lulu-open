@@ -12,7 +12,9 @@ declare(strict_types=1);
  */
 
 require_once dirname(__DIR__) . '/config/config.php';
-if (PHP_SAPI !== 'cli') { http_response_code(403); exit('CLI uniquement.' . PHP_EOL); }
+// CLI par défaut ; exécution web autorisée uniquement via la route protégée
+// /setup/seed (qui définit SEED_WEB après vérification du jeton SEED_TOKEN).
+if (PHP_SAPI !== 'cli' && !defined('SEED_WEB')) { http_response_code(403); exit('CLI uniquement.' . PHP_EOL); }
 
 $pdo = db();
 $profiles = new Profile();
@@ -120,9 +122,10 @@ foreach ($catRows as $cat) {
         $rel = 'uploads/cv/seed_' . bin2hex(random_bytes(6)) . '.docx';
         file_put_contents(base_path($rel), DocumentRenderer::toDocx($cvMd, 'CV — ' . $name));
         $cvDocs->add($uid, $rel, 'CV_' . str_replace(' ', '_', $name) . '.docx', true);
+        echo '.'; // progression (garde la connexion active côté web pendant la génération des .docx)
     }
 }
-echo '  ' . count($talentIds) . ' talents créés.' . PHP_EOL;
+echo PHP_EOL . '  ' . count($talentIds) . ' talents créés.' . PHP_EOL;
 
 /* ------------------------------------------------------------------ Entreprises */
 echo '== Entreprises (2) + offres ==' . PHP_EOL;

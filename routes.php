@@ -23,6 +23,29 @@ Router::get('/sitemap.xml', static function (): never {
     exit;
 });
 
+// Remplissage de la base via le web (plan gratuit Render : pas d'accès Shell).
+// Protégé par un jeton : ne fonctionne que si la variable d'env SEED_TOKEN est
+// définie ET fournie dans l'URL (?token=...). Idempotent (repart d'une base propre).
+Router::get('/setup/seed', static function (): never {
+    header('Content-Type: text/plain; charset=UTF-8');
+    $expected = (string) env('SEED_TOKEN', '');
+    $given = (string) ($_GET['token'] ?? '');
+    if ($expected === '' || !hash_equals($expected, $given)) {
+        http_response_code(403);
+        exit("403 — jeton invalide, ou variable SEED_TOKEN non definie sur le serveur.\n");
+    }
+    // Le seed peut durer ~2 min (génération des CV .docx) : on lève les limites
+    // et on pousse la sortie au fil de l'eau pour ne pas être coupé par le proxy.
+    @set_time_limit(0);
+    @ini_set('max_execution_time', '0');
+    while (ob_get_level() > 0) { ob_end_flush(); }
+    ob_implicit_flush(true);
+    define('SEED_WEB', true);
+    require base_path('scripts/seed.php');
+    echo "\n== Termine. Pense a SUPPRIMER la variable SEED_TOKEN pour desactiver cette route. ==\n";
+    exit;
+});
+
 Router::get('/', 'PageController@home');
 Router::get('/about', 'PageController@about');
 Router::get('/a-propos', 'PageController@about');
