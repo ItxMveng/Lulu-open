@@ -147,6 +147,13 @@ final class Lang
         'Non précisé' => 'Not specified', 'Voir l\'offre' => 'View offer',
         // Accessibilité
         'Aller au contenu' => 'Skip to content',
+        // Page offre publique
+        'Accueil' => 'Home', 'Offres' => 'Offers', 'Vérifiée' => 'Verified', 'Publiée le' => 'Posted on',
+        'Description du poste' => 'Job description',
+        'Connectez-vous en tant que candidat pour postuler à cette offre.' => 'Sign in as a candidate to apply to this offer.',
+        'Envoyez votre candidature avec votre CV et une lettre de motivation.' => 'Send your application with your resume and cover letter.',
+        'Vous consultez cette offre en tant qu\'entreprise.' => 'You are viewing this offer as a company.',
+        'Consultation administrateur.' => 'Administrator view.',
         // Cookies
         'Respect de votre vie privée' => 'Your privacy matters', 'Refuser' => 'Decline', 'Accepter' => 'Accept',
         'En savoir plus' => 'Learn more',

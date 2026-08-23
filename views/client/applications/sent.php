@@ -23,7 +23,7 @@
                     <tbody>
                     <?php foreach ($applications as $application): ?>
                         <tr>
-                            <td class="ps-4 fw-semibold"><a class="text-body" href="<?= e(url('/offres/' . (int) ($application['offer_id'] ?? 0))) ?>"><?= e((string) $application['title']) ?></a></td>
+                            <td class="ps-4 fw-semibold"><a class="text-body" href="<?= e(offer_url(['id' => (int) ($application['offer_id'] ?? 0), 'title' => (string) ($application['title'] ?? '')])) ?>"><?= e((string) $application['title']) ?></a></td>
                             <td class="text-secondary"><?= e(date('d/m/Y', strtotime((string) ($application['created_at'] ?? 'now')))) ?></td>
                             <td><?php View::partial('components/status-badge', ['status' => (string) $application['status']]); ?></td>
                             <td class="text-end pe-4">

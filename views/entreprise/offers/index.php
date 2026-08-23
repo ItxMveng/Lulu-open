@@ -28,7 +28,7 @@
                     <tbody>
                     <?php foreach ($offers as $offer): $st = (string) ($offer['status'] ?? 'active'); ?>
                         <tr>
-                            <td class="ps-4 fw-semibold"><a class="text-body" href="<?= e(url('/offres/' . (int) $offer['id'])) ?>"><?= e((string) $offer['title']) ?></a></td>
+                            <td class="ps-4 fw-semibold"><a class="text-body" href="<?= e(offer_url($offer)) ?>"><?= e((string) $offer['title']) ?></a></td>
                             <td class="text-capitalize"><?= e((string) ($offer['type'] ?? '')) ?></td>
                             <td><span class="badge <?= $st === 'active' ? 'badge-soft-success' : 'text-bg-secondary' ?>"><?= $st === 'active' ? 'Active' : e($st) ?></span></td>
                             <td class="text-secondary"><?= e((string) ($offer['location'] ?? '—')) ?></td>

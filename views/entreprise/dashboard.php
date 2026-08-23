@@ -110,7 +110,7 @@ $name = trim((string) ($user['name'] ?? ''));
                     <?php else: ?>
                         <div class="list-group list-group-flush">
                             <?php foreach ($recentOffers as $offer): ?>
-                                <a class="list-group-item list-group-item-action px-0 d-flex justify-content-between align-items-center" href="<?= e(url('/offres/' . (int) ($offer['id'] ?? 0))) ?>">
+                                <a class="list-group-item list-group-item-action px-0 d-flex justify-content-between align-items-center" href="<?= e(offer_url($offer)) ?>">
                                     <span class="text-truncate pe-2"><?= e((string) ($offer['title'] ?? 'Offre')) ?></span>
                                     <span class="badge <?= ($offer['status'] ?? '') === 'active' ? 'badge-soft-success' : 'text-bg-secondary' ?>"><?= e((string) ($offer['status'] ?? '')) ?></span>
                                 </a>

@@ -17,6 +17,6 @@ $typeLabels = ['emploi' => 'Emploi', 'mission' => 'Mission', 'stage' => 'Stage']
             <?php if (!empty($offer['contract_type'])): ?> · <?= e((string) $offer['contract_type']) ?><?php endif; ?>
         </p>
         <p class="text-secondary small flex-grow-1 mb-3"><?= e(mb_strimwidth((string) ($offer['description'] ?? ''), 0, 140, '…')) ?></p>
-        <a class="btn btn-outline-primary btn-sm align-self-start" href="<?= e(url('/offres/' . (int) ($offer['id'] ?? 0))) ?>"><?= t('Voir l\'offre') ?> <i class="bi bi-arrow-right ms-1"></i></a>
+        <a class="btn btn-outline-primary btn-sm align-self-start" href="<?= e(offer_url($offer)) ?>"><?= t('Voir l\'offre') ?> <i class="bi bi-arrow-right ms-1"></i></a>
     </div>
 </div>

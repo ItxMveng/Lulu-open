@@ -118,14 +118,43 @@ final class OfferController extends Controller
         redirect('/entreprise/offres');
     }
 
-    public function showPublic(string $id): void
+    /** Page publique d'une offre via URL propre /jobs/{slug}-{id}. */
+    public function showPublicBySlug(string $slug): void
+    {
+        if (!preg_match('/-(\d+)$/', $slug, $m)) {
+            abort(404, 'Offre introuvable.');
+        }
+        $offer = $this->offers->findById((int) $m[1]);
+        if (!$offer) {
+            abort(404, 'Offre introuvable.');
+        }
+
+        // 301 vers l'URL canonique si le slug fourni ne correspond pas (évite le
+        // contenu dupliqué en SEO).
+        $canonical = offer_url($offer);
+        if (!str_ends_with($canonical, '/' . $slug)) {
+            redirect($canonical, 301);
+        }
+
+        $company = (new User())->findById((int) ($offer['entreprise_id'] ?? 0));
+        $location = trim((string) ($offer['location'] ?? ''));
+
+        $this->render('pages/offer-public', [
+            'title' => (string) ($offer['title'] ?? 'Offre') . ($location !== '' ? ' — ' . $location : ''),
+            'offer' => $offer,
+            'companyName' => (string) ($company['name'] ?? ''),
+            'metaDescription' => mb_substr(trim((string) preg_replace('/\s+/', ' ', (string) ($offer['description'] ?? ''))), 0, 160),
+        ]);
+    }
+
+    /** Ancienne URL /offres/{id} → redirection permanente vers l'URL propre. */
+    public function redirectLegacyOffer(string $id): never
     {
         $offer = $this->offers->findById((int) $id);
         if (!$offer) {
             abort(404, 'Offre introuvable.');
         }
-
-        $this->render('pages/offer-public', ['title' => 'Offre', 'offer' => $offer]);
+        redirect(offer_url($offer), 301);
     }
 
     private function offerPayload(int $entrepriseId): array

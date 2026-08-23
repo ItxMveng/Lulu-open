@@ -13,8 +13,8 @@ Router::get('/sitemap.xml', static function (): never {
     foreach ($urls as $u) {
         $out .= '<url><loc>' . e(APP_URL . $u) . '</loc><changefreq>weekly</changefreq></url>';
     }
-    foreach (db()->query("SELECT id FROM offers WHERE status='active' ORDER BY created_at DESC LIMIT 500")->fetchAll(PDO::FETCH_COLUMN) as $id) {
-        $out .= '<url><loc>' . e(APP_URL . '/offres/' . (int) $id) . '</loc></url>';
+    foreach (db()->query("SELECT id, title FROM offers WHERE status='active' ORDER BY created_at DESC LIMIT 500")->fetchAll() as $o) {
+        $out .= '<url><loc>' . e(offer_url($o)) . '</loc><changefreq>daily</changefreq></url>';
     }
     foreach (db()->query("SELECT user_id FROM profiles WHERE is_visible=1 LIMIT 1000")->fetchAll(PDO::FETCH_COLUMN) as $id) {
         $out .= '<url><loc>' . e(APP_URL . '/profile/' . (int) $id) . '</loc></url>';
@@ -153,7 +153,8 @@ Router::post('/entreprise/offres', 'OfferController@store', ['auth', 'role:entre
 Router::get('/entreprise/offres/{id}/edit', 'OfferController@edit', ['auth', 'role:entreprise']);
 Router::post('/entreprise/offres/{id}', 'OfferController@update', ['auth', 'role:entreprise']);
 Router::post('/entreprise/offres/{id}/delete', 'OfferController@destroy', ['auth', 'role:entreprise']);
-Router::get('/offres/{id}', 'OfferController@showPublic');
+Router::get('/jobs/{slug}', 'OfferController@showPublicBySlug');
+Router::get('/offres/{id}', 'OfferController@redirectLegacyOffer'); // 301 -> /jobs/{slug}-{id}
 // Le candidat (rôle client) postule aux offres publiées par les entreprises.
 Router::get('/offres/{id}/postuler', 'ApplicationController@apply', ['auth', 'role:client']);
 

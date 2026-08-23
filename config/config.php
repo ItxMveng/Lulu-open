@@ -193,10 +193,33 @@ function url(string $path = ''): string
     return $base . '/' . ltrim($path, '/');
 }
 
-function redirect(string $path): never
+function redirect(string $path, int $status = 302): never
 {
+    if ($status === 301) {
+        http_response_code(301);
+    }
     header('Location: ' . (str_starts_with($path, 'http') ? $path : url($path)));
     exit;
+}
+
+/** Transforme un texte en slug URL (sans accents, minuscules, tirets). */
+function slugify(string $text): string
+{
+    $text = trim($text);
+    if (function_exists('transliterator_transliterate')) {
+        $t = transliterator_transliterate('Any-Latin; Latin-ASCII; Lower()', $text);
+        if (is_string($t)) { $text = $t; }
+    }
+    $text = (string) preg_replace('~[^a-zA-Z0-9]+~', '-', $text);
+    $text = strtolower(trim($text, '-'));
+    return $text !== '' ? $text : 'offre';
+}
+
+/** URL publique canonique d'une offre : /jobs/{slug}-{id}. */
+function offer_url(array $offer): string
+{
+    $id = (int) ($offer['id'] ?? 0);
+    return url('/jobs/' . slugify((string) ($offer['title'] ?? 'offre')) . '-' . $id);
 }
 
 function e(?string $value): string
