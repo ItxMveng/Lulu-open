@@ -154,6 +154,13 @@ final class Lang
         'Envoyez votre candidature avec votre CV et une lettre de motivation.' => 'Send your application with your resume and cover letter.',
         'Vous consultez cette offre en tant qu\'entreprise.' => 'You are viewing this offer as a company.',
         'Consultation administrateur.' => 'Administrator view.',
+        // Meta descriptions (SEO) localisées
+        'LULU-OPEN, la marketplace africaine de l\'emploi et des talents : trouvez un job, un freelance ou un candidat, postulez en un clic et boostez votre CV avec l\'IA.'
+            => 'LULU-OPEN, the African marketplace for jobs and talent: find a job, a freelancer or a candidate, apply in one click and boost your resume with AI.',
+        'Trouvez le prestataire ou le freelance idéal en Afrique : développeurs, designers, artisans, comptables et plus. Profils vérifiés, contact direct.'
+            => 'Find the ideal freelancer or service provider in Africa: developers, designers, craftspeople, accountants and more. Verified profiles, direct contact.',
+        'Offres d\'emploi, missions et stages en Afrique. Postulez en un clic avec un CV et une lettre optimisés par l\'IA. Entreprises vérifiées.'
+            => 'Jobs, projects and internships in Africa. Apply in one click with an AI-optimized resume and cover letter. Verified companies.',
         // Cookies
         'Respect de votre vie privée' => 'Your privacy matters', 'Refuser' => 'Decline', 'Accepter' => 'Accept',
         'En savoir plus' => 'Learn more',

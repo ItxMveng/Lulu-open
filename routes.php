@@ -77,6 +77,41 @@ Router::get('/uploads/{type}/{file}', static function (string $type, string $fil
     exit;
 });
 
+// Bannière de partage social (Open Graph / Twitter) générée à la volée, aux
+// couleurs de la marque. Mise en cache (change rarement).
+Router::get('/og-image.png', static function (): never {
+    header('Content-Type: image/png');
+    header('Cache-Control: public, max-age=604800');
+    $w = 1200; $h = 630;
+    $im = imagecreatetruecolor($w, $h);
+    $blue = imagecolorallocate($im, 27, 58, 91);      // --lulu-primary
+    $orange = imagecolorallocate($im, 249, 115, 22);  // --lulu-accent
+    $white = imagecolorallocate($im, 255, 255, 255);
+    $muted = imagecolorallocate($im, 203, 213, 225);
+    imagefilledrectangle($im, 0, 0, $w, $h, $blue);
+    imagefilledrectangle($im, 0, 0, $w, 12, $orange);           // barre d'accent
+    imagefilledellipse($im, 118, 132, 46, 46, $orange);        // point de marque
+
+    // Police (DejaVu sur le serveur Debian, Arial en local Windows).
+    $bold = null; $reg = null;
+    foreach (['/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 'C:/Windows/Fonts/arialbd.ttf'] as $f) { if (is_file($f)) { $bold = $f; break; } }
+    foreach (['/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 'C:/Windows/Fonts/arial.ttf'] as $f) { if (is_file($f)) { $reg = $f; break; } }
+    $reg = $reg ?: $bold;
+
+    if ($bold) {
+        imagettftext($im, 62, 0, 158, 152, $white, $bold, 'LULU-OPEN');
+        imagettftext($im, 40, 0, 120, 300, $white, $bold, 'Les talents d\'Afrique,');
+        imagettftext($im, 40, 0, 120, 366, $white, $bold, 'les opportunités du monde.');
+        imagettftext($im, 26, 0, 122, 470, $muted, $reg, 'Emploi · Freelance · Missions · Recrutement');
+        imagettftext($im, 22, 0, 122, 560, $orange, $reg, 'lulu-open.onrender.com');
+    } else {
+        imagestring($im, 5, 150, 150, 'LULU-OPEN', $white);
+    }
+    imagepng($im);
+    imagedestroy($im);
+    exit;
+});
+
 Router::get('/', 'PageController@home');
 Router::get('/about', 'PageController@about');
 Router::get('/a-propos', 'PageController@about');

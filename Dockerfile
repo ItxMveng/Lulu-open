@@ -4,7 +4,7 @@ FROM php:8.2-apache
 # Dépendances système + poppler-utils (pdftotext, pour la lecture des CV PDF)
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libzip-dev libpng-dev libjpeg-dev libwebp-dev libonig-dev libicu-dev \
-        poppler-utils unzip \
+        poppler-utils unzip fonts-dejavu-core \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install pdo_mysql mbstring zip intl gd \
     && a2enmod rewrite headers \

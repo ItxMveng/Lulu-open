@@ -269,7 +269,15 @@
                         ['Comment être sûr qu\'une entreprise est fiable ?', 'Toutes les entreprises passent par une vérification manuelle de notre équipe avant de pouvoir publier des offres.'],
                         ['Dans quels pays êtes-vous présents ?', 'La plateforme est pensée pour l\'Afrique et ouverte au monde entier, avec gestion automatique des devises locales.'],
                     ];
-                    foreach ($faq as $i => [$q, $a]): ?>
+                    ?>
+                    <script type="application/ld+json"><?= json_encode([
+                        '@context' => 'https://schema.org', '@type' => 'FAQPage',
+                        'mainEntity' => array_map(static fn ($qa): array => [
+                            '@type' => 'Question', 'name' => t($qa[0]),
+                            'acceptedAnswer' => ['@type' => 'Answer', 'text' => t($qa[1])],
+                        ], $faq),
+                    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
+                    <?php foreach ($faq as $i => [$q, $a]): ?>
                         <div class="accordion-item border-0 mb-2 rounded-3 overflow-hidden">
                             <h3 class="accordion-header">
                                 <button class="accordion-button <?= $i === 0 ? '' : 'collapsed' ?>" type="button" data-bs-toggle="collapse" data-bs-target="#faq<?= $i ?>"><?= t($q) ?></button>

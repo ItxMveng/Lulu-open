@@ -6,14 +6,18 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231B3A5B'/%3E%3Ctext x='50%25' y='53%25' font-family='Arial,sans-serif' font-size='38' font-weight='bold' fill='%23F97316' text-anchor='middle' dominant-baseline='central'%3EL%3C/text%3E%3C/svg%3E">
     <?php
     $metaTitle = t((string) ($pageTitle ?? APP_NAME)) . ' | ' . APP_NAME;
-    $metaDescription = $metaDescription ?? 'LULU-OPEN, la marketplace africaine de l\'emploi et des talents : trouvez un job, un freelance ou un candidat, postulez en un clic et boostez votre CV avec l\'IA.';
+    // Description localisée : t() traduit si une entrée EN existe, sinon garde le FR.
+    $metaDescription = t($metaDescription ?? 'LULU-OPEN, la marketplace africaine de l\'emploi et des talents : trouvez un job, un freelance ou un candidat, postulez en un clic et boostez votre CV avec l\'IA.');
     $metaKeywords = $metaKeywords ?? 'emploi Afrique, recrutement, offres d\'emploi, freelance, talents, CV, lettre de motivation IA, candidature, jobs, marketplace talents';
     $canonical = APP_URL . request_path();
+    $ogImage = APP_URL . '/og-image.png';
+    // Zones privées : non indexables (elles sont aussi bloquées dans robots.txt).
+    $noindex = (bool) preg_match('#^/(client|entreprise|admin|messages|abonnement|favorites|applications|setup)(/|$)#', request_path());
     ?>
     <title><?= e($metaTitle) ?></title>
     <meta name="description" content="<?= e($metaDescription) ?>">
     <meta name="keywords" content="<?= e($metaKeywords) ?>">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="<?= $noindex ? 'noindex, nofollow' : 'index, follow' ?>">
     <meta name="theme-color" content="#0369A1">
     <link rel="canonical" href="<?= e($canonical) ?>">
     <!-- Open Graph -->
@@ -23,9 +27,13 @@
     <meta property="og:description" content="<?= e($metaDescription) ?>">
     <meta property="og:url" content="<?= e($canonical) ?>">
     <meta property="og:locale" content="<?= Lang::current() === 'en' ? 'en_US' : 'fr_FR' ?>">
+    <meta property="og:image" content="<?= e($ogImage) ?>">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="<?= e($metaTitle) ?>">
     <meta name="twitter:description" content="<?= e($metaDescription) ?>">
+    <meta name="twitter:image" content="<?= e($ogImage) ?>">
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,6 +48,14 @@
         'url' => APP_URL,
         'description' => $metaDescription,
         'potentialAction' => ['@type' => 'SearchAction', 'target' => APP_URL . '/search?q={query}', 'query-input' => 'required name=query'],
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
+    <script type="application/ld+json"><?= json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'Organization',
+        'name' => APP_NAME,
+        'url' => APP_URL,
+        'logo' => $ogImage,
+        'description' => $metaDescription,
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
 </head>
 <body class="d-flex flex-column min-vh-100">
