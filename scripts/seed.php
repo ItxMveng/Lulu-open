@@ -120,7 +120,11 @@ foreach ($catRows as $cat) {
         // CV .docx généré
         $cvMd = build_cv($name, $title, $skills, $exp, $bio, $langs);
         $rel = 'uploads/cv/seed_' . bin2hex(random_bytes(6)) . '.docx';
-        file_put_contents(base_path($rel), DocumentRenderer::toDocx($cvMd, 'CV — ' . $name));
+        $cvBytes = DocumentRenderer::toDocx($cvMd, 'CV — ' . $name);
+        file_put_contents(base_path($rel), $cvBytes);
+        if (Storage::enabled()) {
+            Storage::put($rel, $cvBytes, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        }
         $cvDocs->add($uid, $rel, 'CV_' . str_replace(' ', '_', $name) . '.docx', true);
         echo '.'; // progression (garde la connexion active côté web pendant la génération des .docx)
     }

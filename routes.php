@@ -46,6 +46,37 @@ Router::get('/setup/seed', static function (): never {
     exit;
 });
 
+// Service des fichiers uploadés. En temps normal Apache sert le fichier
+// statique (règle !-f du .htaccess) ; cette route n'est atteinte que si le
+// fichier n'est PAS sur le disque local (ex. après un redéploiement sur un
+// disque éphémère) → on le streame alors depuis le stockage objet R2.
+Router::get('/uploads/{type}/{file}', static function (string $type, string $file): never {
+    $type = (string) preg_replace('/[^a-z0-9_-]/i', '', $type);
+    $file = (string) preg_replace('/[^a-zA-Z0-9._-]/', '', $file); // pas de "/" ni ".."
+    $key = 'uploads/' . $type . '/' . $file;
+
+    $local = base_path($key);
+    $body = is_file($local) ? (string) file_get_contents($local) : Storage::get($key);
+    if ($body === null || $body === '') {
+        http_response_code(404);
+        exit('Fichier introuvable.');
+    }
+
+    $ext = strtolower((string) pathinfo($file, PATHINFO_EXTENSION));
+    $mimes = [
+        'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png',
+        'webp' => 'image/webp', 'gif' => 'image/gif', 'pdf' => 'application/pdf',
+        'doc' => 'application/msword',
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
+    header('Content-Type: ' . ($mimes[$ext] ?? 'application/octet-stream'));
+    header('Content-Length: ' . strlen($body));
+    header('Cache-Control: private, max-age=3600');
+    header('X-Content-Type-Options: nosniff');
+    echo $body;
+    exit;
+});
+
 Router::get('/', 'PageController@home');
 Router::get('/about', 'PageController@about');
 Router::get('/a-propos', 'PageController@about');

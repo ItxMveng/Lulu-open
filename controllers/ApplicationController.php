@@ -91,7 +91,11 @@ final class ApplicationController extends Controller
             $dir = UPLOADS_PATH . DIRECTORY_SEPARATOR . 'cv';
             if (!is_dir($dir)) { mkdir($dir, 0775, true); }
             $relative = 'uploads/cv/cvia_' . bin2hex(random_bytes(8)) . '.docx';
-            file_put_contents(base_path($relative), DocumentRenderer::toDocx($generated, 'CV'));
+            $bytes = DocumentRenderer::toDocx($generated, 'CV');
+            file_put_contents(base_path($relative), $bytes);
+            if (Storage::enabled()) {
+                Storage::put($relative, $bytes, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+            }
             return $relative;
         }
 

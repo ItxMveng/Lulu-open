@@ -51,7 +51,15 @@ final class UploadHelper
 
         self::deleteRelativeFile($oldRelativePath);
 
-        return 'uploads/' . trim($target, '/\\') . '/' . $fileName;
+        $relative = 'uploads/' . trim($target, '/\\') . '/' . $fileName;
+
+        // Copie persistante sur le stockage objet (R2) si configuré : le disque
+        // local est éphémère sur l'hébergement gratuit.
+        if (Storage::enabled()) {
+            Storage::put($relative, (string) file_get_contents($destination), $mime);
+        }
+
+        return $relative;
     }
 
     public static function deleteRelativeFile(?string $relativePath): void
@@ -65,6 +73,11 @@ final class UploadHelper
 
         if (is_file($absolutePath) && str_starts_with($absolutePath, UPLOADS_PATH)) {
             unlink($absolutePath);
+        }
+
+        // Supprime aussi la copie distante (clé = chemin relatif normalisé en /).
+        if (Storage::enabled()) {
+            Storage::delete(str_replace('\\', '/', $relativePath));
         }
     }
 }
