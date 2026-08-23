@@ -124,6 +124,14 @@ Router::post('/profile/cv/{id}/primary', 'ProfileController@setPrimaryCV', ['aut
 Router::post('/profile/cv/{id}/delete', 'ProfileController@deleteCV', ['auth', 'role:client']);
 
 // Outils IA candidat
+// Prestations proposées par le prestataire (rôle client).
+Router::get('/client/services', 'ServiceController@index', ['auth', 'role:client']);
+Router::get('/client/services/nouveau', 'ServiceController@create', ['auth', 'role:client']);
+Router::post('/client/services', 'ServiceController@store', ['auth', 'role:client']);
+Router::get('/client/services/{id}/edit', 'ServiceController@edit', ['auth', 'role:client']);
+Router::post('/client/services/{id}', 'ServiceController@update', ['auth', 'role:client']);
+Router::post('/client/services/{id}/delete', 'ServiceController@destroy', ['auth', 'role:client']);
+
 Router::get('/client/ia', 'AiController@tools', ['auth', 'role:client']);
 Router::post('/client/ia/analyse', 'AiController@analyzeCv', ['auth', 'role:client']);
 Router::post('/client/ia/optimiser', 'AiController@optimizeCv', ['auth', 'role:client']);

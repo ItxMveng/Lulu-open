@@ -56,6 +56,29 @@ $parseLink = static function (string $s): array {
                 </div>
             </div>
 
+            <?php if (!empty($services)): ?>
+                <div class="card mb-4">
+                    <div class="card-body p-4">
+                        <h2 class="h6 mb-3"><i class="bi bi-briefcase me-1"></i>Services proposés</h2>
+                        <div class="row g-3">
+                            <?php foreach ($services as $s): ?>
+                                <div class="col-sm-6">
+                                    <div class="border rounded-3 p-3 h-100 d-flex flex-column">
+                                        <div class="fw-semibold mb-1"><?= e((string) $s['title']) ?></div>
+                                        <?php if (!empty($s['category'])): ?><div class="mb-2"><span class="badge badge-soft-primary"><?= e((string) $s['category']) ?></span></div><?php endif; ?>
+                                        <?php if (!empty($s['description'])): ?><p class="text-secondary small mb-2"><?= nl2br(e(mb_strimwidth((string) $s['description'], 0, 140, '…'))) ?></p><?php endif; ?>
+                                        <div class="d-flex flex-wrap gap-3 small mt-auto pt-2">
+                                            <span class="text-primary fw-semibold"><?= e(Service::formatPrice($s['price'] !== null ? (float) $s['price'] : null, (string) $s['price_type'])) ?></span>
+                                            <?php if (!empty($s['delivery_days'])): ?><span class="text-secondary"><i class="bi bi-clock me-1"></i><?= (int) $s['delivery_days'] ?> j</span><?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+
             <?php if (!empty($portfolio)): ?>
                 <div class="card mb-4">
                     <div class="card-body p-4">

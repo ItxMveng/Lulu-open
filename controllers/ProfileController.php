@@ -19,9 +19,16 @@ final class ProfileController extends Controller
             abort(404, 'Profil introuvable.');
         }
 
+        // Prestations actives du prestataire (affichées uniquement pour un talent).
+        $services = [];
+        if ((string) ($profile['role'] ?? '') !== 'entreprise') {
+            $services = (new Service())->activeForUser((int) ($profile['user_id'] ?? 0));
+        }
+
         $this->render('pages/profile-public', [
             'title' => 'Profil public',
             'profile' => $profile,
+            'services' => $services,
         ]);
     }
 

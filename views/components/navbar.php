@@ -37,6 +37,7 @@ $profilePath = $role === 'entreprise' ? '/entreprise/profile/edit' : '/client/pr
                     <?php if ($role === 'client'): ?>
                         <li class="nav-item"><a class="nav-link" href="<?= e(url('/search')) ?>"><?= t('Rechercher') ?></a></li>
                         <li class="nav-item"><a class="nav-link" href="<?= e(url('/client/candidatures')) ?>"><?= t('Mes candidatures') ?></a></li>
+                        <li class="nav-item"><a class="nav-link" href="<?= e(url('/client/services')) ?>"><?= t('Mes prestations') ?></a></li>
                         <li class="nav-item"><a class="nav-link" href="<?= e(url('/client/ia')) ?>"><?= t('Outils IA') ?></a></li>
                         <li class="nav-item"><a class="nav-link" href="<?= e(url('/messages')) ?>"><?= t('Messages') ?></a></li>
                     <?php elseif ($role === 'entreprise'): ?>
@@ -82,6 +83,9 @@ $profilePath = $role === 'entreprise' ? '/entreprise/profile/edit' : '/client/pr
                             <a class="dropdown-item" href="<?= e(url($dashboardPath)) ?>"><i class="bi bi-grid me-2"></i>Tableau de bord</a>
                             <?php if ($role !== 'admin'): ?>
                                 <a class="dropdown-item" href="<?= e(url($profilePath)) ?>"><i class="bi bi-person-gear me-2"></i>Mon profil</a>
+                                <?php if ($role === 'client'): ?>
+                                    <a class="dropdown-item" href="<?= e(url('/client/services')) ?>"><i class="bi bi-briefcase me-2"></i>Mes prestations</a>
+                                <?php endif; ?>
                                 <a class="dropdown-item" href="<?= e(url('/abonnement')) ?>"><i class="bi bi-gem me-2"></i>Mon abonnement</a>
                             <?php endif; ?>
                             <hr class="my-1">
