@@ -10,6 +10,16 @@ final class Offer extends Model
         return $statement->fetchAll() ?: [];
     }
 
+    /** Offres actives d'une catégorie (par category_id). */
+    public function publicByCategory(int $categoryId, int $limit = 6): array
+    {
+        $stmt = $this->db->prepare("SELECT * FROM offers WHERE status = 'active' AND category_id = :cid ORDER BY created_at DESC LIMIT :lim");
+        $stmt->bindValue(':cid', $categoryId, PDO::PARAM_INT);
+        $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll() ?: [];
+    }
+
     public function findById(int $id): ?array
     {
         $statement = $this->db->prepare('SELECT * FROM offers WHERE id = :id LIMIT 1');

@@ -147,6 +147,23 @@ final class Lang
         'Non précisé' => 'Not specified', 'Voir l\'offre' => 'View offer',
         // Accessibilité
         'Aller au contenu' => 'Skip to content',
+        // Pages catégories (SEO contenu, Sprint 8)
+        'Domaines' => 'Fields', 'Domaines & catégories' => 'Fields & categories',
+        'talents & opportunités' => 'talent & opportunities',
+        'Trouvez des talents et des opportunités en' => 'Find talent and opportunities in',
+        'Profils vérifiés, contact direct, sur LULU-OPEN.' => 'Verified profiles, direct contact, on LULU-OPEN.',
+        'Découvrez des professionnels vérifiés et des opportunités dans le domaine' => 'Discover verified professionals and opportunities in the field',
+        'en Afrique et à l\'international.' => 'in Africa and internationally.',
+        'Offres dans ce domaine' => 'Offers in this field',
+        'Talents en' => 'Talent in', 'Voir tous les talents' => 'See all talent',
+        'Bientôt des talents dans ce domaine' => 'Talent in this field coming soon',
+        'Soyez parmi les premiers : créez votre profil et proposez vos compétences.' => 'Be among the first: create your profile and offer your skills.',
+        'Autres domaines' => 'Other fields',
+        'Explorez par domaine' => 'Browse by field',
+        'Talents vérifiés et opportunités dans tous les secteurs, en Afrique et à l\'international.' => 'Verified talent and opportunities across every sector, in Africa and internationally.',
+        'Domaines populaires' => 'Popular fields',
+        'Explorez tous les domaines de LULU-OPEN : développement, design, marketing, finance, artisanat et plus. Talents et opportunités en Afrique.'
+            => 'Explore all fields on LULU-OPEN: development, design, marketing, finance, crafts and more. Talent and opportunities in Africa.',
         // Page offre publique
         'Accueil' => 'Home', 'Offres' => 'Offers', 'Vérifiée' => 'Verified', 'Publiée le' => 'Posted on',
         'Description du poste' => 'Job description',

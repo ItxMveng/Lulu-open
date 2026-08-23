@@ -120,12 +120,12 @@
                 <h2 class="h3 mb-1"><?= t('Explorez par catégorie') ?></h2>
                 <p class="text-secondary mb-0"><?= t('Des profils et des offres dans tous les domaines.') ?></p>
             </div>
-            <a class="btn btn-outline-secondary d-none d-sm-inline-flex" href="<?= e(url('/search')) ?>"><?= t('Tout voir') ?> <i class="bi bi-arrow-right ms-1"></i></a>
+            <a class="btn btn-outline-secondary d-none d-sm-inline-flex" href="<?= e(url('/categories')) ?>"><?= t('Tout voir') ?> <i class="bi bi-arrow-right ms-1"></i></a>
         </div>
         <div class="row g-3 g-lg-4">
             <?php foreach (array_slice($categories, 0, 6) as $category): ?>
                 <div class="col-6 col-md-4 col-lg-2">
-                    <a class="category-card" href="<?= e(url('/search?category=' . urlencode((string) ($category['name'] ?? '')) . '&tab=profils')) ?>">
+                    <a class="category-card" href="<?= e(url('/categorie/' . rawurlencode((string) ($category['slug'] ?? '')))) ?>">
                         <span class="category-icon"><i class="bi <?= e((string) ($category['icon'] ?? 'bi-grid')) ?>"></i></span>
                         <span class="fw-semibold"><?= e(t((string) ($category['name'] ?? ''))) ?></span>
                     </a>

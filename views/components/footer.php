@@ -8,8 +8,9 @@
             <div class="col-6 col-lg-2">
                 <h3 class="h6 mb-3"><?= t('Explorer') ?></h3>
                 <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
-                    <li><a href="<?= e(url('/services')) ?>"><?= t('Prestations') ?></a></li>
                     <li><a href="<?= e(url('/emplois')) ?>"><?= t('Recrutement') ?></a></li>
+                    <li><a href="<?= e(url('/services')) ?>"><?= t('Prestations') ?></a></li>
+                    <li><a href="<?= e(url('/categories')) ?>"><?= t('Domaines') ?></a></li>
                     <li><a href="<?= e(url('/pricing')) ?>"><?= t('Tarifs') ?></a></li>
                     <li><a href="<?= e(url('/contact')) ?>"><?= t('Contact') ?></a></li>
                 </ul>
@@ -30,6 +31,17 @@
                 </ul>
             </div>
         </div>
+        <?php $footerCats = (new Category())->all(); ?>
+        <?php if (!empty($footerCats)): ?>
+            <div class="mt-4">
+                <div class="text-secondary small mb-2"><?= t('Domaines populaires') ?></div>
+                <div class="d-flex flex-wrap gap-2">
+                    <?php foreach (array_slice($footerCats, 0, 12) as $fc): ?>
+                        <a class="badge badge-soft-primary text-decoration-none" href="<?= e(url('/categorie/' . rawurlencode((string) ($fc['slug'] ?? '')))) ?>"><?= e(t((string) ($fc['name'] ?? ''))) ?></a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        <?php endif; ?>
         <hr class="my-4" style="border-color: var(--lulu-border);">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 small text-secondary">
             <span>© <?= date('Y') ?> LULU-OPEN. <?= t('Tous droits réservés.') ?></span>

@@ -8,6 +8,13 @@ final class Category extends Model
         return $this->db->query('SELECT * FROM categories ORDER BY name ASC')->fetchAll() ?: [];
     }
 
+    public function findBySlug(string $slug): ?array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM categories WHERE slug = :slug LIMIT 1');
+        $stmt->execute(['slug' => $slug]);
+        return $stmt->fetch() ?: null;
+    }
+
     public function save(array $data): void
     {
         if (!empty($data['id'])) {

@@ -11,8 +11,9 @@
     $metaKeywords = $metaKeywords ?? 'emploi Afrique, recrutement, offres d\'emploi, freelance, talents, CV, lettre de motivation IA, candidature, jobs, marketplace talents';
     $canonical = APP_URL . request_path();
     $ogImage = APP_URL . '/og-image.png';
-    // Zones privées : non indexables (elles sont aussi bloquées dans robots.txt).
-    $noindex = (bool) preg_match('#^/(client|entreprise|admin|messages|abonnement|favorites|applications|setup)(/|$)#', request_path());
+    // Zones privées (ou pages explicitement marquées vides) : non indexables.
+    $noindex = !empty($noindex)
+        || (bool) preg_match('#^/(client|entreprise|admin|messages|abonnement|favorites|applications|setup)(/|$)#', request_path());
     ?>
     <title><?= e($metaTitle) ?></title>
     <meta name="description" content="<?= e($metaDescription) ?>">

@@ -8,10 +8,13 @@ Router::get('/robots.txt', static function (): never {
 });
 Router::get('/sitemap.xml', static function (): never {
     header('Content-Type: application/xml; charset=UTF-8');
-    $urls = ['/', '/services', '/emplois', '/pricing', '/contact', '/about', '/cgu', '/privacy', '/legal', '/search'];
+    $urls = ['/', '/services', '/emplois', '/categories', '/pricing', '/contact', '/about', '/cgu', '/privacy', '/legal', '/search'];
     $out = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
     foreach ($urls as $u) {
         $out .= '<url><loc>' . e(APP_URL . $u) . '</loc><changefreq>weekly</changefreq></url>';
+    }
+    foreach (db()->query('SELECT slug FROM categories ORDER BY name')->fetchAll(PDO::FETCH_COLUMN) as $slug) {
+        $out .= '<url><loc>' . e(APP_URL . '/categorie/' . rawurlencode((string) $slug)) . '</loc><changefreq>weekly</changefreq></url>';
     }
     foreach (db()->query("SELECT id, title FROM offers WHERE status='active' ORDER BY created_at DESC LIMIT 500")->fetchAll() as $o) {
         $out .= '<url><loc>' . e(offer_url($o)) . '</loc><changefreq>daily</changefreq></url>';
@@ -122,6 +125,8 @@ Router::get('/privacy', 'PageController@privacy');
 Router::get('/legal', 'PageController@legal');
 Router::get('/services', 'PageController@services');
 Router::get('/emplois', 'PageController@emplois');
+Router::get('/categories', 'PageController@categoriesHub');
+Router::get('/categorie/{slug}', 'PageController@category');
 Router::get('/pricing', 'SubscriptionController@showPlans');
 Router::get('/devise/{code}', static function (string $code): never {
     CurrencyService::set($code);

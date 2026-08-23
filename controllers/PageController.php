@@ -96,6 +96,42 @@ final class PageController extends Controller
         ]);
     }
 
+    /** Hub listant tous les domaines (maillage interne + SEO). */
+    public function categoriesHub(): void
+    {
+        $this->render('pages/categories-hub', [
+            'title' => 'Domaines & catégories',
+            'categories' => (new Category())->all(),
+            'metaDescription' => 'Explorez tous les domaines de LULU-OPEN : développement, design, marketing, finance, artisanat et plus. Talents et opportunités en Afrique.',
+        ]);
+    }
+
+    /** Page d'atterrissage d'une catégorie : vrais talents (+ offres si catégorisées). */
+    public function category(string $slug): void
+    {
+        $category = (new Category())->findBySlug($slug);
+        if (!$category) {
+            abort(404, 'Catégorie introuvable.');
+        }
+        $name = (string) $category['name'];
+        $talents = (new Profile())->search(['category' => $name, 'per_page' => 6]);
+        $offers = (new Offer())->publicByCategory((int) $category['id'], 6);
+        // Anti thin-content : si la page n'a aucune donnée réelle, on la désindexe.
+        $isEmpty = empty($talents['items']) && empty($offers);
+
+        $this->render('pages/category-landing', [
+            'title' => $name . ' — ' . t('talents & opportunités'),
+            'fullWidth' => true,
+            'category' => $category,
+            'talents' => $talents,
+            'offers' => $offers,
+            'allCategories' => (new Category())->all(),
+            'noindex' => $isEmpty,
+            'metaDescription' => t('Trouvez des talents et des opportunités en') . ' ' . $name . '. ' . t('Profils vérifiés, contact direct, sur LULU-OPEN.'),
+            'metaKeywords' => $name . ', talents, freelance, recrutement, offres, Afrique',
+        ]);
+    }
+
     public function pricing(): void
     {
         $this->render('pages/pricing', ['title' => 'Tarifs']);
