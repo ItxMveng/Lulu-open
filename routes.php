@@ -8,7 +8,7 @@ Router::get('/robots.txt', static function (): never {
 });
 Router::get('/sitemap.xml', static function (): never {
     header('Content-Type: application/xml; charset=UTF-8');
-    $urls = ['/', '/services', '/emplois', '/categories', '/pricing', '/contact', '/about', '/cgu', '/privacy', '/legal', '/search'];
+    $urls = ['/', '/services', '/emplois', '/categories', '/ia', '/pricing', '/contact', '/about', '/cgu', '/privacy', '/legal', '/search'];
     $out = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
     foreach ($urls as $u) {
         $out .= '<url><loc>' . e(APP_URL . $u) . '</loc><changefreq>weekly</changefreq></url>';
@@ -125,6 +125,7 @@ Router::get('/privacy', 'PageController@privacy');
 Router::get('/legal', 'PageController@legal');
 Router::get('/services', 'PageController@services');
 Router::get('/emplois', 'PageController@emplois');
+Router::get('/ia', 'PageController@ai');
 Router::get('/categories', 'PageController@categoriesHub');
 Router::get('/categorie/{slug}', 'PageController@category');
 Router::get('/pricing', 'SubscriptionController@showPlans');

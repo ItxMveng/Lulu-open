@@ -23,6 +23,7 @@ $profilePath = $role === 'entreprise' ? '/entreprise/profile/edit' : '/client/pr
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item"><a class="nav-link" href="<?= e(url('/services')) ?>"><?= t('Prestations') ?></a></li>
                     <li class="nav-item"><a class="nav-link" href="<?= e(url('/emplois')) ?>"><?= t('Recrutement') ?></a></li>
+                    <li class="nav-item"><a class="nav-link" href="<?= e(url('/ia')) ?>"><?= t('IA') ?></a></li>
                     <li class="nav-item"><a class="nav-link" href="<?= e(url('/pricing')) ?>"><?= t('Tarifs') ?></a></li>
                     <li class="nav-item"><a class="nav-link" href="<?= e(url('/contact')) ?>"><?= t('Contact') ?></a></li>
                 </ul>

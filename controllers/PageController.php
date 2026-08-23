@@ -96,6 +96,17 @@ final class PageController extends Controller
         ]);
     }
 
+    /** Présentation publique des fonctionnalités IA réellement disponibles. */
+    public function ai(): void
+    {
+        $this->render('pages/ai', [
+            'title' => 'IA & matching',
+            'fullWidth' => true,
+            'metaDescription' => 'L\'IA de LULU-OPEN accélère la mise en relation : analyse et génération de CV et de lettres pour les candidats, rédaction d\'offres et classement des candidatures pour les recruteurs.',
+            'metaKeywords' => 'IA recrutement, analyse CV, génération CV IA, lettre de motivation IA, matching candidats, tri candidatures',
+        ]);
+    }
+
     /** Hub listant tous les domaines (maillage interne + SEO). */
     public function categoriesHub(): void
     {

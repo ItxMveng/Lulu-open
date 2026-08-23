@@ -11,6 +11,7 @@
                     <li><a href="<?= e(url('/emplois')) ?>"><?= t('Recrutement') ?></a></li>
                     <li><a href="<?= e(url('/services')) ?>"><?= t('Prestations') ?></a></li>
                     <li><a href="<?= e(url('/categories')) ?>"><?= t('Domaines') ?></a></li>
+                    <li><a href="<?= e(url('/ia')) ?>"><?= t('IA & matching') ?></a></li>
                     <li><a href="<?= e(url('/pricing')) ?>"><?= t('Tarifs') ?></a></li>
                     <li><a href="<?= e(url('/contact')) ?>"><?= t('Contact') ?></a></li>
                 </ul>

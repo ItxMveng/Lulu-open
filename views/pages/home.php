@@ -203,6 +203,58 @@
     </div>
 </section>
 
+<!-- ============ IA & MATCHING ============ -->
+<section class="section reveal">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="hero-eyebrow mb-3"><i class="bi bi-robot"></i> <?= t('IA & matching') ?></span>
+            <h2 class="h3 mb-2"><?= t('L\'IA au service de la mise en relation') ?></h2>
+            <p class="text-secondary mb-0 mx-auto" style="max-width: 58ch;"><?= t('Nos outils analysent les profils et les opportunités pour connecter les bonnes compétences aux bonnes offres — l\'humain garde la main.') ?></p>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card h-100 p-4 p-lg-5">
+                    <span class="badge badge-soft-primary align-self-start mb-3"><i class="bi bi-person-badge me-1"></i> <?= t('Candidats & prestataires') ?></span>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+                        <span class="badge text-bg-light border"><?= t('Votre CV') ?></span><i class="bi bi-arrow-right text-secondary"></i>
+                        <span class="badge text-bg-light border"><?= t('Analyse IA') ?></span><i class="bi bi-arrow-right text-secondary"></i>
+                        <span class="badge text-bg-light border"><?= t('CV & lettre adaptés') ?></span><i class="bi bi-arrow-right text-secondary"></i>
+                        <span class="badge badge-soft-primary"><?= t('Candidature') ?></span>
+                    </div>
+                    <ul class="list-unstyled d-flex flex-column gap-2 mb-4">
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i><?= t('Analyse de l\'adéquation de votre CV avec une offre') ?></li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i><?= t('Génération de CV et de lettres adaptés à chaque offre') ?></li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i><?= t('Import d\'une offre depuis un lien, un PDF ou une image') ?></li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i><?= t('Candidature assistée, envoyée en un clic') ?></li>
+                    </ul>
+                    <a class="btn btn-primary align-self-start" href="<?= e(url(is_auth() && current_role() === 'client' ? '/client/ia' : '/register')) ?>"><?= t('Utiliser les outils IA') ?></a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card h-100 p-4 p-lg-5">
+                    <span class="badge badge-soft-success align-self-start mb-3"><i class="bi bi-building me-1"></i> <?= t('Entreprises & recruteurs') ?></span>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+                        <span class="badge text-bg-light border"><?= t('Votre offre') ?></span><i class="bi bi-arrow-right text-secondary"></i>
+                        <span class="badge text-bg-light border"><?= t('Candidatures') ?></span><i class="bi bi-arrow-right text-secondary"></i>
+                        <span class="badge text-bg-light border"><?= t('Analyse IA') ?></span><i class="bi bi-arrow-right text-secondary"></i>
+                        <span class="badge badge-soft-success"><?= t('Profils recommandés') ?></span>
+                    </div>
+                    <ul class="list-unstyled d-flex flex-column gap-2 mb-4">
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i><?= t('Rédaction d\'offre assistée par l\'IA') ?></li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i><?= t('Analyse automatique de chaque candidature') ?></li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i><?= t('Classement des profils par score d\'adéquation') ?></li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i><?= t('Gagnez du temps sur le tri des candidatures') ?></li>
+                    </ul>
+                    <a class="btn btn-accent align-self-start" href="<?= e(url(is_auth() && current_role() === 'entreprise' ? '/entreprise/offres/new' : '/register')) ?>"><?= t('Recruter avec l\'IA') ?></a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <a class="text-secondary small" href="<?= e(url('/ia')) ?>"><?= t('En savoir plus sur l\'IA de LULU-OPEN') ?> <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+    </div>
+</section>
+
 <!-- ============ CHIFFRES RÉELS ============ -->
 <?php $hs = $homeStats ?? []; ?>
 <section class="section reveal">
