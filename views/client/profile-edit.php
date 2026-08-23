@@ -161,16 +161,21 @@ document.getElementById('enhanceBio')?.addEventListener('click', async function 
     finally { btn.disabled = false; btn.innerHTML = orig; }
 });
 
-// Limite du nombre de domaines selon le plan
+// Limite du nombre de domaines selon le plan.
+// On ne DÉSACTIVE jamais les cases (une case désactivée n'est pas envoyée au
+// serveur, et ça donne l'impression que le clic ne marche pas). À la place, si
+// on dépasse la limite, on décoche automatiquement la plus ancienne sélection
+// pour laisser la place à la nouvelle (bascule fluide, surtout en plan gratuit).
 (function () {
     const wrap = document.getElementById('categoriesWrap'); if (!wrap) return;
-    const max = parseInt(wrap.getAttribute('data-max') || '1');
-    const boxes = wrap.querySelectorAll('input[name="categories[]"]');
-    const apply = () => {
-        const checked = wrap.querySelectorAll('input[name="categories[]"]:checked').length;
-        boxes.forEach(b => { if (!b.checked) b.disabled = checked >= max; });
-    };
-    boxes.forEach(b => b.addEventListener('change', apply));
-    apply();
+    const max = Math.max(1, parseInt(wrap.getAttribute('data-max') || '1', 10));
+    const boxes = Array.from(wrap.querySelectorAll('input[name="categories[]"]'));
+    boxes.forEach(b => b.addEventListener('change', function () {
+        const checked = boxes.filter(x => x.checked);
+        if (checked.length > max) {
+            const oldest = checked.find(x => x !== this);
+            if (oldest) oldest.checked = false;
+        }
+    }));
 })();
 </script>
