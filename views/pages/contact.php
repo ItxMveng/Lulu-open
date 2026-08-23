@@ -1,8 +1,8 @@
 <section class="py-4">
     <div class="row g-4 justify-content-center">
         <div class="col-lg-4">
-            <h1 class="h3 mb-3">Contactez-nous</h1>
-            <p class="text-secondary">Une question, une suggestion ? Notre équipe vous répond rapidement.</p>
+            <h1 class="h3 mb-3"><?= t('Contactez-nous') ?></h1>
+            <p class="text-secondary"><?= t('Une question, une suggestion ? Notre équipe vous répond rapidement.') ?></p>
             <div class="d-flex flex-column gap-3 mt-4">
                 <div class="d-flex align-items-center gap-3">
                     <span class="category-icon"><i class="bi bi-envelope"></i></span>
@@ -14,8 +14,8 @@
                 <div class="d-flex align-items-center gap-3">
                     <span class="category-icon"><i class="bi bi-clock"></i></span>
                     <div>
-                        <div class="fw-semibold">Réactivité</div>
-                        <div class="text-secondary small">Réponse sous 24–48h ouvrées</div>
+                        <div class="fw-semibold"><?= t('Réactivité') ?></div>
+                        <div class="text-secondary small"><?= t('Réponse sous 24–48h ouvrées') ?></div>
                     </div>
                 </div>
             </div>
@@ -26,7 +26,7 @@
                     <?= csrf_field() ?>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label" for="name">Nom</label>
+                            <label class="form-label" for="name"><?= t('Nom') ?></label>
                             <input class="form-control" type="text" id="name" name="name" value="<?= e((string) old('name')) ?>" required>
                         </div>
                         <div class="col-md-6">
@@ -34,11 +34,11 @@
                             <input class="form-control" type="email" id="email" name="email" value="<?= e((string) old('email')) ?>" required>
                         </div>
                         <div class="col-12">
-                            <label class="form-label" for="message">Message</label>
+                            <label class="form-label" for="message"><?= t('Message') ?></label>
                             <textarea class="form-control" id="message" name="message" rows="6" required><?= e((string) old('message')) ?></textarea>
                         </div>
                     </div>
-                    <button class="btn btn-primary mt-4" type="submit"><i class="bi bi-send me-1"></i>Envoyer le message</button>
+                    <button class="btn btn-primary mt-4" type="submit"><i class="bi bi-send me-1"></i><?= t('Envoyer le message') ?></button>
                 </div>
             </form>
         </div>
