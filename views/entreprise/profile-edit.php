@@ -19,7 +19,7 @@ $listVal = static function ($json): string {
             <div class="card mb-4">
                 <div class="card-body p-4 text-center">
                     <?php if (!empty($profile['photo_path'])): ?>
-                        <img class="rounded mb-3" style="width:120px;height:120px;object-fit:cover;" src="<?= e(url('/' . ltrim((string) $profile['photo_path'], '/'))) ?>" alt="Logo">
+                        <img class="rounded mb-3" style="width:120px;height:120px;object-fit:cover;" src="<?= e(url('/' . ltrim((string) $profile['photo_path'], '/'))) ?>" alt="Logo" loading="lazy" decoding="async">
                     <?php else: ?>
                         <span class="avatar-circle mx-auto mb-3" style="width:96px;height:96px;font-size:2rem;border-radius:14px;"><i class="bi bi-building"></i></span>
                     <?php endif; ?>

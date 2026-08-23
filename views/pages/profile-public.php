@@ -30,7 +30,7 @@ $parseLink = static function (string $s): array {
                 <div class="card-body p-4 p-lg-5">
                     <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3 mb-4">
                         <?php if (!empty($profile['photo_path'])): ?>
-                            <img class="<?= $isEntreprise ? 'rounded' : 'rounded-circle' ?>" style="width:80px;height:80px;object-fit:cover;" src="<?= e(url('/' . ltrim((string) $profile['photo_path'], '/'))) ?>" alt="<?= e($displayName) ?>">
+                            <img class="<?= $isEntreprise ? 'rounded' : 'rounded-circle' ?>" style="width:80px;height:80px;object-fit:cover;" src="<?= e(url('/' . ltrim((string) $profile['photo_path'], '/'))) ?>" alt="<?= e($displayName) ?>" loading="lazy" decoding="async">
                         <?php else: ?>
                             <span class="avatar-circle" style="width:80px;height:80px;font-size:1.6rem;<?= $isEntreprise ? 'border-radius:16px;' : '' ?>"><?= e($initials) ?></span>
                         <?php endif; ?>
@@ -65,7 +65,7 @@ $parseLink = static function (string $s): array {
                                 <div class="col-sm-6">
                                     <div class="border rounded-3 h-100 d-flex flex-column overflow-hidden">
                                         <?php if (!empty($s['image_path'])): ?>
-                                            <img src="<?= e(url('/' . ltrim((string) $s['image_path'], '/'))) ?>" alt="<?= e((string) $s['title']) ?>" style="height:120px;object-fit:cover;">
+                                            <img src="<?= e(url('/' . ltrim((string) $s['image_path'], '/'))) ?>" alt="<?= e((string) $s['title']) ?>" style="height:120px;object-fit:cover;" loading="lazy" decoding="async">
                                         <?php endif; ?>
                                         <div class="p-3 d-flex flex-column flex-grow-1">
                                         <div class="fw-semibold mb-1"><?= e((string) $s['title']) ?></div>

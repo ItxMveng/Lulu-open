@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231B3A5B'/%3E%3Ctext x='50%25' y='53%25' font-family='Arial,sans-serif' font-size='38' font-weight='bold' fill='%23F97316' text-anchor='middle' dominant-baseline='central'%3EL%3C/text%3E%3C/svg%3E">
     <?php
     $metaTitle = t((string) ($pageTitle ?? APP_NAME)) . ' | ' . APP_NAME;
     $metaDescription = $metaDescription ?? 'LULU-OPEN, la marketplace africaine de l\'emploi et des talents : trouvez un job, un freelance ou un candidat, postulez en un clic et boostez votre CV avec l\'IA.';
@@ -25,6 +26,10 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="<?= e($metaTitle) ?>">
     <meta name="twitter:description" content="<?= e($metaDescription) ?>">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="<?= e(url('/assets/css/app.css')) ?>" rel="stylesheet">
@@ -38,8 +43,9 @@
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?></script>
 </head>
 <body class="d-flex flex-column min-vh-100">
+<a href="#main" class="skip-link"><?= t('Aller au contenu') ?></a>
 <?php View::partial('components/navbar'); ?>
-<main class="flex-grow-1<?= empty($fullWidth) ? ' py-4' : '' ?>">
+<main id="main" class="flex-grow-1<?= empty($fullWidth) ? ' py-4' : '' ?>">
     <?php if (empty($fullWidth)): ?>
         <div class="container">
             <?php View::partial('components/alerts'); ?>

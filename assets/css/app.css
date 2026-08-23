@@ -4,7 +4,7 @@
    Re-skin de Bootstrap 5 via tokens pour une identité pro et cohérente.
    ===================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+/* Police chargée via <link> + preconnect dans le <head> (plus rapide qu'un @import). */
 
 :root {
     /* Palette — bleu foncé + orange vif fruité + vert frais (harmonieuse, chaleureuse) */
@@ -199,6 +199,13 @@ a { text-decoration: none; transition: color var(--lulu-t); }
 .reveal.is-visible { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
 
+/* Accessibilité : lien d'évitement + anneau de focus clavier (navigation au clavier) */
+.skip-link { position: absolute; left: 0.5rem; top: -60px; z-index: 2000; background: var(--lulu-primary); color: #fff; padding: 0.6rem 1rem; border-radius: 0 0 var(--lulu-radius-sm) var(--lulu-radius-sm); font-weight: 600; transition: top .2s ease; }
+.skip-link:focus { top: 0; color: #fff; }
+a:focus-visible, button:focus-visible, .btn:focus-visible, .form-control:focus-visible, .form-select:focus-visible, .form-check-input:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid rgba(27, 58, 91, 0.45); outline-offset: 2px;
+}
+
 /* ---------- Bandeau cookies ---------- */
 .cookie-consent { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1090; padding: 0.75rem; }
 .cookie-consent-inner {
@@ -283,6 +290,9 @@ a:focus-visible, .btn:focus-visible, .form-control:focus-visible, .nav-link:focu
 .reveal-left { opacity: 0; transform: translateX(-40px); transition: opacity .6s ease, transform .6s cubic-bezier(0.4,0,0.2,1); }
 .reveal-right { opacity: 0; transform: translateX(40px); transition: opacity .6s ease, transform .6s cubic-bezier(0.4,0,0.2,1); }
 .reveal-left.is-visible, .reveal-right.is-visible { opacity: 1; transform: none; }
+/* Mobile : décalage vertical (pas horizontal) pour ne pas créer de scroll latéral
+   — les colonnes s'empilent, l'effet gauche/droite n'a plus de sens. */
+@media (max-width: 991.98px) { .reveal-left, .reveal-right { transform: translateY(24px); } }
 @media (prefers-reduced-motion: reduce) { .reveal-left, .reveal-right { opacity: 1; transform: none; } }
 
 .hero-floats { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }

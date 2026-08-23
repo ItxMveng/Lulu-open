@@ -145,6 +145,8 @@ final class Lang
         // Carte d'offre
         'Mission' => 'Project', 'Stage' => 'Internship', 'Télétravail' => 'Remote',
         'Non précisé' => 'Not specified', 'Voir l\'offre' => 'View offer',
+        // Accessibilité
+        'Aller au contenu' => 'Skip to content',
         // Cookies
         'Respect de votre vie privée' => 'Your privacy matters', 'Refuser' => 'Decline', 'Accepter' => 'Accept',
         'En savoir plus' => 'Learn more',

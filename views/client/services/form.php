@@ -63,7 +63,7 @@ $curType = (string) $val('price_type', 'from');
                     <?php $curImg = (string) ($service['image_path'] ?? ''); ?>
                     <?php if ($curImg !== ''): ?>
                         <div class="d-flex align-items-center gap-3 mb-2">
-                            <img src="<?= e(url('/' . ltrim($curImg, '/'))) ?>" alt="Visuel" style="width:120px;height:80px;object-fit:cover;border-radius:8px;">
+                            <img src="<?= e(url('/' . ltrim($curImg, '/'))) ?>" alt="Visuel" style="width:120px;height:80px;object-fit:cover;border-radius:8px;" loading="lazy" decoding="async">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="remove_image" name="remove_image" value="1">
                                 <label class="form-check-label small" for="remove_image">Retirer ce visuel</label>
