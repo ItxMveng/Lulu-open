@@ -62,13 +62,26 @@ $savedSearches = $savedSearches ?? [];
     </form>
 
     <?php if (is_auth() && $savedSearches): ?>
-        <div class="d-flex flex-wrap gap-2 align-items-center mb-4">
-            <span class="text-secondary small">Recherches sauvegardées :</span>
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+            <span class="text-secondary small"><?= t('Recherches sauvegardées :') ?></span>
             <?php foreach ($savedSearches as $saved): ?>
                 <span class="badge badge-soft-primary"><i class="bi bi-bookmark me-1"></i><?= e((string) $saved['name']) ?></span>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
+
+    <!-- Alerte d'emploi : convertir (visiteur -> inscription, connecté -> alerte) -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4 p-3 rounded-3" style="background: var(--lulu-surface-2);">
+        <div class="small mb-0"><i class="bi bi-bell-fill me-1 text-primary"></i><?= t('Recevez par email les nouvelles offres qui correspondent à cette recherche.') ?></div>
+        <div class="d-flex align-items-center gap-2">
+            <span id="alertStatus" class="small text-success"></span>
+            <?php if (is_auth()): ?>
+                <button class="btn btn-sm btn-primary" id="createAlertBtn" data-filters='<?= e(json_encode($filters ?? [], JSON_UNESCAPED_UNICODE)) ?>'><i class="bi bi-bell me-1"></i><?= t('Créer une alerte') ?></button>
+            <?php else: ?>
+                <a class="btn btn-sm btn-primary" href="<?= e(url('/register')) ?>"><i class="bi bi-bell me-1"></i><?= t('Créer une alerte') ?></a>
+            <?php endif; ?>
+        </div>
+    </div>
 
     <ul class="nav nav-pills mb-4 gap-2">
         <li class="nav-item"><a class="nav-link <?= $activeTab === 'profils' ? 'active' : '' ?>" href="<?= e(url('/search/profils?' . http_build_query(array_merge($filters, ['tab' => 'profils'])))) ?>"><i class="bi bi-person me-1"></i><?= t('Talents & prestations') ?></a></li>
@@ -77,7 +90,15 @@ $savedSearches = $savedSearches ?? [];
 
     <?php if ($activeTab === 'offres'): ?>
         <?php if (empty($offers)): ?>
-            <?php View::partial('components/empty-state', ['icon' => 'bi-briefcase', 'title' => 'Aucune offre trouvée', 'text' => 'Essayez d\'élargir vos critères de recherche.']); ?>
+            <div class="card text-center p-5">
+                <div class="mb-3" style="font-size:2.4rem;"><i class="bi bi-search text-secondary"></i></div>
+                <h3 class="h5"><?= t('Aucune offre pour cette recherche') ?></h3>
+                <p class="text-secondary mb-4 mx-auto" style="max-width:48ch;"><?= t('Élargissez vos critères ou explorez les domaines. Vous pouvez aussi créer une alerte pour être prévenu dès qu\'une offre correspond.') ?></p>
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a class="btn btn-outline-primary" href="<?= e(url('/search?tab=offres')) ?>"><?= t('Élargir la recherche') ?></a>
+                    <a class="btn btn-outline-secondary" href="<?= e(url('/categories')) ?>"><?= t('Explorer les domaines') ?></a>
+                </div>
+            </div>
         <?php else: ?>
             <div class="row g-4">
                 <?php foreach ($offers as $offer): ?>
@@ -88,11 +109,19 @@ $savedSearches = $savedSearches ?? [];
     <?php else: ?>
         <?php $items = $profiles['items'] ?? []; ?>
         <?php if (empty($items)): ?>
-            <?php View::partial('components/empty-state', ['icon' => 'bi-person-x', 'title' => 'Aucun profil trouvé', 'text' => 'Modifiez vos filtres pour découvrir plus de talents.']); ?>
+            <div class="card text-center p-5">
+                <div class="mb-3" style="font-size:2.4rem;"><i class="bi bi-people text-secondary"></i></div>
+                <h3 class="h5"><?= t('Aucun talent pour cette recherche') ?></h3>
+                <p class="text-secondary mb-4 mx-auto" style="max-width:48ch;"><?= t('Modifiez vos filtres ou explorez les domaines pour découvrir plus de profils.') ?></p>
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a class="btn btn-outline-primary" href="<?= e(url('/search?tab=profils')) ?>"><?= t('Élargir la recherche') ?></a>
+                    <a class="btn btn-outline-secondary" href="<?= e(url('/categories')) ?>"><?= t('Explorer les domaines') ?></a>
+                </div>
+            </div>
         <?php else: ?>
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <span class="text-secondary small"><?= e((string) ($profiles['total'] ?? 0)) ?> résultat(s)</span>
-                <span class="text-secondary small">Page <?= e((string) ($profiles['page'] ?? 1)) ?> / <?= e((string) ($profiles['pages'] ?? 1)) ?></span>
+                <span class="text-secondary small"><?= e((string) ($profiles['total'] ?? 0)) ?> <?= t('résultat(s)') ?></span>
+                <span class="text-secondary small"><?= t('Page') ?> <?= e((string) ($profiles['page'] ?? 1)) ?> / <?= e((string) ($profiles['pages'] ?? 1)) ?></span>
             </div>
             <div class="row g-4">
                 <?php foreach ($items as $profile): ?>
@@ -102,6 +131,33 @@ $savedSearches = $savedSearches ?? [];
         <?php endif; ?>
     <?php endif; ?>
 </section>
+
+<script>
+document.getElementById('createAlertBtn')?.addEventListener('click', async function () {
+    var btn = this, status = document.getElementById('alertStatus');
+    var filters = {};
+    try { filters = JSON.parse(btn.getAttribute('data-filters') || '{}'); } catch (e) {}
+    var name = ((filters.q || '') + (filters.location ? ' · ' + filters.location : '')).trim() || <?= json_encode(t('Alerte emploi')) ?>;
+    var orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>';
+    try {
+        var res = await fetch('<?= e(url('/api/saved-searches')) ?>', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, filters: filters, alert_enabled: true })
+        });
+        var d = await res.json();
+        if (res.ok && d.success) {
+            status.className = 'small text-success';
+            status.textContent = <?= json_encode(t('Alerte créée — vous serez prévenu par email.')) ?>;
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>' + <?= json_encode(t('Alerte créée')) ?>;
+        } else {
+            status.className = 'small text-danger'; status.textContent = d.error || 'Erreur'; btn.disabled = false; btn.innerHTML = orig;
+        }
+    } catch (e) {
+        status.className = 'small text-danger'; status.textContent = <?= json_encode(t('Erreur réseau.')) ?>; btn.disabled = false; btn.innerHTML = orig;
+    }
+});
+</script>
 
 <?php if (is_auth()): ?>
 <script>

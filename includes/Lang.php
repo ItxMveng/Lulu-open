@@ -147,6 +147,19 @@ final class Lang
         'Non précisé' => 'Not specified', 'Voir l\'offre' => 'View offer',
         // Accessibilité
         'Aller au contenu' => 'Skip to content',
+        // Recherche & alertes (conversion, Sprint 10)
+        'Recherches sauvegardées :' => 'Saved searches:',
+        'Recevez par email les nouvelles offres qui correspondent à cette recherche.' => 'Get the new offers matching this search by email.',
+        'Créer une alerte' => 'Create an alert', 'Alerte emploi' => 'Job alert', 'Alerte créée' => 'Alert created',
+        'Alerte créée — vous serez prévenu par email.' => 'Alert created — we\'ll notify you by email.',
+        'Erreur réseau.' => 'Network error.',
+        'Aucune offre pour cette recherche' => 'No offer for this search',
+        'Aucun talent pour cette recherche' => 'No talent for this search',
+        'Élargissez vos critères ou explorez les domaines. Vous pouvez aussi créer une alerte pour être prévenu dès qu\'une offre correspond.'
+            => 'Broaden your criteria or explore fields. You can also create an alert to be notified as soon as an offer matches.',
+        'Modifiez vos filtres ou explorez les domaines pour découvrir plus de profils.' => 'Adjust your filters or explore fields to discover more profiles.',
+        'Élargir la recherche' => 'Broaden the search', 'Explorer les domaines' => 'Explore fields',
+        'résultat(s)' => 'result(s)', 'Page' => 'Page',
         // IA & matching (Sprint 9)
         'IA & matching' => 'AI & matching', 'IA' => 'AI',
         'Nos outils analysent les profils et les opportunités pour connecter les bonnes compétences aux bonnes offres — l\'humain garde la main.'
