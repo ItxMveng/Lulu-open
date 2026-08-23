@@ -52,8 +52,47 @@
 </div><!-- /.hero-pin -->
 <div class="wave-divider"><svg viewBox="0 0 1440 48" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path fill="var(--lulu-surface-2)" d="M0,24 C240,48 480,48 720,28 C960,8 1200,8 1440,28 L1440,48 L0,48 Z"/></svg></div>
 
+<!-- ============ À PROPOS ============ -->
+<section class="section bg-surface-2 pt-0 reveal">
+    <div class="container">
+        <div class="row g-4 g-lg-5 align-items-center">
+            <div class="col-lg-6 reveal-left">
+                <span class="hero-eyebrow mb-3"><i class="bi bi-stars"></i> <?= t('Qu\'est-ce que LULU-OPEN ?') ?></span>
+                <h2 class="h3 mb-3"><?= t('La plateforme qui rapproche les talents et les opportunités') ?></h2>
+                <p class="text-secondary mb-4" style="max-width: 54ch;"><?= t('LULU-OPEN réunit candidats, freelances et entreprises au même endroit : emploi, missions, prestations et recrutement. Simple, sécurisé et pensé pour l\'Afrique, ouvert sur le monde.') ?></p>
+                <div class="row g-3">
+                    <div class="col-sm-4"><div class="d-flex flex-column gap-1"><span class="category-icon"><i class="bi bi-patch-check-fill text-primary"></i></span><span class="fw-semibold small"><?= t('Entreprises vérifiées') ?></span></div></div>
+                    <div class="col-sm-4"><div class="d-flex flex-column gap-1"><span class="category-icon"><i class="bi bi-robot text-green"></i></span><span class="fw-semibold small"><?= t('Outils IA intégrés') ?></span></div></div>
+                    <div class="col-sm-4"><div class="d-flex flex-column gap-1"><span class="category-icon"><i class="bi bi-globe2 text-accent"></i></span><span class="fw-semibold small"><?= t('Devise locale & bilingue') ?></span></div></div>
+                </div>
+            </div>
+            <div class="col-lg-6 reveal-right text-center">
+                <svg class="about-illus" viewBox="0 0 460 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="LULU-OPEN">
+                    <rect x="24" y="70" width="180" height="120" rx="16" fill="var(--lulu-surface)" stroke="var(--lulu-border)"/>
+                    <circle cx="60" cy="104" r="18" fill="var(--lulu-primary)" opacity="0.15"/><circle cx="60" cy="104" r="10" fill="var(--lulu-primary)"/>
+                    <rect x="88" y="94" width="90" height="10" rx="5" fill="var(--lulu-primary)" opacity="0.25"/>
+                    <rect x="88" y="112" width="60" height="8" rx="4" fill="var(--lulu-border)"/>
+                    <rect x="44" y="140" width="46" height="20" rx="10" fill="var(--lulu-green)" opacity="0.18"/>
+                    <rect x="98" y="140" width="46" height="20" rx="10" fill="var(--lulu-primary)" opacity="0.12"/>
+                    <rect x="256" y="130" width="180" height="120" rx="16" fill="var(--lulu-surface)" stroke="var(--lulu-border)"/>
+                    <rect x="278" y="150" width="26" height="26" rx="7" fill="var(--lulu-accent)" opacity="0.85"/>
+                    <rect x="316" y="152" width="96" height="10" rx="5" fill="var(--lulu-accent)" opacity="0.35"/>
+                    <rect x="316" y="170" width="64" height="8" rx="4" fill="var(--lulu-border)"/>
+                    <rect x="278" y="196" width="130" height="10" rx="5" fill="var(--lulu-border)"/>
+                    <rect x="278" y="214" width="90" height="10" rx="5" fill="var(--lulu-border)"/>
+                    <path d="M150 150 C 210 210, 250 120, 300 175" stroke="var(--lulu-accent)" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/>
+                    <circle cx="230" cy="163" r="20" fill="var(--lulu-primary)"/>
+                    <path d="M223 163 l5 5 l10 -11" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="392" cy="86" r="8" fill="var(--lulu-green)" opacity="0.6"/>
+                    <circle cx="40" cy="220" r="6" fill="var(--lulu-accent)" opacity="0.6"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- ============ CHOIX DU PARCOURS ============ -->
-<section class="section bg-surface-2 pb-0 reveal">
+<section class="section reveal">
     <div class="container">
         <div class="row g-3 g-lg-4 justify-content-center">
             <div class="col-md-6 col-lg-5">
@@ -92,12 +131,16 @@
             <a class="btn btn-outline-secondary d-none d-sm-inline-flex" href="<?= e(url('/search?tab=offres')) ?>"><?= t('Voir toutes les opportunités') ?> <i class="bi bi-arrow-right ms-1"></i></a>
         </div>
         <?php if (!empty($latestOffers)): ?>
-            <div class="row g-3 g-lg-4">
-                <?php foreach ($latestOffers as $offer): ?>
-                    <div class="col-md-6 col-lg-4"><?php View::partial('components/offer-card', ['offer' => $offer]); ?></div>
-                <?php endforeach; ?>
+            <div class="offers-carousel-wrap position-relative">
+                <button class="carousel-nav carousel-prev d-none d-lg-inline-flex" type="button" aria-label="<?= e(t('Précédent')) ?>"><i class="bi bi-chevron-left"></i></button>
+                <div class="offers-carousel" id="offersCarousel">
+                    <?php foreach ($latestOffers as $offer): ?>
+                        <div class="offers-carousel-item"><?php View::partial('components/offer-card', ['offer' => $offer]); ?></div>
+                    <?php endforeach; ?>
+                </div>
+                <button class="carousel-nav carousel-next d-none d-lg-inline-flex" type="button" aria-label="<?= e(t('Suivant')) ?>"><i class="bi bi-chevron-right"></i></button>
             </div>
-            <div class="text-center mt-4 d-sm-none">
+            <div class="text-center mt-4 d-lg-none">
                 <a class="btn btn-outline-primary" href="<?= e(url('/search?tab=offres')) ?>"><?= t('Voir toutes les opportunités') ?></a>
             </div>
         <?php else: ?>
@@ -136,36 +179,6 @@
 </section>
 <?php endif; ?>
 
-<!-- ============ FONCTIONNALITÉS ============ -->
-<section class="section reveal">
-    <div class="container">
-        <div class="text-center mb-5">
-            <span class="hero-eyebrow mb-3"><i class="bi bi-grid-1x2"></i> <?= t('Nos chiffres') ?></span>
-            <h2 class="h3 mb-2"><?= t('Tout ce qu\'il vous faut, au même endroit') ?></h2>
-            <p class="text-secondary mb-0 mx-auto" style="max-width: 52ch;"><?= t('Une plateforme complète pensée pour l\'Afrique et ouverte sur le monde.') ?></p>
-        </div>
-        <div class="row g-4">
-            <?php
-            $features = [
-                ['bi-lightning-charge-fill', 'Candidature en 1 clic', 'Postulez avec votre CV et une lettre générée par l\'IA, sans friction.', 'text-warning'],
-                ['bi-robot', 'Assistant IA', 'Analyse de CV, génération de CV et de lettres adaptées à chaque offre.', 'text-primary'],
-                ['bi-shield-lock-fill', 'Messagerie sécurisée', 'Échangez directement avec les recruteurs ou les candidats en toute sécurité.', 'text-success'],
-                ['bi-patch-check-fill', 'Entreprises vérifiées', 'Chaque entreprise est vérifiée par notre équipe, pour réduire les risques d\'annonces frauduleuses.', 'text-primary'],
-                ['bi-globe2', 'Multi-devises', 'Les tarifs s\'affichent automatiquement dans la devise de votre pays.', 'text-success'],
-                ['bi-translate', 'Bilingue FR / EN', 'Naviguez en français ou en anglais, selon votre préférence.', 'text-warning'],
-            ];
-            foreach ($features as [$icon, $title, $desc, $color]): ?>
-                <div class="col-md-6 col-lg-4">
-                    <div class="card card-hover h-100 p-4">
-                        <span class="category-icon mb-3"><i class="bi <?= e($icon) ?> <?= e($color) ?>"></i></span>
-                        <h3 class="h5 mb-2"><?= t($title) ?></h3>
-                        <p class="text-secondary small mb-0"><?= t($desc) ?></p>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-</section>
 
 <!-- ============ COMMENT ÇA MARCHE ============ -->
 <section class="section bg-surface-2 reveal">
@@ -255,24 +268,6 @@
     </div>
 </section>
 
-<!-- ============ CHIFFRES RÉELS ============ -->
-<?php $hs = $homeStats ?? []; ?>
-<section class="section reveal">
-    <div class="container">
-        <div class="text-center mb-4">
-            <h2 class="h3 mb-1"><?= t('Une plateforme en croissance') ?></h2>
-            <p class="text-secondary mb-0"><?= t('Rejoignez les talents et les entreprises déjà présents.') ?></p>
-        </div>
-        <div class="cta-band p-4 p-lg-5">
-            <div class="row text-center g-4 text-white">
-                <div class="col-6 col-lg-3"><div class="stat-value text-white"><?= (int) ($hs['talents'] ?? 0) ?>+</div><div class="opacity-75 small"><?= t('talents actifs') ?></div></div>
-                <div class="col-6 col-lg-3"><div class="stat-value text-white"><?= (int) ($hs['offers'] ?? 0) ?>+</div><div class="opacity-75 small"><?= t('offres en ligne') ?></div></div>
-                <div class="col-6 col-lg-3"><div class="stat-value text-white"><?= (int) ($hs['categories'] ?? 0) ?></div><div class="opacity-75 small"><?= t('domaines métiers') ?></div></div>
-                <div class="col-6 col-lg-3"><div class="stat-value text-white"><?= (int) ($hs['companies'] ?? 0) ?></div><div class="opacity-75 small"><?= t('entreprises vérifiées') ?></div></div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <!-- ============ CONFIANCE ============ -->
 <section class="section reveal">
@@ -380,5 +375,16 @@
     }
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
+})();
+
+// Carrousel des offres : boutons précédent / suivant
+(function () {
+    var track = document.getElementById('offersCarousel');
+    if (!track) return;
+    var wrap = track.closest('.offers-carousel-wrap');
+    function step() { var it = track.querySelector('.offers-carousel-item'); return it ? it.getBoundingClientRect().width + 16 : 320; }
+    var prev = wrap.querySelector('.carousel-prev'), next = wrap.querySelector('.carousel-next');
+    prev && prev.addEventListener('click', function () { track.scrollBy({ left: -step(), behavior: 'smooth' }); });
+    next && next.addEventListener('click', function () { track.scrollBy({ left: step(), behavior: 'smooth' }); });
 })();
 </script>

@@ -148,6 +148,13 @@ final class Lang
         // Accessibilité
         'Aller au contenu' => 'Skip to content',
         'Signaler cette annonce' => 'Report this listing',
+        // Accueil — section À propos + carrousel
+        'Qu\'est-ce que LULU-OPEN ?' => 'What is LULU-OPEN?',
+        'La plateforme qui rapproche les talents et les opportunités' => 'The platform that brings talent and opportunities together',
+        'LULU-OPEN réunit candidats, freelances et entreprises au même endroit : emploi, missions, prestations et recrutement. Simple, sécurisé et pensé pour l\'Afrique, ouvert sur le monde.'
+            => 'LULU-OPEN brings candidates, freelancers and companies together in one place: jobs, projects, services and hiring. Simple, secure, built for Africa and open to the world.',
+        'Outils IA intégrés' => 'Built-in AI tools', 'Devise locale & bilingue' => 'Local currency & bilingual',
+        'Précédent' => 'Previous', 'Suivant' => 'Next',
         // Titres de page secondaires
         'Offres et recrutement' => 'Jobs & recruiting', 'À propos' => 'About',
         // Page Emplois

@@ -206,6 +206,31 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, .form-control:focus-v
     outline: 3px solid rgba(27, 58, 91, 0.45); outline-offset: 2px;
 }
 
+/* Utilitaires couleur (exposent les tokens de marque, pas de nouveau coloris) */
+.text-green { color: var(--lulu-green) !important; }
+.text-accent { color: var(--lulu-accent) !important; }
+
+/* Illustration section « À propos » */
+.about-illus { width: 100%; max-width: 440px; height: auto; }
+
+/* Carrousel d'offres (défilement horizontal, scroll-snap, sans dépendance) */
+.offers-carousel-wrap { display: flex; align-items: center; gap: 0.5rem; }
+.offers-carousel {
+    flex: 1; display: flex; gap: 1rem; overflow-x: auto;
+    scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+    padding: 0.4rem 0.25rem 1rem; scrollbar-width: thin;
+}
+.offers-carousel::-webkit-scrollbar { height: 6px; }
+.offers-carousel::-webkit-scrollbar-thumb { background: var(--lulu-border); border-radius: 999px; }
+.offers-carousel-item { scroll-snap-align: start; flex: 0 0 auto; width: min(340px, 82vw); }
+.carousel-nav {
+    flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%;
+    border: 1px solid var(--lulu-border); background: var(--lulu-surface); color: var(--lulu-primary);
+    align-items: center; justify-content: center; box-shadow: var(--lulu-shadow-sm);
+    transition: background-color var(--lulu-t), color var(--lulu-t);
+}
+.carousel-nav:hover { background: var(--lulu-primary); color: #fff; }
+
 /* ---------- Bandeau cookies ---------- */
 .cookie-consent { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1090; padding: 0.75rem; }
 .cookie-consent-inner {
