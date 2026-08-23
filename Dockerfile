@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         poppler-utils unzip fonts-dejavu-core \
     && docker-php-ext-configure gd --with-jpeg --with-webp \
     && docker-php-ext-install pdo_mysql mbstring zip intl gd \
-    && a2enmod rewrite headers \
+    && a2enmod rewrite headers deflate expires \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Autoriser le .htaccess (front controller) sur le DocumentRoot
