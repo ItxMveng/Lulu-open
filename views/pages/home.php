@@ -52,6 +52,65 @@
 </div><!-- /.hero-pin -->
 <div class="wave-divider"><svg viewBox="0 0 1440 48" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><path fill="var(--lulu-surface-2)" d="M0,24 C240,48 480,48 720,28 C960,8 1200,8 1440,28 L1440,48 L0,48 Z"/></svg></div>
 
+<!-- ============ CHOIX DU PARCOURS ============ -->
+<section class="section bg-surface-2 pb-0 reveal">
+    <div class="container">
+        <div class="row g-3 g-lg-4 justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <a class="card card-hover h-100 p-4 d-flex flex-row align-items-center gap-3 text-decoration-none" href="<?= e(url('/search?tab=offres')) ?>">
+                    <span class="category-icon flex-shrink-0"><i class="bi bi-person-workspace text-primary"></i></span>
+                    <span class="flex-grow-1">
+                        <span class="d-block fw-semibold text-body"><?= t('Je cherche un emploi ou une mission') ?></span>
+                        <span class="d-block text-secondary small"><?= t('Parcourez les offres et prestations disponibles.') ?></span>
+                    </span>
+                    <i class="bi bi-arrow-right text-primary"></i>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-5">
+                <a class="card card-hover h-100 p-4 d-flex flex-row align-items-center gap-3 text-decoration-none" href="<?= e(url('/search?tab=profils')) ?>">
+                    <span class="category-icon flex-shrink-0"><i class="bi bi-building-check text-success"></i></span>
+                    <span class="flex-grow-1">
+                        <span class="d-block fw-semibold text-body"><?= t('Je cherche un talent') ?></span>
+                        <span class="d-block text-secondary small"><?= t('Trouvez le bon profil ou publiez une offre.') ?></span>
+                    </span>
+                    <i class="bi bi-arrow-right text-success"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ DERNIÈRES OPPORTUNITÉS ============ -->
+<?php $latestOffers = $latestOffers ?? []; ?>
+<section class="section bg-surface-2 reveal">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <h2 class="h3 mb-1"><?= t('Dernières opportunités') ?></h2>
+                <p class="text-secondary mb-0"><?= t('Des offres réelles publiées par des entreprises vérifiées.') ?></p>
+            </div>
+            <a class="btn btn-outline-secondary d-none d-sm-inline-flex" href="<?= e(url('/search?tab=offres')) ?>"><?= t('Voir toutes les opportunités') ?> <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+        <?php if (!empty($latestOffers)): ?>
+            <div class="row g-3 g-lg-4">
+                <?php foreach ($latestOffers as $offer): ?>
+                    <div class="col-md-6 col-lg-4"><?php View::partial('components/offer-card', ['offer' => $offer]); ?></div>
+                <?php endforeach; ?>
+            </div>
+            <div class="text-center mt-4 d-sm-none">
+                <a class="btn btn-outline-primary" href="<?= e(url('/search?tab=offres')) ?>"><?= t('Voir toutes les opportunités') ?></a>
+            </div>
+        <?php else: ?>
+            <div class="card text-center p-5">
+                <div class="mb-3" style="font-size:2.4rem;"><i class="bi bi-briefcase text-secondary"></i></div>
+                <h3 class="h5"><?= t('Les premières offres arrivent bientôt') ?></h3>
+                <p class="text-secondary mb-3"><?= t('Créez votre profil dès maintenant pour être alerté des nouvelles opportunités.') ?></p>
+                <div><a class="btn btn-primary" href="<?= e(url('/register')) ?>"><?= t('Créer mon profil') ?></a></div>
+            </div>
+        <?php endif; ?>
+    </div>
+</section>
+
 <!-- ============ CATÉGORIES ============ -->
 <?php if (!empty($categories)): ?>
 <section class="section reveal">
@@ -148,6 +207,10 @@
 <?php $hs = $homeStats ?? []; ?>
 <section class="section reveal">
     <div class="container">
+        <div class="text-center mb-4">
+            <h2 class="h3 mb-1"><?= t('Une plateforme en croissance') ?></h2>
+            <p class="text-secondary mb-0"><?= t('Rejoignez les talents et les entreprises déjà présents.') ?></p>
+        </div>
         <div class="cta-band p-4 p-lg-5">
             <div class="row text-center g-4 text-white">
                 <div class="col-6 col-lg-3"><div class="stat-value text-white"><?= (int) ($hs['talents'] ?? 0) ?>+</div><div class="opacity-75 small"><?= t('talents actifs') ?></div></div>
@@ -159,29 +222,29 @@
     </div>
 </section>
 
-<!-- ============ TÉMOIGNAGES ============ -->
+<!-- ============ CONFIANCE ============ -->
 <section class="section reveal">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="h3 mb-2"><?= t('Ils en parlent mieux que nous') ?></h2>
-            <p class="text-secondary mb-0"><?= t('Des talents et des entreprises qui avancent avec LULU-OPEN.') ?></p>
+            <h2 class="h3 mb-2"><?= t('Pourquoi faire confiance à LULU-OPEN ?') ?></h2>
+            <p class="text-secondary mb-0 mx-auto" style="max-width: 52ch;"><?= t('Une plateforme pensée pour vous protéger et vous faire gagner du temps.') ?></p>
         </div>
         <div class="row g-4">
             <?php
-            $testimonials = [
-                ['Aminata D.', 'Développeuse — Abidjan', 'Grâce à l\'assistant IA, j\'ai décroché un entretien en une semaine. Le CV généré était bluffant.', 'AD'],
-                ['Sahel Talents', 'Cabinet de recrutement — Dakar', 'Le matching IA nous fait gagner un temps fou pour trier les candidatures reçues.', 'ST'],
-                ['Kwame M.', 'Designer — Douala', 'Enfin une plateforme sérieuse où les entreprises sont vérifiées. Je postule en confiance.', 'KM'],
+            $trust = [
+                ['bi-patch-check-fill', 'Entreprises vérifiées', 'Chaque entreprise est contrôlée par notre équipe avant de publier une offre.', 'text-primary'],
+                ['bi-shield-lock-fill', 'Messagerie sécurisée', 'Échangez en toute sécurité, sans partager vos coordonnées trop tôt.', 'text-success'],
+                ['bi-flag-fill', 'Signalement des annonces', 'Un doute sur une offre ? Signalez-la, notre équipe vérifie.', 'text-warning'],
+                ['bi-robot', 'L\'IA au service de la mise en relation', 'L\'IA vous aide à postuler et à recruter, sans jamais remplacer l\'humain.', 'text-primary'],
+                ['bi-globe2', 'Pensée pour l\'Afrique', 'Devise locale, marché africain, ouverture internationale.', 'text-success'],
+                ['bi-lock-fill', 'Vos données protégées', 'Profil visible selon votre choix, compte supprimable à tout moment.', 'text-warning'],
             ];
-            foreach ($testimonials as [$name, $role, $quote, $ini]): ?>
-                <div class="col-md-4">
+            foreach ($trust as [$icon, $ti, $de, $co]): ?>
+                <div class="col-md-6 col-lg-4">
                     <div class="card h-100 p-4">
-                        <div class="text-warning mb-2"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></div>
-                        <p class="mb-3">« <?= t($quote) ?> »</p>
-                        <div class="d-flex align-items-center gap-2 mt-auto">
-                            <span class="avatar-sm"><?= e($ini) ?></span>
-                            <div><div class="fw-semibold small"><?= e($name) ?></div><div class="text-secondary" style="font-size:.8rem;"><?= e($role) ?></div></div>
-                        </div>
+                        <span class="category-icon mb-3"><i class="bi <?= e($icon) ?> <?= e($co) ?>"></i></span>
+                        <h3 class="h6 mb-2"><?= t($ti) ?></h3>
+                        <p class="text-secondary small mb-0"><?= t($de) ?></p>
                     </div>
                 </div>
             <?php endforeach; ?>

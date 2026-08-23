@@ -11,6 +11,7 @@ final class PageController extends Controller
             'title' => 'Recrutement & talents',
             'fullWidth' => true,
             'categories' => (new Category())->all(),
+            'latestOffers' => array_slice((new Offer())->publicSearch([]), 0, 6),
             'homeStats' => [
                 'talents' => $count("SELECT COUNT(*) FROM users WHERE role='client' AND status='active'"),
                 'offers' => $count("SELECT COUNT(*) FROM offers WHERE status='active'"),
