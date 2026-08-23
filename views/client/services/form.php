@@ -18,7 +18,7 @@ $curType = (string) $val('price_type', 'from');
             <h1 class="h3 mb-0"><?= $isEdit ? 'Modifier la prestation' : 'Nouvelle prestation' ?></h1>
         </div>
 
-        <form method="post" action="<?= e($action) ?>" class="card shadow-sm">
+        <form method="post" action="<?= e($action) ?>" enctype="multipart/form-data" class="card shadow-sm">
             <div class="card-body p-4">
                 <?= csrf_field() ?>
 
@@ -29,17 +29,49 @@ $curType = (string) $val('price_type', 'from');
 
                 <div class="mb-3">
                     <label class="form-label" for="category">Domaine</label>
-                    <select class="form-select" id="category" name="category">
-                        <option value="">— Aucun —</option>
-                        <?php foreach ($categoriesList as $cat): ?>
-                            <option value="<?= e((string) $cat) ?>" <?= (string) $val('category') === (string) $cat ? 'selected' : '' ?>><?= e((string) $cat) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <?php if (empty($categoriesList)): ?>
+                        <div class="alert alert-warning py-2 small mb-0">
+                            Vous n'avez pas encore de domaine sur votre profil. <a href="<?= e(url('/client/profile/edit')) ?>">Ajoutez-en un</a> pour pouvoir le rattacher à vos prestations.
+                        </div>
+                    <?php else: ?>
+                        <?php
+                        $curCat = (string) $val('category');
+                        $opts = $categoriesList;
+                        if ($curCat !== '' && !in_array($curCat, $opts, true)) { $opts[] = $curCat; } // conserve un domaine retiré du profil
+                        ?>
+                        <select class="form-select" id="category" name="category">
+                            <option value="">— Aucun —</option>
+                            <?php foreach ($opts as $cat): ?>
+                                <option value="<?= e((string) $cat) ?>" <?= $curCat === (string) $cat ? 'selected' : '' ?>><?= e((string) $cat) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="form-text">Seuls les domaines liés à votre profil sont proposés.</div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label" for="description">Description</label>
-                    <textarea class="form-control" id="description" name="description" rows="5" placeholder="Ce qui est inclus, votre méthode, ce qui vous distingue…"><?= e((string) $val('description')) ?></textarea>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label mb-0" for="description">Description</label>
+                        <button class="btn btn-sm btn-accent" type="button" id="aiDescribe"><i class="bi bi-stars me-1"></i>Rédiger avec l'IA</button>
+                    </div>
+                    <textarea class="form-control" id="description" name="description" rows="6" placeholder="Ce qui est inclus, votre méthode, ce qui vous distingue…"><?= e((string) $val('description')) ?></textarea>
+                    <div id="aiStatus" class="form-text"></div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="image">Visuel de la prestation <span class="text-secondary fw-normal small">(optionnel)</span></label>
+                    <?php $curImg = (string) ($service['image_path'] ?? ''); ?>
+                    <?php if ($curImg !== ''): ?>
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <img src="<?= e(url('/' . ltrim($curImg, '/'))) ?>" alt="Visuel" style="width:120px;height:80px;object-fit:cover;border-radius:8px;">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="remove_image" name="remove_image" value="1">
+                                <label class="form-check-label small" for="remove_image">Retirer ce visuel</label>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                    <input class="form-control" type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp,image/gif">
+                    <div class="form-text">L'image est automatiquement redimensionnée et compressée (léger). JPG, PNG, WebP ou GIF.</div>
                 </div>
 
                 <div class="row g-3">
@@ -75,3 +107,35 @@ $curType = (string) $val('price_type', 'from');
         </form>
     </div>
 </div>
+
+<script>
+document.getElementById('aiDescribe')?.addEventListener('click', async function () {
+    const btn = this, orig = btn.innerHTML;
+    const desc = document.getElementById('description');
+    const status = document.getElementById('aiStatus');
+    const title = (document.getElementById('title')?.value || '').trim();
+    const category = document.getElementById('category')?.value || '';
+    if (title === '') { status.innerHTML = '<span class="text-danger">Indiquez d\'abord un titre.</span>'; return; }
+    const previous = desc.value;
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Rédaction…';
+    status.innerHTML = '';
+    try {
+        const res = await fetch('<?= e(url('/client/services/ia/description')) ?>', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ _csrf_token: '<?= e(csrf_token()) ?>', title, category, description: previous })
+        });
+        const d = await res.json();
+        if (d.description) {
+            desc.value = d.description;
+            status.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Description générée. <a href="#" id="undoAi">Annuler</a></span>';
+            document.getElementById('undoAi').addEventListener('click', (e) => { e.preventDefault(); desc.value = previous; status.innerHTML = ''; });
+        } else {
+            status.innerHTML = '<span class="text-danger">' + (d.error || 'Échec.') + '</span>';
+        }
+    } catch (e) {
+        status.innerHTML = '<span class="text-danger">Erreur réseau.</span>';
+    } finally {
+        btn.disabled = false; btn.innerHTML = orig;
+    }
+});
+</script>

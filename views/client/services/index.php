@@ -21,6 +21,9 @@
         <?php foreach ($services as $s): ?>
             <div class="col-md-6">
                 <div class="card h-100">
+                    <?php if (!empty($s['image_path'])): ?>
+                        <img src="<?= e(url('/' . ltrim((string) $s['image_path'], '/'))) ?>" alt="<?= e((string) $s['title']) ?>" style="height:150px;object-fit:cover;border-radius:var(--lulu-radius) var(--lulu-radius) 0 0;">
+                    <?php endif; ?>
                     <div class="card-body d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                             <h2 class="h5 mb-0"><?= e((string) $s['title']) ?></h2>

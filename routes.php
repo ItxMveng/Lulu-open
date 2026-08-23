@@ -128,6 +128,7 @@ Router::post('/profile/cv/{id}/delete', 'ProfileController@deleteCV', ['auth', '
 Router::get('/client/services', 'ServiceController@index', ['auth', 'role:client']);
 Router::get('/client/services/nouveau', 'ServiceController@create', ['auth', 'role:client']);
 Router::post('/client/services', 'ServiceController@store', ['auth', 'role:client']);
+Router::post('/client/services/ia/description', 'ServiceController@aiDescribe', ['auth', 'role:client']);
 Router::get('/client/services/{id}/edit', 'ServiceController@edit', ['auth', 'role:client']);
 Router::post('/client/services/{id}', 'ServiceController@update', ['auth', 'role:client']);
 Router::post('/client/services/{id}/delete', 'ServiceController@destroy', ['auth', 'role:client']);

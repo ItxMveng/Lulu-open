@@ -63,7 +63,11 @@ $parseLink = static function (string $s): array {
                         <div class="row g-3">
                             <?php foreach ($services as $s): ?>
                                 <div class="col-sm-6">
-                                    <div class="border rounded-3 p-3 h-100 d-flex flex-column">
+                                    <div class="border rounded-3 h-100 d-flex flex-column overflow-hidden">
+                                        <?php if (!empty($s['image_path'])): ?>
+                                            <img src="<?= e(url('/' . ltrim((string) $s['image_path'], '/'))) ?>" alt="<?= e((string) $s['title']) ?>" style="height:120px;object-fit:cover;">
+                                        <?php endif; ?>
+                                        <div class="p-3 d-flex flex-column flex-grow-1">
                                         <div class="fw-semibold mb-1"><?= e((string) $s['title']) ?></div>
                                         <?php if (!empty($s['category'])): ?><div class="mb-2"><span class="badge badge-soft-primary"><?= e((string) $s['category']) ?></span></div><?php endif; ?>
                                         <?php if (!empty($s['description'])): ?><p class="text-secondary small mb-2"><?= nl2br(e(mb_strimwidth((string) $s['description'], 0, 140, '…'))) ?></p><?php endif; ?>
@@ -71,7 +75,8 @@ $parseLink = static function (string $s): array {
                                             <span class="text-primary fw-semibold"><?= e(Service::formatPrice($s['price'] !== null ? (float) $s['price'] : null, (string) $s['price_type'])) ?></span>
                                             <?php if (!empty($s['delivery_days'])): ?><span class="text-secondary"><i class="bi bi-clock me-1"></i><?= (int) $s['delivery_days'] ?> j</span><?php endif; ?>
                                         </div>
-                                    </div>
+                                        </div><!-- /.p-3 -->
+                                    </div><!-- /.border -->
                                 </div>
                             <?php endforeach; ?>
                         </div>

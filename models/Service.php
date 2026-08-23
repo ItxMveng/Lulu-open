@@ -62,8 +62,8 @@ final class Service extends Model
     public function create(int $userId, array $data): int
     {
         $stmt = $this->db->prepare(
-            'INSERT INTO services (user_id, title, category, description, price, price_type, delivery_days, is_active, created_at, updated_at)
-             VALUES (:u, :title, :category, :description, :price, :price_type, :delivery_days, :is_active, NOW(), NOW())'
+            'INSERT INTO services (user_id, title, category, description, image_path, price, price_type, delivery_days, is_active, created_at, updated_at)
+             VALUES (:u, :title, :category, :description, :image_path, :price, :price_type, :delivery_days, :is_active, NOW(), NOW())'
         );
         $stmt->execute($this->bind($userId, $data));
         return (int) $this->db->lastInsertId();
@@ -75,7 +75,7 @@ final class Service extends Model
         $params = $this->bind($userId, $data);
         $params['id'] = $id;
         $stmt = $this->db->prepare(
-            'UPDATE services SET title = :title, category = :category, description = :description,
+            'UPDATE services SET title = :title, category = :category, description = :description, image_path = :image_path,
                 price = :price, price_type = :price_type, delivery_days = :delivery_days, is_active = :is_active,
                 updated_at = NOW()
              WHERE id = :id AND user_id = :u'
@@ -102,6 +102,7 @@ final class Service extends Model
             'title' => mb_substr(trim((string) ($data['title'] ?? '')), 0, 160),
             'category' => ($data['category'] ?? '') !== '' ? mb_substr((string) $data['category'], 0, 150) : null,
             'description' => trim((string) ($data['description'] ?? '')) ?: null,
+            'image_path' => ($data['image_path'] ?? null) ?: null,
             'price' => $price,
             'price_type' => $type,
             'delivery_days' => $delivery,
