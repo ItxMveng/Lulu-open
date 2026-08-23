@@ -1,0 +1,32 @@
+name: Keep Render awake
+
+# Empêche la mise en veille du service Render (plan gratuit : sommeil après
+# ~15 min d'inactivité, d'où la page "momentanément indisponible" au réveil).
+# On ping une route légère (/robots.txt) régulièrement pour le garder chaud.
+#
+# ⚠️ À configurer : Repo > Settings > Secrets and variables > Actions > Variables
+#    -> New variable :  APP_PING_URL = https://<votre-service>.onrender.com
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # toutes les ~10 minutes (GitHub peut décaler un peu)
+  workflow_dispatch:          # bouton "Run workflow" pour tester à la main
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the app
+        run: |
+          URL="${{ vars.APP_PING_URL }}"
+          if [ -z "$URL" ]; then
+            echo "APP_PING_URL non défini (Settings > Secrets and variables > Actions > Variables). Rien à pinger."
+            exit 0
+          fi
+          echo "Ping $URL/robots.txt"
+          # --max-time 90 : laisse le temps à un éventuel démarrage à froid.
+          if curl -fsS --max-time 90 "$URL/robots.txt" -o /dev/null; then
+            echo "OK — service éveillé."
+          else
+            echo "Ping en échec (le service se réveillait peut-être) — sans gravité."
+          fi
