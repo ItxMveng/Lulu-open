@@ -58,6 +58,21 @@ services:
         sync: false
       - key: MAIL_FROM_NAME
         value: LULU-OPEN
+      # Informations légales de l'éditeur (mentions légales / RGPD) — À RENSEIGNER
+      - key: LEGAL_EDITOR_NAME
+        sync: false   # dénomination / nom de l'éditeur
+      - key: LEGAL_EDITOR_STATUS
+        sync: false   # forme juridique (SARL, auto-entrepreneur, association…)
+      - key: LEGAL_EDITOR_ADDRESS
+        sync: false   # adresse du siège
+      - key: LEGAL_EDITOR_REG
+        sync: false   # RCS / SIRET / immatriculation
+      - key: LEGAL_PUBLICATION_DIRECTOR
+        sync: false   # directeur de la publication
+      - key: LEGAL_COUNTRY
+        sync: false   # pays / droit applicable
+      - key: LEGAL_DPO_EMAIL
+        sync: false   # email dédié données (optionnel, défaut = MAIL_FROM_ADDRESS)
       # Stockage objet persistant des fichiers (CV, photos) — Cloudflare R2.
       # Sans ces variables, les fichiers vont sur le disque local (éphémère).
       - key: R2_ENDPOINT

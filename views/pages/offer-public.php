@@ -105,6 +105,8 @@ $breadcrumbLd = [
                     <?php else: ?>
                         <p class="text-secondary small mb-0"><?= t('Consultation administrateur.') ?></p>
                     <?php endif; ?>
+                    <hr class="my-3">
+                    <a class="text-secondary small d-inline-flex align-items-center" href="mailto:<?= e((string) env('MAIL_FROM_ADDRESS', 'contact@lulu-open.com')) ?>?subject=<?= rawurlencode('Signalement — ' . (string) ($offer['title'] ?? 'offre')) ?>&body=<?= rawurlencode('Offre signalée : ' . $canonical . "\n\nMotif : ") ?>"><i class="bi bi-flag me-1"></i><?= t('Signaler cette annonce') ?></a>
                 </div>
             </div>
         </div>

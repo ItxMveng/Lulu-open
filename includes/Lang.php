@@ -147,6 +147,7 @@ final class Lang
         'Non précisé' => 'Not specified', 'Voir l\'offre' => 'View offer',
         // Accessibilité
         'Aller au contenu' => 'Skip to content',
+        'Signaler cette annonce' => 'Report this listing',
         // Titres de page secondaires
         'Offres et recrutement' => 'Jobs & recruiting', 'À propos' => 'About',
         // Page Emplois

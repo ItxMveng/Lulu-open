@@ -222,6 +222,39 @@ function offer_url(array $offer): string
     return url('/jobs/' . slugify((string) ($offer['title'] ?? 'offre')) . '-' . $id);
 }
 
+/**
+ * Informations légales. L'identité de l'éditeur provient de variables
+ * d'environnement (à renseigner par le propriétaire — JAMAIS inventées).
+ * Les hébergeurs sont connus et renseignés.
+ */
+function legal_info(): array
+{
+    $contact = (string) env('MAIL_FROM_ADDRESS', 'contact@lulu-open.com');
+    return [
+        'editor_name'          => (string) env('LEGAL_EDITOR_NAME', ''),
+        'editor_status'        => (string) env('LEGAL_EDITOR_STATUS', ''),   // ex: SARL, auto-entrepreneur, association…
+        'editor_capital'       => (string) env('LEGAL_EDITOR_CAPITAL', ''),  // ex: 1 000 €
+        'editor_address'       => (string) env('LEGAL_EDITOR_ADDRESS', ''),
+        'editor_reg'           => (string) env('LEGAL_EDITOR_REG', ''),      // RCS / SIRET / immatriculation
+        'editor_vat'           => (string) env('LEGAL_EDITOR_VAT', ''),      // TVA intracom (optionnel)
+        'publication_director' => (string) env('LEGAL_PUBLICATION_DIRECTOR', ''),
+        'contact_email'        => $contact,
+        'dpo_email'            => (string) env('LEGAL_DPO_EMAIL', $contact),
+        'country'              => (string) env('LEGAL_COUNTRY', ''),         // pays / droit applicable
+        // Hébergeurs réellement utilisés (voir DEPLOYMENT.md)
+        'host_app'             => 'Render, Inc. (render.com) — San Francisco, Californie, États-Unis',
+        'host_db'              => 'Clever Cloud SAS (clever-cloud.com) — Nantes, France',
+        'host_files'           => 'Cloudflare, Inc. (cloudflare.com) — San Francisco, Californie, États-Unis (stockage objet R2)',
+    ];
+}
+
+/** Un champ légal est-il renseigné ? (sinon on affiche « à compléter » proprement). */
+function legal_field(string $value): string
+{
+    $value = trim($value);
+    return $value !== '' ? e($value) : '<span class="text-warning">[à compléter par l\'éditeur]</span>';
+}
+
 function e(?string $value): string
 {
     return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
