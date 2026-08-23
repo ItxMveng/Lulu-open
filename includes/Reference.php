@@ -40,6 +40,20 @@ final class Reference
         return ['CDI', 'CDD', 'Freelance', 'Alternance', 'Stage', 'Intérim'];
     }
 
+    /** Disponibilités proposées (liste déroulante du profil talent). */
+    public static function availabilities(): array
+    {
+        return [
+            'Disponible immédiatement',
+            'Disponible sous 1 semaine',
+            'Disponible sous 2 semaines',
+            'Disponible sous 1 mois',
+            'Disponible sur préavis',
+            'Ouvert(e) aux opportunités',
+            'Non disponible actuellement',
+        ];
+    }
+
     /** Pays (marché africain prioritaire + international). */
     public static function countries(): array
     {

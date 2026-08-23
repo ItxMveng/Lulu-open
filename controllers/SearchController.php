@@ -19,7 +19,10 @@ final class SearchController extends Controller
     public function searchAll(): void
     {
         $filters = $this->collectFilters();
-        $activeTab = (string) ($_GET['tab'] ?? 'profils');
+        // Onglet par défaut selon le rôle : un candidat cherche d'abord des OFFRES,
+        // un recruteur cherche d'abord des TALENTS. L'utilisateur peut basculer.
+        $defaultTab = current_role() === 'client' ? 'offres' : 'profils';
+        $activeTab = (string) ($_GET['tab'] ?? $defaultTab);
         $profiles = $this->profiles->search($filters);
         $offers = $this->offers->publicSearch($filters);
 

@@ -120,15 +120,26 @@ $extraSkills = array_values(array_diff($selSkills, $skillsList ?? []));
                         </div>
                         <div class="col-md-3">
                             <label class="form-label" for="availability">Disponibilité</label>
-                            <input class="form-control" type="text" id="availability" name="availability" value="<?= e((string) ($profile['availability'] ?? '')) ?>" placeholder="Immédiate…">
+                            <?php $curAvail = (string) ($profile['availability'] ?? ''); ?>
+                            <select class="form-select" id="availability" name="availability">
+                                <option value="">— Sélectionner —</option>
+                                <?php foreach (Reference::availabilities() as $av): ?>
+                                    <option value="<?= e($av) ?>" <?= $curAvail === $av ? 'selected' : '' ?>><?= e($av) ?></option>
+                                <?php endforeach; ?>
+                                <?php if ($curAvail !== '' && !in_array($curAvail, Reference::availabilities(), true)): ?>
+                                    <option value="<?= e($curAvail) ?>" selected><?= e($curAvail) ?></option>
+                                <?php endif; ?>
+                            </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label" for="portfolio">Portfolio (une entrée par ligne)</label>
-                            <textarea class="form-control" id="portfolio" name="portfolio" rows="3" placeholder="https://mon-site.com&#10;Projet X — description"><?= e($multiVal($profile['portfolio'] ?? null)) ?></textarea>
+                            <label class="form-label" for="portfolio">Portfolio — liens (un par ligne)</label>
+                            <textarea class="form-control" id="portfolio" name="portfolio" rows="3" placeholder="https://mon-site.com&#10;Mon projet — https://github.com/moi/projet"><?= e($multiVal($profile['portfolio'] ?? null)) ?></textarea>
+                            <div class="form-text">Collez vos liens (site, GitHub, Behance…). Ils seront cliquables sur votre profil. Format libre : <code>https://…</code> ou <code>Titre — https://…</code></div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="certifications">Certifications (une par ligne)</label>
-                            <textarea class="form-control" id="certifications" name="certifications" rows="3"><?= e($multiVal($profile['certifications'] ?? null)) ?></textarea>
+                            <textarea class="form-control" id="certifications" name="certifications" rows="3" placeholder="Certification PHP — https://lien-verif.com&#10;Diplôme d'État en comptabilité"><?= e($multiVal($profile['certifications'] ?? null)) ?></textarea>
+                            <div class="form-text">Ajoutez un lien de vérification si vous en avez un : <code>Nom — https://…</code> (le nom deviendra cliquable).</div>
                         </div>
                         <div class="col-12">
                             <div class="form-check">

@@ -20,10 +20,17 @@ final class MailHelper
         }
 
         try {
+            // TLS : sur le port 465 => TLS implicite (true) ; sur 587 => STARTTLS,
+            // qu'on laisse Symfony négocier en passant null (forcer true casserait
+            // la connexion Brevo/Gmail en 587). 'ssl' force le TLS implicite.
+            $port = (int) env('MAIL_PORT', 587);
+            $encryption = strtolower((string) env('MAIL_ENCRYPTION', ''));
+            $implicitTls = ($encryption === 'ssl' || $port === 465) ? true : null;
+
             $transport = new EsmtpTransport(
                 (string) env('MAIL_HOST', '127.0.0.1'),
-                (int) env('MAIL_PORT', 25),
-                (string) env('MAIL_ENCRYPTION', 'null') !== 'null'
+                $port,
+                $implicitTls
             );
 
             $username = (string) env('MAIL_USER', '');

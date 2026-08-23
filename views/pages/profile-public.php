@@ -11,6 +11,17 @@ $initials = $displayName !== '' ? mb_strtoupper(mb_substr(trim($displayName), 0,
 if (preg_match('/\s(\S)/u', trim($displayName), $m)) { $initials .= mb_strtoupper($m[1]); }
 $rate = $profile['hourly_rate'] ?? null;
 $isEntreprise = (string) ($profile['role'] ?? '') === 'entreprise';
+// Extrait [libellé, url|null] d'une entrée « Titre — https://… » ou d'un lien brut.
+$parseLink = static function (string $s): array {
+    $s = trim($s);
+    if (preg_match('#https?://[^\s]+#i', $s, $m)) {
+        $url = rtrim($m[0], '.,;)');
+        $label = trim(str_replace($m[0], '', $s), " \t—–-|:•");
+        if ($label === '') { $label = (string) preg_replace('#^https?://(www\.)?#i', '', $url); }
+        return [$label, $url];
+    }
+    return [$s, null];
+};
 ?>
 <section class="py-4">
     <div class="row g-4">
@@ -50,9 +61,9 @@ $isEntreprise = (string) ($profile['role'] ?? '') === 'entreprise';
                     <div class="card-body p-4">
                         <h2 class="h6 mb-3"><i class="bi bi-collection me-1"></i>Portfolio</h2>
                         <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
-                            <?php foreach ($portfolio as $item): $item = (string) $item; $isUrl = preg_match('#^https?://#', $item); ?>
+                            <?php foreach ($portfolio as $item): [$label, $url] = $parseLink((string) $item); ?>
                                 <li class="d-flex gap-2"><i class="bi bi-arrow-right-short text-primary"></i>
-                                    <?php if ($isUrl): ?><a href="<?= e($item) ?>" target="_blank" rel="noopener nofollow"><?= e($item) ?></a><?php else: ?><span><?= e($item) ?></span><?php endif; ?>
+                                    <?php if ($url !== null): ?><a href="<?= e($url) ?>" target="_blank" rel="noopener nofollow"><?= e($label) ?> <i class="bi bi-box-arrow-up-right small"></i></a><?php else: ?><span><?= e($label) ?></span><?php endif; ?>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
@@ -65,7 +76,13 @@ $isEntreprise = (string) ($profile['role'] ?? '') === 'entreprise';
                     <div class="card-body p-4">
                         <h2 class="h6 mb-3"><i class="bi bi-patch-check me-1"></i>Certifications</h2>
                         <div class="d-flex flex-wrap gap-2">
-                            <?php foreach ($certifications as $cert): ?><span class="badge badge-soft-success"><?= e((string) $cert) ?></span><?php endforeach; ?>
+                            <?php foreach ($certifications as $cert): [$label, $url] = $parseLink((string) $cert); ?>
+                                <?php if ($url !== null): ?>
+                                    <a class="badge badge-soft-success text-decoration-none" href="<?= e($url) ?>" target="_blank" rel="noopener nofollow"><i class="bi bi-patch-check me-1"></i><?= e($label) ?> <i class="bi bi-box-arrow-up-right"></i></a>
+                                <?php else: ?>
+                                    <span class="badge badge-soft-success"><?= e($label) ?></span>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>

@@ -133,6 +133,22 @@ final class ProfileController extends Controller
                 $profileData['categories'] = array_slice($profileData['categories'], 0, $max);
                 flash("Votre plan permet {$max} domaine(s). Passez à un plan supérieur pour en sélectionner davantage.", 'warning');
             }
+
+            // Un profil n'apparaît dans la recherche que s'il est minimalement
+            // complet. Sinon on force la non-visibilité (même si la case est cochée)
+            // et on indique ce qu'il reste à renseigner.
+            $missing = [];
+            if (mb_strlen((string) ($profileData['bio'] ?? '')) < 40) { $missing[] = 'une présentation (40 caractères minimum)'; }
+            if (trim((string) ($profileData['location'] ?? '')) === '') { $missing[] = 'la localisation'; }
+            if (empty($profileData['skills'])) { $missing[] = 'au moins une compétence'; }
+
+            if ($missing !== []) {
+                $wantedVisible = $profileData['is_visible'] === 1;
+                $profileData['is_visible'] = 0;
+                if ($wantedVisible) {
+                    flash('Profil enregistré. Pour apparaître dans la recherche, complétez encore : ' . implode(', ', $missing) . '.', 'warning');
+                }
+            }
         }
 
         $this->profiles->save($userId, $profileData);
