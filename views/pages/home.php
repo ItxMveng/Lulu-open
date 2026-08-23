@@ -150,7 +150,7 @@
                 ['bi-lightning-charge-fill', 'Candidature en 1 clic', 'Postulez avec votre CV et une lettre générée par l\'IA, sans friction.', 'text-warning'],
                 ['bi-robot', 'Assistant IA', 'Analyse de CV, génération de CV et de lettres adaptées à chaque offre.', 'text-primary'],
                 ['bi-shield-lock-fill', 'Messagerie sécurisée', 'Échangez directement avec les recruteurs ou les candidats en toute sécurité.', 'text-success'],
-                ['bi-patch-check-fill', 'Entreprises vérifiées', 'Chaque entreprise est vérifiée : fini les arnaques, place à la confiance.', 'text-primary'],
+                ['bi-patch-check-fill', 'Entreprises vérifiées', 'Chaque entreprise est vérifiée par notre équipe, pour réduire les risques d\'annonces frauduleuses.', 'text-primary'],
                 ['bi-globe2', 'Multi-devises', 'Les tarifs s\'affichent automatiquement dans la devise de votre pays.', 'text-success'],
                 ['bi-translate', 'Bilingue FR / EN', 'Naviguez en français ou en anglais, selon votre préférence.', 'text-warning'],
             ];

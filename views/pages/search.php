@@ -143,7 +143,7 @@ document.getElementById('createAlertBtn')?.addEventListener('click', async funct
     try {
         var res = await fetch('<?= e(url('/api/saved-searches')) ?>', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: name, filters: filters, alert_enabled: true })
+            body: JSON.stringify({ name: name, filters: filters, alert_enabled: true, _csrf_token: <?= json_encode(csrf_token()) ?> })
         });
         var d = await res.json();
         if (res.ok && d.success) {
@@ -168,7 +168,7 @@ document.getElementById('saveSearchButton')?.addEventListener('click', async () 
     const response = await fetch('<?= e(url('/api/saved-searches')) ?>', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, filters: Object.fromEntries(params.entries()), alert_enabled: false })
+        body: JSON.stringify({ name, filters: Object.fromEntries(params.entries()), alert_enabled: false, _csrf_token: <?= json_encode(csrf_token()) ?> })
     });
     if (response.ok) { window.location.reload(); }
 });

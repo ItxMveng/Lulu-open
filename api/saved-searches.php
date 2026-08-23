@@ -17,6 +17,7 @@ try {
 
     if ($method === 'POST') {
         $payload = json_decode((string) file_get_contents('php://input'), true) ?: [];
+        verify_csrf($payload['_csrf_token'] ?? ($_POST['_csrf_token'] ?? null));
         $id = $model->create(
             (int) current_user_id(),
             trim((string) ($payload['name'] ?? 'Recherche sauvegardée')),
@@ -27,6 +28,7 @@ try {
     }
 
     if ($method === 'DELETE') {
+        verify_csrf($_GET['_csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null));
         parse_str(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_QUERY) ?: '', $query);
         $id = (int) ($query['id'] ?? ($_GET['id'] ?? 0));
         $model->delete((int) current_user_id(), $id);

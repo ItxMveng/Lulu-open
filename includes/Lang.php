@@ -269,7 +269,7 @@ final class Lang
         'Messagerie sécurisée' => 'Secure messaging',
         'Échangez directement avec les recruteurs ou les candidats en toute sécurité.' => 'Chat directly with recruiters or candidates, securely.',
         'Entreprises vérifiées' => 'Verified companies',
-        'Chaque entreprise est vérifiée : fini les arnaques, place à la confiance.' => 'Every company is verified: no more scams, only trust.',
+        'Chaque entreprise est vérifiée par notre équipe, pour réduire les risques d\'annonces frauduleuses.' => 'Every company is checked by our team, to reduce the risk of fraudulent listings.',
         'Multi-devises' => 'Multi-currency',
         'Les tarifs s\'affichent automatiquement dans la devise de votre pays.' => 'Prices are automatically shown in your country\'s currency.',
         'Bilingue FR / EN' => 'Bilingual FR / EN',

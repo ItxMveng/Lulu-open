@@ -72,7 +72,7 @@
     <div class="container">
         <div class="cta-band text-center p-5">
             <h2 class="mb-3">Votre prochain emploi vous attend</h2>
-            <p class="mb-4 opacity-75 mx-auto" style="max-width:46ch;">Des centaines d'opportunités en Afrique et ailleurs. Créez votre profil et postulez dès aujourd'hui.</p>
+            <p class="mb-4 opacity-75 mx-auto" style="max-width:46ch;">Des opportunités en Afrique et à l'international. Créez votre profil et postulez dès aujourd'hui.</p>
             <a class="btn btn-light btn-lg fw-semibold" href="<?= e(url('/search?tab=offres')) ?>">Voir toutes les offres</a>
         </div>
     </div>
