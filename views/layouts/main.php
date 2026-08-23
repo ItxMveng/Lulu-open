@@ -52,6 +52,24 @@
 </main>
 <?php View::partial('components/footer'); ?>
 <?php View::partial('components/cookie-consent'); ?>
+
+<!-- Modale de confirmation réutilisable : tout élément avec data-confirm="…" la déclenche -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="confirm-icon mx-auto mb-3"><i class="bi bi-exclamation-triangle"></i></div>
+                <h5 class="mb-2" data-confirm-title>Confirmer l'action</h5>
+                <p class="text-secondary mb-4" data-confirm-message>Voulez-vous vraiment continuer ?</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-danger px-4" data-confirm-ok>Confirmer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // Apparition au défilement
@@ -63,6 +81,46 @@
         entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('is-visible'); obs.unobserve(en.target); } });
     }, { threshold: 0.12 });
     els.forEach(function (e) { obs.observe(e); });
+})();
+
+// Confirmation stylée : remplace confirm() natif. Ajouter data-confirm="message"
+// sur un bouton submit, un lien ou un formulaire. Options : data-confirm-title,
+// data-confirm-ok (libellé du bouton).
+(function () {
+    var el = document.getElementById('confirmModal');
+    if (!el || typeof bootstrap === 'undefined') return;
+    var modal = new bootstrap.Modal(el);
+    var titleEl = el.querySelector('[data-confirm-title]');
+    var msgEl = el.querySelector('[data-confirm-message]');
+    var okEl = el.querySelector('[data-confirm-ok]');
+    var pending = null;
+
+    document.addEventListener('click', function (e) {
+        var t = e.target.closest('[data-confirm]');
+        if (!t) return;
+        e.preventDefault();
+        pending = t;
+        msgEl.textContent = t.getAttribute('data-confirm') || 'Voulez-vous vraiment continuer ?';
+        titleEl.textContent = t.getAttribute('data-confirm-title') || 'Confirmer l\'action';
+        okEl.textContent = t.getAttribute('data-confirm-ok') || 'Confirmer';
+        modal.show();
+    });
+
+    okEl.addEventListener('click', function () {
+        var t = pending; pending = null; modal.hide();
+        if (!t) return;
+        if (t.tagName === 'A' && t.getAttribute('href')) { window.location.href = t.getAttribute('href'); return; }
+        var form = t.form || t.closest('form');
+        if (!form) return;
+        // Préserve name/value du bouton (ex. decision=rejected) puis envoie sans
+        // repasser par onsubmit (évite une double confirmation).
+        if (t.name) {
+            var h = document.createElement('input');
+            h.type = 'hidden'; h.name = t.name; h.value = t.value;
+            form.appendChild(h);
+        }
+        form.submit();
+    });
 })();
 </script>
 </body>

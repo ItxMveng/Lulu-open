@@ -50,7 +50,7 @@ $multiVal = static function ($json): string {
                                     <?php else: ?>
                                         <form method="post" action="<?= e(url('/profile/cv/' . (int) $cv['id'] . '/primary')) ?>"><?= csrf_field() ?><button class="btn btn-sm btn-link p-0 small" type="submit">Définir principal</button></form>
                                     <?php endif; ?>
-                                    <form method="post" action="<?= e(url('/profile/cv/' . (int) $cv['id'] . '/delete')) ?>" onsubmit="return confirm('Supprimer ce CV ?');"><?= csrf_field() ?><button class="btn btn-sm btn-link text-danger p-0" type="submit" aria-label="Supprimer"><i class="bi bi-trash"></i></button></form>
+                                    <form method="post" action="<?= e(url('/profile/cv/' . (int) $cv['id'] . '/delete')) ?>"><?= csrf_field() ?><button class="btn btn-sm btn-link text-danger p-0" type="submit" aria-label="Supprimer" data-confirm="Ce CV sera définitivement supprimé de votre profil." data-confirm-title="Supprimer ce CV ?" data-confirm-ok="Supprimer"><i class="bi bi-trash"></i></button></form>
                                 </div>
                             <?php endforeach; ?>
                         </div>

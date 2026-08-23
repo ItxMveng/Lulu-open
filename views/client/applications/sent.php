@@ -31,9 +31,9 @@
                                     <?php if (!empty($application['entreprise_id'])): ?>
                                         <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/messages/nouveau/' . (int) $application['entreprise_id'])) ?>" title="Contacter le recruteur"><i class="bi bi-chat-dots"></i></a>
                                     <?php endif; ?>
-                                    <form method="post" action="<?= e(url('/applications/' . (int) $application['id'] . '/delete')) ?>" onsubmit="return confirm('Retirer cette candidature ?');">
+                                    <form method="post" action="<?= e(url('/applications/' . (int) $application['id'] . '/delete')) ?>">
                                         <?= csrf_field() ?>
-                                        <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash me-1"></i>Retirer</button>
+                                        <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="Votre candidature sera retirée et le recruteur ne la verra plus." data-confirm-title="Retirer cette candidature ?" data-confirm-ok="Retirer"><i class="bi bi-trash me-1"></i>Retirer</button>
                                     </form>
                                 </div>
                             </td>

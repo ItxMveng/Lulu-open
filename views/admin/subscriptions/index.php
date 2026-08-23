@@ -28,7 +28,7 @@ $statusMap = ['active' => ['Actif', 'badge-soft-success'], 'inactive' => ['Inact
                         <td><span class="badge <?= e($sc) ?> status-badge"><?= e($sl) ?></span></td>
                         <td class="text-end pe-4">
                             <?php if ($st === 'active'): ?>
-                                <a class="btn btn-sm btn-outline-danger" href="<?= e(url('/admin/subscriptions/' . (int) $subscription['id'] . '/cancel')) ?>" onclick="return confirm('Annuler cet abonnement ?');">Annuler</a>
+                                <a class="btn btn-sm btn-outline-danger" href="<?= e(url('/admin/subscriptions/' . (int) $subscription['id'] . '/cancel')) ?>" data-confirm="L'abonnement sera annulé immédiatement." data-confirm-title="Annuler cet abonnement ?" data-confirm-ok="Annuler l'abonnement">Annuler</a>
                             <?php endif; ?>
                         </td>
                     </tr>

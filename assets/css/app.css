@@ -439,6 +439,13 @@ a:focus-visible, .btn:focus-visible, .form-control:focus-visible, .nav-link:focu
 .navbar .user-menu-toggle { display: inline-flex; align-items: center; gap: 0.5rem; border: 1px solid var(--lulu-border); background: var(--lulu-surface); border-radius: var(--lulu-radius-pill); padding: 0.25rem 0.75rem 0.25rem 0.35rem; color: var(--lulu-text); font-weight: 600; }
 .navbar .user-menu-toggle:hover { border-color: var(--lulu-primary); color: var(--lulu-primary-700); }
 .navbar .dropdown-menu { border: 1px solid var(--lulu-border); border-radius: var(--lulu-radius); box-shadow: var(--lulu-shadow-lg); padding: 0.4rem; z-index: 1036; }
+/* Modale de confirmation */
+#confirmModal .modal-content { border: none; border-radius: var(--lulu-radius); box-shadow: var(--lulu-shadow-lg); }
+#confirmModal .confirm-icon {
+    width: 64px; height: 64px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: #FEF2F2; color: #DC2626; font-size: 1.9rem;
+}
 .navbar .dropdown-item { border-radius: var(--lulu-radius-sm); padding: 0.5rem 0.75rem; font-weight: 500; }
 .navbar .dropdown-item:active { background: var(--lulu-primary); }
 

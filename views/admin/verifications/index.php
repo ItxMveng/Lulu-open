@@ -42,7 +42,7 @@
                         <input class="form-control form-control-sm mb-2" name="admin_note" placeholder="Note / motif (envoyé au demandeur en cas de refus)">
                         <div class="d-flex gap-2">
                             <button class="btn btn-sm btn-success" name="decision" value="verified" type="submit"><i class="bi bi-check-lg me-1"></i>Valider l'entreprise</button>
-                            <button class="btn btn-sm btn-outline-danger" name="decision" value="rejected" type="submit" onclick="return confirm('Refuser ce dossier ?');"><i class="bi bi-x-lg me-1"></i>Refuser</button>
+                            <button class="btn btn-sm btn-outline-danger" name="decision" value="rejected" type="submit" data-confirm="L'entreprise sera notifiée du refus avec le motif indiqué." data-confirm-title="Refuser ce dossier ?" data-confirm-ok="Refuser"><i class="bi bi-x-lg me-1"></i>Refuser</button>
                         </div>
                     </form>
                 </div>

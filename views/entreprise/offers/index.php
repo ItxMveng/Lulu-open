@@ -34,9 +34,9 @@
                             <td class="text-secondary"><?= e((string) ($offer['location'] ?? '—')) ?></td>
                             <td class="text-end pe-4">
                                 <a class="btn btn-sm btn-outline-secondary" href="<?= e(url('/entreprise/offres/' . (int) $offer['id'] . '/edit')) ?>"><i class="bi bi-pencil"></i></a>
-                                <form method="post" action="<?= e(url('/entreprise/offres/' . (int) $offer['id'] . '/delete')) ?>" class="d-inline" onsubmit="return confirm('Fermer cette offre ?');">
+                                <form method="post" action="<?= e(url('/entreprise/offres/' . (int) $offer['id'] . '/delete')) ?>" class="d-inline">
                                     <?= csrf_field() ?>
-                                    <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-x-lg"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit" data-confirm="L'offre sera fermée et ne sera plus visible par les candidats." data-confirm-title="Fermer cette offre ?" data-confirm-ok="Fermer"><i class="bi bi-x-lg"></i></button>
                                 </form>
                             </td>
                         </tr>
