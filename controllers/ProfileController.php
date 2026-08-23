@@ -92,6 +92,52 @@ final class ProfileController extends Controller
         json_response(['bio' => trim($result)]);
     }
 
+    /**
+     * Suppression définitive du compte et de toutes les données associées (RGPD).
+     * Nécessite la confirmation du mot de passe.
+     */
+    public function deleteAccount(): never
+    {
+        AuthMiddleware::requireAuth();
+        verify_csrf();
+
+        $userId = (int) current_user_id();
+        $role = (string) current_role();
+        $users = new User();
+        $user = $users->findById($userId);
+        $password = (string) ($_POST['password'] ?? '');
+
+        if ($user === null || !password_verify($password, (string) $user['password_hash'])) {
+            flash('Mot de passe incorrect. Votre compte n\'a pas été supprimé.', 'danger');
+            $this->redirect($role === 'entreprise' ? '/entreprise/profile/edit' : '/client/profile/edit');
+        }
+
+        // Supprime les fichiers du stockage (photo, CV, visuels de prestations).
+        $profile = $this->profiles->getByUserId($userId);
+        UploadHelper::deleteRelativeFile(((string) ($profile['photo_path'] ?? '')) ?: null);
+        foreach ((new CvDocument())->allForUser($userId) as $cv) {
+            UploadHelper::deleteRelativeFile(((string) ($cv['file_path'] ?? '')) ?: null);
+        }
+        foreach ((new Service())->forUser($userId) as $svc) {
+            UploadHelper::deleteRelativeFile(((string) ($svc['image_path'] ?? '')) ?: null);
+        }
+
+        // Suppression DÉFINITIVE : cascade sur profils, offres, candidatures, CV,
+        // prestations, messages, favoris, abonnements… (FK ON DELETE CASCADE).
+        $users->hardDelete($userId);
+
+        // Déconnexion propre.
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'] ?? '', (bool) $params['secure'], (bool) $params['httponly']);
+        }
+        session_destroy();
+        session_start();
+        flash('Votre compte et l\'ensemble de vos données ont été définitivement supprimés.', 'success');
+        redirect('/');
+    }
+
     public function handleUpdate(): never
     {
         AuthMiddleware::requireAuth();

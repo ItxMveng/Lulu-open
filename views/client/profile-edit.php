@@ -154,6 +154,29 @@ $extraSkills = array_values(array_diff($selSkills, $skillsList ?? []));
         </div>
     </div>
 </section>
+
+<section class="pb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card" style="border-color: var(--bs-danger-border-subtle, #f1aeb5);">
+                <div class="card-body p-4">
+                    <h2 class="h5 text-danger mb-1"><i class="bi bi-exclamation-octagon me-2"></i>Supprimer mon compte</h2>
+                    <p class="text-secondary mb-3">Action <strong>définitive et irréversible</strong> : suppression de l'ensemble de vos données (profil, CV, prestations, candidatures, messages…), conformément au RGPD.</p>
+                    <form method="post" action="<?= e(url('/account/delete')) ?>" class="row g-2 align-items-end" style="max-width:560px;">
+                        <?= csrf_field() ?>
+                        <div class="col-sm-7">
+                            <label class="form-label small mb-1" for="del_pwd">Confirmez avec votre mot de passe</label>
+                            <input class="form-control" type="password" id="del_pwd" name="password" required autocomplete="current-password">
+                        </div>
+                        <div class="col-sm-5">
+                            <button class="btn btn-danger w-100" type="submit" data-confirm="Toutes vos données seront définitivement effacées. Cette action est irréversible." data-confirm-title="Supprimer définitivement mon compte ?" data-confirm-ok="Oui, supprimer"><i class="bi bi-trash me-1"></i>Supprimer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 <script>
 document.getElementById('enhanceBio')?.addEventListener('click', async function () {
     const btn = this, orig = btn.innerHTML, bio = document.getElementById('bio'), status = document.getElementById('enhanceStatus');

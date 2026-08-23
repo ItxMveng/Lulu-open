@@ -113,6 +113,17 @@ final class User extends Model
         ]);
     }
 
+    /**
+     * Suppression DÉFINITIVE (droit à l'effacement RGPD). Les données liées
+     * (profil, offres, candidatures, CV, prestations, messages, favoris,
+     * abonnements…) partent en cascade via les contraintes ON DELETE CASCADE.
+     */
+    public function hardDelete(int $userId): bool
+    {
+        $statement = $this->db->prepare('DELETE FROM users WHERE id = :id');
+        return $statement->execute(['id' => $userId]);
+    }
+
     public function updateLoginTimestamp(int $userId): void
     {
         $statement = $this->db->prepare('UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = :id');

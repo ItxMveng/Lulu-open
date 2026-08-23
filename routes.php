@@ -118,6 +118,7 @@ Router::get('/client/profile/edit', 'ProfileController@showEditClient', ['auth',
 Router::get('/entreprise/profile/edit', 'ProfileController@showEditEntreprise', ['auth', 'role:entreprise']);
 Router::post('/profile/update', 'ProfileController@handleUpdate', ['auth']);
 Router::post('/profile/enhance', 'ProfileController@enhance', ['auth']);
+Router::post('/account/delete', 'ProfileController@deleteAccount', ['auth']);
 Router::post('/profile/photo', 'ProfileController@uploadPhoto', ['auth']);
 Router::post('/profile/cv', 'ProfileController@uploadCV', ['auth', 'role:client']);
 Router::post('/profile/cv/{id}/primary', 'ProfileController@setPrimaryCV', ['auth', 'role:client']);
