@@ -82,6 +82,41 @@ final class Lang
         'Prêt à passer à la vitesse supérieure ?' => 'Ready to take it to the next level?',
         'Rejoignez LULU-OPEN gratuitement et connectez-vous aux bonnes opportunités.' => 'Join LULU-OPEN for free and connect to the right opportunities.',
         'Voir les tarifs' => 'See pricing',
+        // Positionnement de marque + types d'opportunités (Sprint 2)
+        'Les talents d\'Afrique, les opportunités du monde' => 'African talent, global opportunities',
+        'Emploi, freelance, missions et recrutement : LULU-OPEN connecte les talents d\'Afrique aux bonnes opportunités, ici et à l\'international — simplement, en confiance, avec l\'IA.'
+            => 'Jobs, freelancing, projects and hiring: LULU-OPEN connects African talent to the right opportunities, at home and abroad — simple, trusted, AI-powered.',
+        'Emploi' => 'Jobs', 'Missions & freelance' => 'Projects & freelance', 'Services' => 'Services', 'International' => 'International',
+        // Titres de page + chips vitrine
+        'Recrutement & talents' => 'Recruiting & talent',
+        'Développeur' => 'Developer', 'Designer' => 'Designer', 'Data Analyst' => 'Data Analyst',
+        'Entreprise vérifiée' => 'Verified company', 'Cuisinier' => 'Chef',
+        'Compétences, expériences, services proposés.' => 'Skills, experience, services offered.',
+        'Candidatez en un clic avec votre CV et une lettre.' => 'Apply in one click with your resume and cover letter.',
+        'Les entreprises vous trouvent et vous écrivent.' => 'Companies find you and reach out.',
+        'Emploi, mission ou stage, en quelques minutes.' => 'Job, project or internship, in minutes.',
+        'Centralisées, avec analyse IA à la clé.' => 'Centralized, with AI analysis built in.',
+        'Recherchez et contactez directement les profils.' => 'Search and contact profiles directly.',
+        'Trouver une opportunité' => 'Find an opportunity', 'Recruter un talent' => 'Hire a talent',
+        // Tarifs
+        'Tarifs simples et transparents' => 'Simple, transparent pricing',
+        'Choisissez le plan qui vous ressemble' => 'Choose the plan that fits you',
+        'Commencez gratuitement, évoluez quand vous en avez besoin.' => 'Start free, upgrade when you need to.',
+        'Populaire' => 'Popular', '/mois' => '/month', 'Gratuit' => 'Free', 'Devise' => 'Currency',
+        'Devise détectée selon votre position. Les tarifs sont convertis depuis l\'euro (à titre indicatif).'
+            => 'Currency detected from your location. Prices are converted from euro (for reference).',
+        'Choisir ce plan' => 'Choose this plan', 'Candidats & talents' => 'Candidates & talents',
+        'Pour postuler et proposer vos services.' => 'To apply and offer your services.',
+        'Pour publier des offres et recruter.' => 'To post offers and hire.',
+        'Aucun plan disponible.' => 'No plan available.',
+        // Noms de plans + fonctionnalités (catalogue, traduits à l'affichage)
+        'Client Free' => 'Talent Free', 'Client Pro' => 'Talent Pro',
+        'Entreprise Starter' => 'Company Starter', 'Entreprise Pro' => 'Company Pro', 'Entreprise Business' => 'Company Business',
+        'Recherche basique' => 'Basic search', '3 favoris maximum' => 'Up to 3 favorites',
+        'Messagerie illimitee' => 'Unlimited messaging', 'Favoris illimites' => 'Unlimited favorites', 'Alertes email' => 'Email alerts',
+        '1 offre active' => '1 active offer', 'Profil basique' => 'Basic profile',
+        'Offres illimitees' => 'Unlimited offers', 'Modules IA' => 'AI modules', 'Messagerie prioritaire' => 'Priority messaging',
+        'Tout le plan Pro' => 'Everything in Pro', 'Badge verifie' => 'Verified badge', 'Statistiques avancees' => 'Advanced statistics',
         // Cookies
         'Respect de votre vie privée' => 'Your privacy matters', 'Refuser' => 'Decline', 'Accepter' => 'Accept',
         'En savoir plus' => 'Learn more',

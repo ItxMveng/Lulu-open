@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php
-    $metaTitle = ($pageTitle ?? APP_NAME) . ' | ' . APP_NAME;
+    $metaTitle = t((string) ($pageTitle ?? APP_NAME)) . ' | ' . APP_NAME;
     $metaDescription = $metaDescription ?? 'LULU-OPEN, la marketplace africaine de l\'emploi et des talents : trouvez un job, un freelance ou un candidat, postulez en un clic et boostez votre CV avec l\'IA.';
     $metaKeywords = $metaKeywords ?? 'emploi Afrique, recrutement, offres d\'emploi, freelance, talents, CV, lettre de motivation IA, candidature, jobs, marketplace talents';
     $canonical = APP_URL . request_path();

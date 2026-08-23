@@ -4,19 +4,26 @@
 <div class="hero-pin" id="heroPin">
 <section class="hero">
     <div class="hero-floats" aria-hidden="true">
-        <span class="float-chip" style="top:14%;left:6%;animation-delay:0s;"><i class="bi bi-code-slash"></i>Développeur</span>
-        <span class="float-chip" style="top:26%;right:8%;animation-delay:1.2s;"><i class="bi bi-palette"></i>Designer</span>
-        <span class="float-chip" style="top:64%;left:9%;animation-delay:2s;"><i class="bi bi-megaphone"></i>Marketing</span>
-        <span class="float-chip" style="bottom:14%;right:10%;animation-delay:0.6s;"><i class="bi bi-graph-up"></i>Data Analyst</span>
-        <span class="float-chip" style="top:44%;left:3%;animation-delay:2.6s;"><i class="bi bi-building"></i>Entreprise vérifiée</span>
-        <span class="float-chip" style="bottom:24%;right:4%;animation-delay:1.8s;"><i class="bi bi-cup-hot"></i>Cuisinier</span>
+        <span class="float-chip" style="top:14%;left:6%;animation-delay:0s;"><i class="bi bi-code-slash"></i><?= t('Développeur') ?></span>
+        <span class="float-chip" style="top:26%;right:8%;animation-delay:1.2s;"><i class="bi bi-palette"></i><?= t('Designer') ?></span>
+        <span class="float-chip" style="top:64%;left:9%;animation-delay:2s;"><i class="bi bi-megaphone"></i><?= t('Marketing') ?></span>
+        <span class="float-chip" style="bottom:14%;right:10%;animation-delay:0.6s;"><i class="bi bi-graph-up"></i><?= t('Data Analyst') ?></span>
+        <span class="float-chip" style="top:44%;left:3%;animation-delay:2.6s;"><i class="bi bi-building"></i><?= t('Entreprise vérifiée') ?></span>
+        <span class="float-chip" style="bottom:24%;right:4%;animation-delay:1.8s;"><i class="bi bi-cup-hot"></i><?= t('Cuisinier') ?></span>
     </div>
     <div class="container py-5 py-lg-6">
         <div class="row justify-content-center text-center">
             <div class="col-lg-9">
-                <span class="hero-eyebrow mb-4"><i class="bi bi-stars"></i> <?= t('La marketplace des talents et des entreprises') ?></span>
+                <span class="hero-eyebrow mb-4"><i class="bi bi-stars"></i> <?= t('Les talents d\'Afrique, les opportunités du monde') ?></span>
                 <h1 class="fw-bold mb-3"><?= t('Trouvez le bon') ?> <span class="text-gradient"><?= t('talent') ?></span>,<br class="d-none d-md-block"> <?= t('décrochez la bonne') ?> <span class="text-gradient doodle-underline"><?= t('mission') ?><svg viewBox="0 0 200 12" fill="none" preserveAspectRatio="none"><path d="M2 8 C 40 2, 70 2, 100 6 S 160 12, 198 4" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/></svg></span>.</h1>
-                <p class="lead mx-auto mb-4" style="max-width: 46ch;"><?= t('Candidats et prestataires d\'un côté, entreprises et recruteurs de l\'autre. Offres, candidatures, messagerie et outils IA — au même endroit.') ?></p>
+                <p class="lead mx-auto mb-3" style="max-width: 52ch;"><?= t('Emploi, freelance, missions et recrutement : LULU-OPEN connecte les talents d\'Afrique aux bonnes opportunités, ici et à l\'international — simplement, en confiance, avec l\'IA.') ?></p>
+
+                <div class="d-flex flex-wrap justify-content-center gap-3 mb-4 small text-secondary">
+                    <span><i class="bi bi-briefcase me-1 text-primary"></i><?= t('Emploi') ?></span>
+                    <span><i class="bi bi-rocket-takeoff me-1 text-primary"></i><?= t('Missions & freelance') ?></span>
+                    <span><i class="bi bi-tools me-1 text-primary"></i><?= t('Services') ?></span>
+                    <span><i class="bi bi-globe2 me-1 text-primary"></i><?= t('International') ?></span>
+                </div>
 
                 <form action="<?= e(url('/search')) ?>" method="get" class="search-bar mx-auto d-flex flex-column flex-md-row align-items-stretch gap-2" style="max-width: 720px;">
                     <div class="d-flex align-items-center flex-grow-1 px-2">
@@ -32,9 +39,9 @@
 
                 <div class="d-flex flex-wrap justify-content-center gap-2 mt-3 small text-secondary">
                     <span class="me-1"><?= t('Populaire :') ?></span>
-                    <a class="badge badge-soft-primary" href="<?= e(url('/search?q=développeur')) ?>">Développeur</a>
-                    <a class="badge badge-soft-primary" href="<?= e(url('/search?q=designer')) ?>">Designer</a>
-                    <a class="badge badge-soft-primary" href="<?= e(url('/search?q=marketing')) ?>">Marketing</a>
+                    <a class="badge badge-soft-primary" href="<?= e(url('/search?q=développeur')) ?>"><?= t('Développeur') ?></a>
+                    <a class="badge badge-soft-primary" href="<?= e(url('/search?q=designer')) ?>"><?= t('Designer') ?></a>
+                    <a class="badge badge-soft-primary" href="<?= e(url('/search?q=marketing')) ?>"><?= t('Marketing') ?></a>
                     <a class="badge badge-soft-primary" href="<?= e(url('/search?q=data')) ?>">Data</a>
                 </div>
             </div>
@@ -111,26 +118,26 @@
         <div class="row g-4">
             <div class="col-lg-6 reveal-left">
                 <div class="card h-100 p-4 p-lg-5">
-                    <span class="badge badge-soft-primary align-self-start mb-3"><i class="bi bi-person-badge me-1"></i> Candidats & prestataires</span>
-                    <h3 class="h4 mb-4">Mettez-vous en avant</h3>
+                    <span class="badge badge-soft-primary align-self-start mb-3"><i class="bi bi-person-badge me-1"></i> <?= t('Candidats & prestataires') ?></span>
+                    <h3 class="h4 mb-4"><?= t('Mettez-vous en avant') ?></h3>
                     <div class="d-flex flex-column gap-4">
-                        <div class="d-flex gap-3"><span class="step-num">1</span><div><h4 class="h6 mb-1">Créez votre profil</h4><p class="text-secondary small mb-0">Compétences, expériences, services proposés.</p></div></div>
-                        <div class="d-flex gap-3"><span class="step-num">2</span><div><h4 class="h6 mb-1">Postulez aux offres</h4><p class="text-secondary small mb-0">Candidatez en un clic avec votre CV et une lettre.</p></div></div>
-                        <div class="d-flex gap-3"><span class="step-num">3</span><div><h4 class="h6 mb-1">Soyez contacté</h4><p class="text-secondary small mb-0">Les entreprises vous trouvent et vous écrivent.</p></div></div>
+                        <div class="d-flex gap-3"><span class="step-num">1</span><div><h4 class="h6 mb-1"><?= t('Créez votre profil') ?></h4><p class="text-secondary small mb-0"><?= t('Compétences, expériences, services proposés.') ?></p></div></div>
+                        <div class="d-flex gap-3"><span class="step-num">2</span><div><h4 class="h6 mb-1"><?= t('Postulez aux offres') ?></h4><p class="text-secondary small mb-0"><?= t('Candidatez en un clic avec votre CV et une lettre.') ?></p></div></div>
+                        <div class="d-flex gap-3"><span class="step-num">3</span><div><h4 class="h6 mb-1"><?= t('Soyez contacté') ?></h4><p class="text-secondary small mb-0"><?= t('Les entreprises vous trouvent et vous écrivent.') ?></p></div></div>
                     </div>
-                    <a class="btn btn-primary mt-4 align-self-start" href="<?= e(url('/register')) ?>">Je suis un talent</a>
+                    <a class="btn btn-primary mt-4 align-self-start" href="<?= e(url('/register')) ?>"><?= t('Trouver une opportunité') ?></a>
                 </div>
             </div>
             <div class="col-lg-6 reveal-right">
                 <div class="card h-100 p-4 p-lg-5">
-                    <span class="badge badge-soft-success align-self-start mb-3"><i class="bi bi-building me-1"></i> Entreprises & recruteurs</span>
-                    <h3 class="h4 mb-4">Recrutez plus vite</h3>
+                    <span class="badge badge-soft-success align-self-start mb-3"><i class="bi bi-building me-1"></i> <?= t('Entreprises & recruteurs') ?></span>
+                    <h3 class="h4 mb-4"><?= t('Recrutez plus vite') ?></h3>
                     <div class="d-flex flex-column gap-4">
-                        <div class="d-flex gap-3"><span class="step-num" style="background: var(--lulu-accent);">1</span><div><h4 class="h6 mb-1">Publiez vos offres</h4><p class="text-secondary small mb-0">Emploi, mission ou stage, en quelques minutes.</p></div></div>
-                        <div class="d-flex gap-3"><span class="step-num" style="background: var(--lulu-accent);">2</span><div><h4 class="h6 mb-1">Recevez les candidatures</h4><p class="text-secondary small mb-0">Centralisées, avec analyse IA à la clé.</p></div></div>
-                        <div class="d-flex gap-3"><span class="step-num" style="background: var(--lulu-accent);">3</span><div><h4 class="h6 mb-1">Sourcez les talents</h4><p class="text-secondary small mb-0">Recherchez et contactez directement les profils.</p></div></div>
+                        <div class="d-flex gap-3"><span class="step-num" style="background: var(--lulu-accent);">1</span><div><h4 class="h6 mb-1"><?= t('Publiez vos offres') ?></h4><p class="text-secondary small mb-0"><?= t('Emploi, mission ou stage, en quelques minutes.') ?></p></div></div>
+                        <div class="d-flex gap-3"><span class="step-num" style="background: var(--lulu-accent);">2</span><div><h4 class="h6 mb-1"><?= t('Recevez les candidatures') ?></h4><p class="text-secondary small mb-0"><?= t('Centralisées, avec analyse IA à la clé.') ?></p></div></div>
+                        <div class="d-flex gap-3"><span class="step-num" style="background: var(--lulu-accent);">3</span><div><h4 class="h6 mb-1"><?= t('Sourcez les talents') ?></h4><p class="text-secondary small mb-0"><?= t('Recherchez et contactez directement les profils.') ?></p></div></div>
                     </div>
-                    <a class="btn btn-accent mt-4 align-self-start" href="<?= e(url('/register')) ?>">Je recrute</a>
+                    <a class="btn btn-accent mt-4 align-self-start" href="<?= e(url('/register')) ?>"><?= t('Recruter un talent') ?></a>
                 </div>
             </div>
         </div>
