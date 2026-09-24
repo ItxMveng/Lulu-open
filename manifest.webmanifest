@@ -1,0 +1,23 @@
+{
+  "name": "LULU-OPEN — Emploi et talents",
+  "short_name": "LULU-OPEN",
+  "description": "La marketplace de l'emploi et des talents : offres, freelances, candidatures et CV boostés par l'IA.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#0369A1",
+  "lang": "fr",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "/assets/pwa/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/pwa/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/pwa/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Offres d'emploi", "url": "/emplois?source=pwa", "icons": [{ "src": "/assets/pwa/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Rechercher", "url": "/search?source=pwa", "icons": [{ "src": "/assets/pwa/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

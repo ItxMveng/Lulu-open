@@ -20,6 +20,13 @@
     <meta name="keywords" content="<?= e($metaKeywords) ?>">
     <meta name="robots" content="<?= $noindex ? 'noindex, nofollow' : 'index, follow' ?>">
     <meta name="theme-color" content="#0369A1">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/assets/pwa/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="LULU-OPEN">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link href="<?= e(url('/assets/css/pwa.css')) ?>?v=<?= (int) @filemtime(base_path('assets/css/pwa.css')) ?>" rel="stylesheet">
     <link rel="canonical" href="<?= e($canonical) ?>">
     <!-- Open Graph -->
     <meta property="og:type" content="website">
@@ -148,5 +155,6 @@
     });
 })();
 </script>
+<script src="<?= e(url('/assets/js/pwa.js')) ?>?v=<?= (int) @filemtime(base_path('assets/js/pwa.js')) ?>" defer></script>
 </body>
 </html>

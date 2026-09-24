@@ -1,0 +1,10 @@
+.pwa-banner{position:fixed;left:12px;right:12px;bottom:12px;z-index:1080;max-width:520px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border:1px solid #dbe3ec;border-radius:16px;box-shadow:0 12px 32px rgba(27,58,91,.22);transform:translateY(140%);transition:transform .3s ease;font-family:inherit}
+.pwa-banner.is-visible{transform:none}
+.pwa-banner__icon{flex:0 0 44px;height:44px;border-radius:12px;background:#1B3A5B;color:#F97316;font-weight:800;font-size:26px;display:flex;align-items:center;justify-content:center}
+.pwa-banner__text{flex:1;min-width:0;display:flex;flex-direction:column;font-size:.85rem;line-height:1.35;color:#4a5b6e}
+.pwa-banner__text strong{color:#1B3A5B;font-size:.95rem}
+.pwa-banner__actions{display:flex;flex-direction:column;gap:6px}
+.pwa-btn{border:0;background:transparent;color:#4a5b6e;font-size:.8rem;padding:4px 8px;border-radius:999px;cursor:pointer}
+.pwa-btn--primary{background:#0369A1;color:#fff;font-weight:600;padding:8px 16px;font-size:.85rem}
+.pwa-btn:focus-visible{outline:3px solid #F97316;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.pwa-banner{transition:none}}

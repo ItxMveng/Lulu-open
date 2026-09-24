@@ -17,6 +17,13 @@ RewriteRule ^ index.php [QSA,L]
     Require all denied
 </FilesMatch>
 
+# PWA : type MIME du manifeste ; le service worker ne doit jamais rester en cache long
+AddType application/manifest+json .webmanifest
+<Files "sw.js">
+    Header set Cache-Control "no-cache"
+    Header set Service-Worker-Allowed "/"
+</Files>
+
 # Ne pas lister les répertoires
 Options -Indexes
 
