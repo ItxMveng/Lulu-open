@@ -46,7 +46,8 @@
         <hr class="my-4" style="border-color: var(--lulu-border);">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 small text-secondary">
             <span>© <?= date('Y') ?> LULU-OPEN. <?= t('Tous droits réservés.') ?></span>
-            <div class="d-flex gap-2">
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" hidden data-pwa-install class="btn btn-sm btn-primary"><i class="bi bi-download me-1"></i><?= t('Installer l\'app') ?></button>
                 <div class="dropdown">
                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" type="button"><i class="bi bi-translate me-1"></i><?= strtoupper(Lang::current()) ?></button>
                     <ul class="dropdown-menu dropdown-menu-end">

@@ -14,6 +14,7 @@ $profilePath = $role === 'entreprise' ? '/entreprise/profile/edit' : '/client/pr
 <nav class="navbar navbar-expand-lg sticky-top">
     <div class="container">
         <a class="navbar-brand" href="<?= e(url('/')) ?>"><span class="brand-dot"></span>LULU-OPEN</a>
+        <button type="button" hidden data-pwa-install class="btn btn-sm btn-outline-primary ms-auto me-2 d-lg-none"><i class="bi bi-download me-1"></i><?= t('Installer l\'app') ?></button>
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Navigation">
             <span class="navbar-toggler-icon"></span>
         </button>

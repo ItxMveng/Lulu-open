@@ -1,6 +1,6 @@
 /* Service worker LULU-OPEN : coque hors ligne + cache des ressources statiques.
    Les pages HTML ne sont jamais mises en cache (comptes, messages, paiements). */
-const VERSION = 'lulu-pwa-v1';
+const VERSION = 'lulu-pwa-v2';
 const STATIC_CACHE = VERSION + '-static';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = [OFFLINE_URL, '/assets/pwa/icon-192.png', '/assets/css/app.css'];
